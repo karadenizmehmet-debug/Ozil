@@ -594,14 +594,15 @@ async function yoneticiGiris() {
   if (!sifre) return;
 
   try {
-    const snap = await db.ref(DB_YOLU.ayarlar + "/yonetici_sifre_hash").get();
+    const snap = await db.ref(DB_YOLU.ayarlar).get();
+    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
     let eslesme = false;
-    if (snap.exists()) {
-      eslesme = (await sha256(sifre)) === snap.val();
+    if (ayarlar.yonetici_sifre_hash) {
+      eslesme = (await sha256(sifre)) === ayarlar.yonetici_sifre_hash;
+    } else if (ayarlar.yonetici_sifre) {
+      eslesme = sifre === ayarlar.yonetici_sifre;
     } else {
-      // Düz metin fallback (ilk kurulum)
-      const s2 = await db.ref(DB_YOLU.ayarlar + "/yonetici_sifre").get();
-      eslesme = s2.exists() && s2.val() === sifre;
+      eslesme = sifre === "1234";
     }
     if (eslesme) {
       yoneticiGirildi = true;
@@ -613,7 +614,7 @@ async function yoneticiGiris() {
       document.getElementById("hata_yon").style.display = "block";
     }
   } catch (e) {
-    toast("⚠️ Bağlantı hatası");
+    toast("⚠️ Bağlantı hatası: " + e.message);
   }
 }
 
@@ -631,18 +632,24 @@ async function sifreDegistir() {
   }
 
   const hash = await sha256(y1);
-  // Firebase'e şifre değiştirme komutu gönder (PC okur ve ayarlar.json'a yazar)
+
+  // 1. Firebase ayarlar düğümüne hash'i yaz (tüm istemciler okur)
+  const guncelle = {};
+  guncelle[tip + "_sifre_hash"] = hash;
+  await db.ref(DB_YOLU.ayarlar).update(guncelle);
+
+  // 2. PC'ye şifre değiştirme komutu gönder (ana program ayarlar.json'a kaydeder)
   await db.ref(DB_YOLU.sifre).set({
     tip:   tip,
     hash:  hash,
     zaman: Date.now()
   });
-  // Ayrıca ayarlar düğümünü de güncelle
-  const guncelle = {};
-  guncelle[tip + "_sifre_hash"] = hash;
-  await db.ref(DB_YOLU.ayarlar).update(guncelle);
 
-  mesajEl.innerHTML = '<div class="msg-ok">✓ Şifre güncellendi.</div>';
+  // 3. Yönetici kendi şifresini değiştirdiyse, mevcut oturumda şifresini güncelle
+  if (tip === "yonetici") yoneticiSifre = y1;
+  if (tip === "mobil")    mobilSifre = y1;
+
+  mesajEl.innerHTML = '<div class="msg-ok">✓ Şifre güncellendi ve tüm cihazlara yansıtıldı.</div>';
   document.getElementById("inp_yeni1").value = "";
   document.getElementById("inp_yeni2").value = "";
 }
