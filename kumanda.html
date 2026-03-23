@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📱 oZil Kumanda</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Segoe UI',sans-serif;background-color:#f1f2f6;text-align:center;padding:10px;margin:0}
+  h2{color:#2f3542;margin-bottom:10px;font-size:20px}
+
+  /* --- GİRİŞ EKRANI --- */
+  #ekran_giris{max-width:360px;margin:60px auto}
+  #ekran_giris input{padding:15px;font-size:18px;border-radius:8px;border:1px solid #ced6e0;
+    width:100%;margin-bottom:15px;text-align:center;outline:none}
+  #ekran_giris button{padding:15px;font-size:18px;background-color:#0984e3;color:white;
+    border:none;border-radius:8px;font-weight:bold;width:100%;box-shadow:0 4px #06528d;cursor:pointer}
+  .hata{color:#e74c3c;font-weight:bold;margin-top:10px;display:none}
+  .info{color:#7f8c8d;margin-bottom:20px;font-size:14px}
+
+  /* --- KUMANDA EKRANI --- */
+  #ekran_kumanda{display:none;max-width:500px;margin:0 auto}
+  .card{background:white;padding:15px;border-radius:15px;box-shadow:0 4px 6px rgba(0,0,0,.1);margin-bottom:15px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .btn{padding:15px 5px;font-size:14px;font-weight:bold;color:#fff;background-color:#0984e3;
+    border:none;border-radius:8px;box-shadow:0 4px #06528d;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;cursor:pointer;width:100%}
+  .btn:active{box-shadow:0 1px #043e6b;transform:translateY(3px)}
+  .full{grid-column:span 2;padding:15px;font-size:16px}
+  .blue{background-color:#0984e3;box-shadow:0 4px #06528d}
+  .green{background-color:#2ecc71;box-shadow:0 4px #27ae60}
+  .orange{background-color:#f39c12;box-shadow:0 4px #e67e22}
+  .red{background-color:#e74c3c;box-shadow:0 4px #c0392b}
+  .dark{background-color:#2c3e50;box-shadow:0 4px #1a252f}
+  .purple{background-color:#8e44ad;box-shadow:0 4px #732d91}
+  .gray{background-color:#57606f;box-shadow:0 4px #3d4450}
+  .icon{font-size:22px;margin-bottom:5px}
+  .footer{margin-top:20px;display:flex;justify-content:space-around;padding-bottom:20px}
+  .footer a{text-decoration:none;color:#0984e3;font-weight:bold;cursor:pointer}
+  #toast{visibility:hidden;background-color:#333;color:#fff;text-align:center;padding:10px;
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);border-radius:5px;z-index:99;
+    min-width:200px}
+  .show{visibility:visible !important;animation:fadein .3s,fadeout .5s 2.5s}
+  .slider-cont{margin-top:10px;padding:10px}
+  input[type=range]{width:100%;height:15px;border-radius:5px;background:#dfe4ea;outline:none}
+
+  /* --- ŞARKI LİSTESİ EKRANI --- */
+  #ekran_sarki{display:none;max-width:500px;margin:0 auto}
+  .sarki-item{padding:15px;border-bottom:1px solid #f1f2f6;cursor:pointer;display:flex;
+    justify-content:space-between;align-items:center;background:white}
+  .sarki-item:active{background-color:#dfe4ea}
+  .sarki-name{font-weight:bold;color:#2c3e50;text-align:left}
+  .play-btn{color:#0984e3;font-size:20px}
+
+  /* --- YÖNETİCİ EKRANI --- */
+  #ekran_yonetici{display:none;max-width:400px;margin:0 auto}
+  #ekran_yonetici input,#ekran_yonetici select{width:100%;padding:12px;margin:10px 0;
+    border-radius:8px;border:1px solid #ddd;font-size:15px;outline:none}
+  #ekran_yonetici button{width:100%;padding:12px;background:#2ed573;color:white;border:none;
+    border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;margin-top:5px}
+  .msg-ok{background:#2ed573;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
+  .msg-err{background:#ff4757;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
+
+  /* --- BAĞLANTI DURUMU --- */
+  #durum_bar{font-size:12px;padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:8px}
+  .durum-bagli{background:#d4edda;color:#155724}
+  .durum-bekliyor{background:#fff3cd;color:#856404}
+  .durum-cevrimdisi{background:#f8d7da;color:#721c24}
+
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  @keyframes fadeout{from{opacity:1}to{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- ===================== GİRİŞ EKRANI ===================== -->
+<div id="ekran_giris">
+  <h2>Nimetullah Nahçivani İHO<br>
+    <span style="font-size:16px;color:#7f8c8d">Mobil Kumanda Girişi</span>
+  </h2>
+  <div class="info">İnternet üzerinden uzaktan kontrol</div>
+  <input type="password" id="inp_sifre" placeholder="Mobil Kumanda Şifresi"
+         onkeydown="if(event.key==='Enter')girisYap()">
+  <button onclick="girisYap()">GİRİŞ YAP</button>
+  <div class="hata" id="hata_giris">Hatalı Şifre! Lütfen tekrar deneyin.</div>
+</div>
+
+<!-- ===================== KUMANDA EKRANI ===================== -->
+<div id="ekran_kumanda">
+  <h2>Nimetullah Nahçivani İHO<br>
+    <span style="font-size:14px;color:#7f8c8d" id="lbl_pc">Kumanda</span>
+  </h2>
+  <div id="durum_bar" class="durum-bekliyor">⏳ Bağlanıyor...</div>
+
+  <!-- Anons -->
+  <div class="card">
+    <strong>🎤 Canlı Sesli Anons</strong>
+    <div style="display:flex;margin-top:10px;gap:8px">
+      <input type="text" id="txt_anons" placeholder="Duyuru metnini yazın..."
+             style="flex:1;padding:10px;border:1px solid #ced6e0;border-radius:5px;outline:none;font-size:15px"
+             onkeydown="if(event.key==='Enter')anonsGonder()">
+      <button class="btn blue" style="padding:10px 15px;flex-direction:row;box-shadow:none;width:auto"
+              onclick="anonsGonder()">
+        <span style="font-size:18px">🔊</span>&nbsp;Oku
+      </button>
+    </div>
+  </div>
+
+  <!-- Ses -->
+  <div class="card">
+    <strong>🔊 Sistem Ses Seviyesi</strong>
+    <div class="slider-cont">
+      <input type="range" id="ses_slider" min="0" max="100" value="80"
+             oninput="sesGuncelle(this.value)">
+    </div>
+    <div id="vol_val">%80</div>
+  </div>
+
+  <!-- Zil butonları -->
+  <div class="grid">
+    <button class="btn dark"   onclick="komutGonder('toplanma_zil','Toplanma Zili')">
+      <span class="icon">🔔</span>Toplanma</button>
+    <button class="btn blue"   onclick="komutGonder('ogr_zil','Öğrenci Zili')">
+      <span class="icon">🧑‍🎓</span>Öğrenci</button>
+    <button class="btn green"  onclick="komutGonder('ogrt_zil','Öğretmen Zili')">
+      <span class="icon">👨‍🏫</span>Öğretmen</button>
+    <button class="btn orange" onclick="komutGonder('cikis_zil','Çıkış Zili')">
+      <span class="icon">🚪</span>Çıkış</button>
+  </div>
+
+  <div class="grid">
+    <button class="btn red" onclick="komutGonder('istiklal','İstiklal Marşı')">
+      <span class="icon">🇹🇷</span>İstiklal Marşı</button>
+    <button class="btn red" onclick="komutGonder('siren','Siren')">
+      <span class="icon">🚨</span>Siren Sesi</button>
+    <button class="btn red" onclick="komutGonder('saygi_1','1 Dk Saygı')">
+      <span class="icon">⏱️</span>1 Dakika Saygı Duruşu</button>
+    <button class="btn red" onclick="komutGonder('saygi_1_ist','1 Dk+İstiklal')">
+      <span class="icon">⏱️</span>1 Dk Saygı + İstiklal</button>
+    <button class="btn red full" onclick="komutGonder('saygi_2_ist','2 Dk+İstiklal')">
+      <span class="icon">⏱️</span>2 Dakika Saygı Duruşu + İstiklal Marşı</button>
+  </div>
+
+  <div class="grid">
+    <button class="btn purple full" onclick="ekranGoster('sarki')">
+      <span class="icon">🎵</span>ŞARKI LİSTESİ</button>
+    <button class="btn purple full" onclick="komutGonder('muzik_toggle','Müzik Yayını')">
+      <span class="icon">📻</span>Müzik Yayını (Aç/Kapat)</button>
+    <button class="btn gray full" onclick="komutGonder('sustur','Sustur')">
+      <span class="icon">⏹️</span>SİSTEMİ SUSTUR</button>
+  </div>
+
+  <div class="footer">
+    <a onclick="ekranGoster('yonetici')">🔐 Şifre Yönetimi</a>
+    <a onclick="cikisYap()">🚪 Çıkış</a>
+  </div>
+</div>
+
+<!-- ===================== ŞARKI LİSTESİ EKRANI ===================== -->
+<div id="ekran_sarki">
+  <div style="position:sticky;top:0;background:white;padding:15px;
+              box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
+    <strong>🔊 Ses: <span id="vol_val2">%80</span></strong><br>
+    <input type="range" min="0" max="100" value="80"
+           oninput="sesGuncelle(this.value,true)" style="margin-top:8px">
+  </div>
+  <div id="sarki_liste" class="card" style="text-align:left;padding:0">
+    <div class="sarki-item" style="color:#7f8c8d">Şarkılar yükleniyor...</div>
+  </div>
+  <div style="margin:15px">
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">
+      ← Kumandaya Geri Dön
+    </button>
+  </div>
+</div>
+
+<!-- ===================== YÖNETİCİ EKRANI ===================== -->
+<div id="ekran_yonetici">
+  <h2>🔐 Yönetici Girişi</h2>
+  <div id="yon_giris_bolum">
+    <div class="card">
+      <p style="color:#7f8c8d">Şifre yönetimi için yönetici şifresini girin.</p>
+      <input type="password" id="inp_yon_sifre" placeholder="Yönetici Şifresi"
+             onkeydown="if(event.key==='Enter')yoneticiGiris()">
+      <button onclick="yoneticiGiris()" style="background:#e67e22">GİRİŞ YAP</button>
+      <div class="hata" id="hata_yon" style="display:none">Hatalı Yönetici Şifresi!</div>
+    </div>
+  </div>
+
+  <div id="yon_panel_bolum" style="display:none">
+    <div id="yon_mesaj"></div>
+    <div class="card">
+      <label style="font-weight:bold">Değiştirilecek Şifre:</label>
+      <select id="sifre_tip">
+        <option value="yonetici">🔑 Yönetici Şifresi</option>
+        <option value="uygulama">⚙️ Uygulama Giriş Şifresi</option>
+        <option value="mobil">📱 Mobil Kumanda Şifresi</option>
+      </select>
+      <input type="password" id="inp_yeni1" placeholder="Yeni Şifre">
+      <input type="password" id="inp_yeni2" placeholder="Yeni Şifre (Tekrar)">
+      <button onclick="sifreDegistir()">ŞİFREYİ GÜNCELLE</button>
+    </div>
+  </div>
+
+  <div style="margin:15px">
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">
+      ← Kumandaya Geri Dön
+    </button>
+  </div>
+</div>
+
+<!-- Toast bildirimi -->
+<div id="toast"></div>
+
+<!-- ===================== FIREBASE SDK ===================== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ================================================================
+//  YAPILANDIRMA — Firebase konsolunuzdan bu değerleri güncelleyin
+// ================================================================
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAJSKfy8otqrah-efNzI0OoLlFETqMsJEM",
+  authDomain:        "ozil-99982.firebaseapp.com",
+  databaseURL:       "https://ozil-99982-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "ozil-99982",
+  storageBucket:     "ozil-99982.firebasestorage.app",
+  messagingSenderId: "120039746207",
+  appId:             "1:120039746207:web:bad5f22a77a4669d1890aa"
+};
+
+// Firebase yolları — okul bilgisayarındaki Python kodu bu yolları dinler
+const DB_YOLU = {
+  komut:       "kumanda/komut",       // çalınacak zil / özel komut
+  anons:       "kumanda/anons",       // sesli anons metni
+  ses:         "kumanda/ses",         // ses seviyesi (0-100)
+  sarki:       "kumanda/sarki",       // özel şarkı adı
+  sarki_liste: "kumanda/sarki_liste", // PC'nin yüklediği şarkı listesi
+  durum:       "kumanda/durum",       // PC'nin bağlantı durumu
+  sifre:       "kumanda/sifre",       // şifre değiştirme komutu
+  ayarlar:     "kumanda/ayarlar"      // mobil şifre ve yönetici şifresi (hash'li)
+};
+// ================================================================
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+// ---- Oturum değişkenleri ----
+let girisYapildi    = false;
+let yoneticiGirildi = false;
+let mevcutSes       = 80;
+let mobilSifre      = "";   // Firebase'den okunur
+let yoneticiSifre   = "";   // Firebase'den okunur (yönetici girince)
+
+// ---- Yardımcı: SHA-256 hash ----
+async function sha256(metin) {
+  const buf  = await crypto.subtle.digest("SHA-256",
+                 new TextEncoder().encode(metin));
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+// ---- Toast bildirimi ----
+function toast(mesaj) {
+  const el = document.getElementById("toast");
+  el.innerHTML = mesaj;
+  el.className = "show";
+  setTimeout(() => el.className = "", 3000);
+}
+
+// ---- Ekran geçişleri ----
+function ekranGoster(ekran) {
+  ["giris","kumanda","sarki","yonetici"].forEach(e =>
+    document.getElementById("ekran_" + e).style.display = "none");
+  document.getElementById("ekran_" + ekran).style.display = "block";
+  if (ekran === "sarki") sarkiListesiYukle();
+}
+
+// ================================================================
+//  GİRİŞ
+// ================================================================
+async function girisYap() {
+  const sifre = document.getElementById("inp_sifre").value;
+  if (!sifre) return;
+
+  // Önce Firebase'den mobil şifreyi çek (hash olarak saklanıyor)
+  try {
+    const snap = await db.ref(DB_YOLU.ayarlar + "/mobil_sifre_hash").get();
+    if (snap.exists()) {
+      const hash = await sha256(sifre);
+      if (hash === snap.val()) {
+        girisBasarili(sifre);
+        return;
+      }
+    } else {
+      // Hash henüz Firebase'e yazılmamışsa düz metin karşılaştır (ilk kurulum)
+      const snap2 = await db.ref(DB_YOLU.ayarlar + "/mobil_sifre").get();
+      if (snap2.exists() && snap2.val() === sifre) {
+        girisBasarili(sifre);
+        return;
+      }
+    }
+  } catch (e) {
+    toast("⚠️ Bağlantı hatası: " + e.message);
+    return;
+  }
+  document.getElementById("hata_giris").style.display = "block";
+}
+
+function girisBasarili(sifre) {
+  girisYapildi = true;
+  mobilSifre   = sifre;
+  document.getElementById("hata_giris").style.display = "none";
+  sessionStorage.setItem("ozil_giris", "1");
+  ekranGoster("kumanda");
+  dinleyicileriBaslat();
+}
+
+function cikisYap() {
+  girisYapildi = false;
+  sessionStorage.removeItem("ozil_giris");
+  ekranGoster("giris");
+  document.getElementById("inp_sifre").value = "";
+}
+
+// ================================================================
+//  FİREBASE DİNLEYİCİLERİ (PC durumu, ses, PC adı)
+// ================================================================
+function dinleyicileriBaslat() {
+  // PC bağlantı durumu
+  db.ref(DB_YOLU.durum).on("value", snap => {
+    const bar = document.getElementById("durum_bar");
+    const v   = snap.val() || {};
+    if (v.cevrimici) {
+      bar.textContent  = "🟢 Bağlı — " + (v.pc_adi || "");
+      bar.className    = "durum-bagli";
+      if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda";
+    } else {
+      bar.textContent = "🔴 PC Çevrimdışı";
+      bar.className   = "durum-cevrimdisi";
+    }
+  });
+
+  // Ses seviyesi senkronizasyonu (PC değiştirirse buraya yansır)
+  db.ref(DB_YOLU.ses).on("value", snap => {
+    if (snap.val() !== null) {
+      mevcutSes = snap.val();
+      document.getElementById("ses_slider").value = mevcutSes;
+      document.getElementById("vol_val").textContent = "%" + mevcutSes;
+      document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+    }
+  });
+}
+
+// ================================================================
+//  KOMUT GÖNDERME
+// ================================================================
+function komutGonder(kod, isim) {
+  if (!girisYapildi) return;
+  db.ref(DB_YOLU.komut).set({
+    kod:   kod,
+    zaman: Date.now()
+  }).then(() => toast(isim + " ✓"))
+    .catch(e  => toast("⚠️ Hata: " + e.message));
+}
+
+function anonsGonder() {
+  const metin = document.getElementById("txt_anons").value.trim();
+  if (!metin) return;
+  db.ref(DB_YOLU.anons).set({
+    metin: metin,
+    zaman: Date.now()
+  }).then(() => {
+    toast("Anons İletildi! 🔊");
+    document.getElementById("txt_anons").value = "";
+  }).catch(e => toast("⚠️ Hata: " + e.message));
+}
+
+let sesZamanlayici = null;
+function sesGuncelle(val, ikincislider) {
+  mevcutSes = parseInt(val);
+  document.getElementById("vol_val").textContent  = "%" + mevcutSes;
+  document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+  if (!ikincislider) document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
+  else document.getElementById("ses_slider").value = mevcutSes;
+  // Sürekli kaydetmemek için 300ms bekle
+  clearTimeout(sesZamanlayici);
+  sesZamanlayici = setTimeout(() => {
+    db.ref(DB_YOLU.ses).set(mevcutSes);
+  }, 300);
+}
+
+// ================================================================
+//  ŞARKI LİSTESİ
+// ================================================================
+function sarkiListesiYukle() {
+  const kap = document.getElementById("sarki_liste");
+  db.ref(DB_YOLU.sarki_liste).get().then(snap => {
+    kap.innerHTML = "";
+    if (!snap.exists() || !snap.val() || snap.val().length === 0) {
+      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkı bulunamadı.<br><small>PC\'nin şarkı listesi göndermesi bekleniyor.</small></div>';
+      return;
+    }
+    snap.val().forEach(sarki => {
+      const div = document.createElement("div");
+      div.className = "sarki-item";
+      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`;
+      div.onclick = () => {
+        db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
+        toast("▶️ " + sarki);
+      };
+      kap.appendChild(div);
+    });
+  }).catch(() => {
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>';
+  });
+}
+
+// ================================================================
+//  YÖNETİCİ — Şifre değiştirme
+// ================================================================
+async function yoneticiGiris() {
+  const sifre = document.getElementById("inp_yon_sifre").value;
+  if (!sifre) return;
+
+  try {
+    const snap = await db.ref(DB_YOLU.ayarlar + "/yonetici_sifre_hash").get();
+    let eslesme = false;
+    if (snap.exists()) {
+      eslesme = (await sha256(sifre)) === snap.val();
+    } else {
+      // Düz metin fallback (ilk kurulum)
+      const s2 = await db.ref(DB_YOLU.ayarlar + "/yonetici_sifre").get();
+      eslesme = s2.exists() && s2.val() === sifre;
+    }
+    if (eslesme) {
+      yoneticiGirildi = true;
+      yoneticiSifre = sifre;
+      document.getElementById("hata_yon").style.display = "none";
+      document.getElementById("yon_giris_bolum").style.display = "none";
+      document.getElementById("yon_panel_bolum").style.display = "block";
+    } else {
+      document.getElementById("hata_yon").style.display = "block";
+    }
+  } catch (e) {
+    toast("⚠️ Bağlantı hatası");
+  }
+}
+
+async function sifreDegistir() {
+  const tip  = document.getElementById("sifre_tip").value;
+  const y1   = document.getElementById("inp_yeni1").value;
+  const y2   = document.getElementById("inp_yeni2").value;
+  const mesajEl = document.getElementById("yon_mesaj");
+
+  if (y1 !== y2) {
+    mesajEl.innerHTML = '<div class="msg-err">Hata: Şifreler uyuşmuyor!</div>'; return;
+  }
+  if (y1.length < 4) {
+    mesajEl.innerHTML = '<div class="msg-err">Hata: En az 4 karakter olmalı!</div>'; return;
+  }
+
+  const hash = await sha256(y1);
+  // Firebase'e şifre değiştirme komutu gönder (PC okur ve ayarlar.json'a yazar)
+  await db.ref(DB_YOLU.sifre).set({
+    tip:   tip,
+    hash:  hash,
+    zaman: Date.now()
+  });
+  // Ayrıca ayarlar düğümünü de güncelle
+  const guncelle = {};
+  guncelle[tip + "_sifre_hash"] = hash;
+  await db.ref(DB_YOLU.ayarlar).update(guncelle);
+
+  mesajEl.innerHTML = '<div class="msg-ok">✓ Şifre güncellendi.</div>';
+  document.getElementById("inp_yeni1").value = "";
+  document.getElementById("inp_yeni2").value = "";
+}
+
+// ================================================================
+//  SAYFA YÜKLENINCE — oturum kontrolü
+// ================================================================
+window.onload = () => {
+  if (sessionStorage.getItem("ozil_giris") === "1") {
+    girisYapildi = true;
+    ekranGoster("kumanda");
+    dinleyicileriBaslat();
+  }
+};
+</script>
+</body>
+</html>
