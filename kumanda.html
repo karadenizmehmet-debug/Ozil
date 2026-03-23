@@ -99,6 +99,12 @@
       <input type="text" id="txt_anons" placeholder="Duyuru metnini yazın..."
              style="flex:1;padding:10px;border:1px solid #ced6e0;border-radius:5px;outline:none;font-size:15px"
              onkeydown="if(event.key==='Enter')anonsGonder()">
+      <select id="anons_tekrar" style="padding:10px;border:1px solid #ced6e0;border-radius:5px;
+              font-size:14px;font-weight:bold;background:#fff;outline:none;width:60px">
+        <option value="1">1x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+      </select>
       <button class="btn blue" style="padding:10px 15px;flex-direction:row;box-shadow:none;width:auto"
               onclick="anonsGonder()">
         <span style="font-size:18px">🔊</span>&nbsp;Oku
@@ -142,6 +148,8 @@
   </div>
 
   <div class="grid">
+    <button class="btn purple full" onclick="ekranGoster('zil')">
+      <span class="icon">🎼</span>ZİL MELODİSİ SEÇ</button>
     <button class="btn purple full" onclick="ekranGoster('sarki')">
       <span class="icon">🎵</span>ŞARKI LİSTESİ</button>
     <button class="btn purple full" onclick="komutGonder('muzik_toggle','Müzik Yayını')">
@@ -153,6 +161,28 @@
   <div class="footer">
     <a onclick="ekranGoster('yonetici')">🔐 Şifre Yönetimi</a>
     <a onclick="cikisYap()">🚪 Çıkış</a>
+  </div>
+</div>
+
+<!-- ===================== ZİL MELODİSİ EKRANI ===================== -->
+<div id="ekran_zil" style="display:none;max-width:500px;margin:0 auto">
+  <div style="position:sticky;top:0;background:white;padding:15px;
+              box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
+    <strong>🎵 Zil Melodisi Seç</strong><br>
+    <small style="color:#7f8c8d">Hangi zil için melodi seçmek istiyorsunuz?</small><br><br>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn dark" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('toplanma_zil','Toplanma')">🔔 Toplanma</button>
+      <button class="btn blue" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogr_zil','Öğrenci')">🧑‍🎓 Öğrenci</button>
+      <button class="btn green" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogrt_zil','Öğretmen')">👨‍🏫 Öğretmen</button>
+      <button class="btn orange" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('cikis_zil','Çıkış')">🚪 Çıkış</button>
+    </div>
+  </div>
+  <div id="zil_secili_tip" style="text-align:center;font-weight:bold;color:#0984e3;margin-bottom:8px"></div>
+  <div id="zil_melodi_liste" class="card" style="text-align:left;padding:0">
+    <div class="sarki-item" style="color:#7f8c8d">Önce yukarıdan bir zil türü seçin.</div>
+  </div>
+  <div style="margin:15px">
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">← Kumandaya Geri Dön</button>
   </div>
 </div>
 
@@ -232,14 +262,16 @@ const FIREBASE_CONFIG = {
 
 // Firebase yolları — okul bilgisayarındaki Python kodu bu yolları dinler
 const DB_YOLU = {
-  komut:       "kumanda/komut",       // çalınacak zil / özel komut
-  anons:       "kumanda/anons",       // sesli anons metni
-  ses:         "kumanda/ses",         // ses seviyesi (0-100)
-  sarki:       "kumanda/sarki",       // özel şarkı adı
-  sarki_liste: "kumanda/sarki_liste", // PC'nin yüklediği şarkı listesi
-  durum:       "kumanda/durum",       // PC'nin bağlantı durumu
-  sifre:       "kumanda/sifre",       // şifre değiştirme komutu
-  ayarlar:     "kumanda/ayarlar"      // mobil şifre ve yönetici şifresi (hash'li)
+  komut:       "kumanda/komut",
+  anons:       "kumanda/anons",
+  ses:         "kumanda/ses",
+  sarki:       "kumanda/sarki",
+  sarki_liste: "kumanda/sarki_liste",
+  zil_listesi: "kumanda/zil_listesi", // PC'nin zil melodisi listesi
+  zil_sec:     "kumanda/zil_sec",     // seçilen zil melodisi komutu
+  durum:       "kumanda/durum",
+  sifre:       "kumanda/sifre",
+  ayarlar:     "kumanda/ayarlar"
 };
 // ================================================================
 
@@ -271,10 +303,11 @@ function toast(mesaj) {
 
 // ---- Ekran geçişleri ----
 function ekranGoster(ekran) {
-  ["giris","kumanda","sarki","yonetici"].forEach(e =>
+  ["giris","kumanda","sarki","yonetici","zil"].forEach(e =>
     document.getElementById("ekran_" + e).style.display = "none");
   document.getElementById("ekran_" + ekran).style.display = "block";
   if (ekran === "sarki") sarkiListesiYukle();
+  if (ekran === "zil") zilListesiYukle();
 }
 
 // ================================================================
@@ -284,24 +317,29 @@ async function girisYap() {
   const sifre = document.getElementById("inp_sifre").value;
   if (!sifre) return;
 
-  // Önce Firebase'den mobil şifreyi çek (hash olarak saklanıyor)
   try {
-    const snap = await db.ref(DB_YOLU.ayarlar + "/mobil_sifre_hash").get();
-    if (snap.exists()) {
+    const snap = await db.ref(DB_YOLU.ayarlar).get();
+    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
+
+    // 1. Hash karşılaştırma (en güvenli)
+    if (ayarlar.mobil_sifre_hash) {
       const hash = await sha256(sifre);
-      if (hash === snap.val()) {
-        girisBasarili(sifre);
-        return;
-      }
-    } else {
-      // Hash henüz Firebase'e yazılmamışsa düz metin karşılaştır (ilk kurulum)
-      const snap2 = await db.ref(DB_YOLU.ayarlar + "/mobil_sifre").get();
-      if (snap2.exists() && snap2.val() === sifre) {
-        girisBasarili(sifre);
-        return;
-      }
+      if (hash === ayarlar.mobil_sifre_hash) { girisBasarili(sifre); return; }
     }
+
+    // 2. Düz metin karşılaştırma (Firebase'e henüz hash yazılmadıysa)
+    if (ayarlar.mobil_sifre) {
+      if (sifre === ayarlar.mobil_sifre) { girisBasarili(sifre); return; }
+    }
+
+    // 3. Firebase'de hiç kayıt yoksa varsayılan şifre "1234"
+    if (!ayarlar.mobil_sifre && !ayarlar.mobil_sifre_hash) {
+      if (sifre === "1234") { girisBasarili(sifre); return; }
+    }
+
   } catch (e) {
+    // Bağlantı hatası durumunda varsayılan şifreyle dene
+    if (sifre === "1234") { girisBasarili(sifre); return; }
     toast("⚠️ Bağlantı hatası: " + e.message);
     return;
   }
@@ -368,11 +406,14 @@ function komutGonder(kod, isim) {
 function anonsGonder() {
   const metin = document.getElementById("txt_anons").value.trim();
   if (!metin) return;
+  const tekrar = document.getElementById("anons_tekrar").value;
+  // Tekrar sayısını metne "||N" formatında ekle — Python tarafı okur
+  const veri = tekrar > 1 ? metin + "||" + tekrar : metin;
   db.ref(DB_YOLU.anons).set({
-    metin: metin,
+    metin: veri,
     zaman: Date.now()
   }).then(() => {
-    toast("Anons İletildi! 🔊");
+    toast("Anons İletildi! 🔊 (" + tekrar + "x)");
     document.getElementById("txt_anons").value = "";
   }).catch(e => toast("⚠️ Hata: " + e.message));
 }
@@ -389,6 +430,59 @@ function sesGuncelle(val, ikincislider) {
   sesZamanlayici = setTimeout(() => {
     db.ref(DB_YOLU.ses).set(mevcutSes);
   }, 300);
+}
+
+// ================================================================
+//  ZİL MELODİSİ SEÇİCİ
+// ================================================================
+let seciliZilTip = "";
+let seciliZilAdi = "";
+
+function zilListesiYukle() {
+  const kap = document.getElementById("zil_melodi_liste");
+  db.ref(DB_YOLU.zil_listesi).get().then(snap => {
+    if (!snap.exists() || !snap.val() || snap.val().length === 0) {
+      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamadı.<br><small>PC\'nin melodi listesi bekleniyor.</small></div>';
+      return;
+    }
+    window._zilListesi = snap.val();
+    if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi);
+    else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukarıdan bir zil türü seçin.</div>';
+  }).catch(() => {
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>';
+  });
+}
+
+function zilTipSec(tip, ad) {
+  seciliZilTip = tip;
+  seciliZilAdi = ad;
+  document.getElementById("zil_secili_tip").textContent = ad + " için melodi seçin:";
+  const kap = document.getElementById("zil_melodi_liste");
+  const liste = window._zilListesi || [];
+  if (!liste.length) { zilListesiYukle(); return; }
+  kap.innerHTML = "";
+  // "Varsayılan" seçeneği her zaman en üstte
+  const varsDiv = document.createElement("div");
+  varsDiv.className = "sarki-item";
+  varsDiv.innerHTML = '<span class="sarki-name">⭐ Varsayılan</span><span class="play-btn">✓</span>';
+  varsDiv.onclick = () => { zilSecGonder(tip, "Varsayılan", ad); };
+  kap.appendChild(varsDiv);
+  liste.forEach(melodi => {
+    const div = document.createElement("div");
+    div.className = "sarki-item";
+    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">✓</span>`;
+    div.onclick = () => { zilSecGonder(tip, melodi, ad); };
+    kap.appendChild(div);
+  });
+}
+
+function zilSecGonder(tip, melodi, ad) {
+  db.ref(DB_YOLU.zil_sec).set({
+    tip: tip,
+    melodi: melodi,
+    zaman: Date.now()
+  }).then(() => toast("✓ " + ad + ": " + melodi))
+    .catch(e => toast("⚠️ Hata: " + e.message));
 }
 
 // ================================================================
