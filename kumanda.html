@@ -161,9 +161,25 @@
       <span class="icon">✅</span><span id="lbl_sistem">SİSTEM: AÇIK</span></button>
   </div>
 
+  <!-- Genel Ayarlar -->
+  <div class="card" id="genel_ayar_card" style="display:none">
+    <strong>⚙️ Genel Ayarlar</strong>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span>🔔 Teneffüs Müziği:</span>
+      <input type="checkbox" id="chk_teneffus" onchange="genelAyarGonder()">
+    </div>
+    <div style="margin-top:12px">
+      <span>🎵 Müzik Sesi: <span id="lbl_muzik_sesi">%30</span></span>
+      <input type="range" id="rng_muzik_sesi" min="1" max="100" value="30"
+             oninput="document.getElementById('lbl_muzik_sesi').textContent='%'+this.value"
+             onchange="genelAyarGonder()" style="width:100%;margin-top:6px">
+    </div>
+  </div>
+
   <div class="footer">
-    <a onclick="ekranGoster('yonetici')">🔐 Şifre Yönetimi</a>
-    <a onclick="qrGoster()">📱 QR Kod</a>
+    <a onclick="genelAyarGoster()">⚙️ Genel</a>
+    <a onclick="ekranGoster('yonetici')">🔐 Şifre</a>
+    <a onclick="qrGoster()">📱 QR</a>
     <a onclick="cikisYap()">🚪 Çıkış</a>
   </div>
 </div>
@@ -288,6 +304,7 @@ const DB_YOLU = {
   zil_sec:     "kumanda/zil_sec",     // seçilen zil melodisi komutu
   durum:         "kumanda/durum",
   sistem_durum:  "kumanda/sistem_durum",
+  genel_ayar:    "kumanda/genel_ayar",
   sifre:       "kumanda/sifre",
   ayarlar:     "kumanda/ayarlar"
 };
@@ -374,6 +391,26 @@ function girisBasarili(sifre) {
   dinleyicileriBaslat();
 }
 
+function genelAyarGoster() {
+  const card = document.getElementById("genel_ayar_card");
+  card.style.display = card.style.display === "none" ? "block" : "none";
+}
+
+let _genelAyarTimer = null;
+function genelAyarGonder() {
+  clearTimeout(_genelAyarTimer);
+  _genelAyarTimer = setTimeout(() => {
+    const ten = document.getElementById("chk_teneffus").checked;
+    const ses = parseInt(document.getElementById("rng_muzik_sesi").value);
+    db.ref(DB_YOLU.genel_ayar).set({
+      teneffus_aktif: ten,
+      muzik_sesi: ses,
+      zaman: Date.now()
+    }).then(() => toast("✓ Ayar güncellendi"))
+      .catch(e => toast("⚠️ Hata: " + e.message));
+  }, 400);
+}
+
 function sistemToggle() {
   const yeniDurum = !sistemAcik;
   db.ref(DB_YOLU.sistem_durum).set({
@@ -444,6 +481,18 @@ function dinleyicileriBaslat() {
     } else {
       bar.textContent = "🔴 PC Çevrimdışı";
       bar.className   = "durum-cevrimdisi";
+    }
+  });
+
+  // Genel ayarlar (teneffüs müziği, müzik sesi)
+  db.ref(DB_YOLU.genel_ayar).on("value", snap => {
+    const v = snap.val();
+    if (v && typeof v === "object") {
+      const chk = document.getElementById("chk_teneffus");
+      const rng = document.getElementById("rng_muzik_sesi");
+      const lbl = document.getElementById("lbl_muzik_sesi");
+      if (chk && typeof v.teneffus_aktif === "boolean") chk.checked = v.teneffus_aktif;
+      if (rng && v.muzik_sesi) { rng.value = v.muzik_sesi; if(lbl) lbl.textContent = "%" + v.muzik_sesi; }
     }
   });
 
