@@ -156,10 +156,14 @@
       <span class="icon">📻</span>Müzik Yayını (Aç/Kapat)</button>
     <button class="btn gray full" onclick="komutGonder('sustur','Sustur')">
       <span class="icon">⏹️</span>SİSTEMİ SUSTUR</button>
+    <button id="btn_sistem" class="btn full" onclick="sistemToggle()"
+            style="background-color:#2ed573;box-shadow:0 4px #27ae60;grid-column:span 2">
+      <span class="icon">✅</span><span id="lbl_sistem">SİSTEM: AÇIK</span></button>
   </div>
 
   <div class="footer">
     <a onclick="ekranGoster('yonetici')">🔐 Şifre Yönetimi</a>
+    <a onclick="qrGoster()">📱 QR Kod</a>
     <a onclick="cikisYap()">🚪 Çıkış</a>
   </div>
 </div>
@@ -239,10 +243,23 @@
   </div>
 </div>
 
+<!-- QR Modal -->
+<div id="qr_modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:24px;text-align:center;max-width:320px;margin:20px">
+    <h3 style="margin:0 0 8px;color:#2c3e50">📱 Bu Sayfanın QR Kodu</h3>
+    <p style="color:#7f8c8d;font-size:13px;margin-bottom:16px">Telefona eklemek için tara</p>
+    <div id="qr_container" style="margin:0 auto 16px"></div>
+    <p id="qr_url" style="font-size:12px;color:#0984e3;word-break:break-all;margin-bottom:16px"></p>
+    <button class="btn blue" onclick="qrKapat()" style="width:100%;padding:12px">Kapat</button>
+  </div>
+</div>
+
 <!-- Toast bildirimi -->
 <div id="toast"></div>
 
 <!-- ===================== FIREBASE SDK ===================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -269,7 +286,8 @@ const DB_YOLU = {
   sarki_liste: "kumanda/sarki_liste",
   zil_listesi: "kumanda/zil_listesi", // PC'nin zil melodisi listesi
   zil_sec:     "kumanda/zil_sec",     // seçilen zil melodisi komutu
-  durum:       "kumanda/durum",
+  durum:         "kumanda/durum",
+  sistem_durum:  "kumanda/sistem_durum",
   sifre:       "kumanda/sifre",
   ayarlar:     "kumanda/ayarlar"
 };
@@ -280,6 +298,7 @@ const db = firebase.database();
 
 // ---- Oturum değişkenleri ----
 let girisYapildi    = false;
+let sistemAcik      = true;
 let yoneticiGirildi = false;
 let mevcutSes       = 80;
 let mobilSifre      = "";   // Firebase'den okunur
@@ -355,6 +374,54 @@ function girisBasarili(sifre) {
   dinleyicileriBaslat();
 }
 
+function sistemToggle() {
+  const yeniDurum = !sistemAcik;
+  db.ref(DB_YOLU.sistem_durum).set({
+    aktif: yeniDurum,
+    zaman: Date.now()
+  }).then(() => {
+    _sistemDurumGuncelle(yeniDurum);
+    toast(yeniDurum ? "✅ Sistem Açıldı" : "🔴 Sistem Kapatıldı");
+  }).catch(e => toast("⚠️ Hata: " + e.message));
+}
+
+function _sistemDurumGuncelle(aktif) {
+  sistemAcik = aktif;
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
+  if (!btn) return;
+  if (aktif) {
+    btn.style.backgroundColor = "#2ed573";
+    btn.style.boxShadow = "0 4px #27ae60";
+    lbl.textContent = "SİSTEM: AÇIK";
+  } else {
+    btn.style.backgroundColor = "#ff4757";
+    btn.style.boxShadow = "0 4px #c0392b";
+    lbl.textContent = "SİSTEM: KAPALI";
+  }
+}
+
+function qrGoster() {
+  const modal = document.getElementById("qr_modal");
+  const container = document.getElementById("qr_container");
+  const urlEl = document.getElementById("qr_url");
+  const url = window.location.href;
+  urlEl.textContent = url;
+  container.innerHTML = "";
+  new QRCode(container, {
+    text: url,
+    width: 200,
+    height: 200,
+    colorDark: "#2c3e50",
+    colorLight: "#ffffff"
+  });
+  modal.style.display = "flex";
+}
+
+function qrKapat() {
+  document.getElementById("qr_modal").style.display = "none";
+}
+
 function cikisYap() {
   girisYapildi = false;
   sessionStorage.removeItem("ozil_giris");
@@ -377,6 +444,14 @@ function dinleyicileriBaslat() {
     } else {
       bar.textContent = "🔴 PC Çevrimdışı";
       bar.className   = "durum-cevrimdisi";
+    }
+  });
+
+  // Sistem durumu (zil açık/kapalı)
+  db.ref(DB_YOLU.durum).on("value", snap => {
+    const v = snap.val() || {};
+    if (typeof v.zil_aktif === "boolean") {
+      _sistemDurumGuncelle(v.zil_aktif);
     }
   });
 
