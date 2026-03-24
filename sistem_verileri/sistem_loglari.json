@@ -1,0 +1,92 @@
+[
+    {
+        "tarih": "24.03.2026 23:19:09",
+        "kullanici": "Sistem",
+        "islem": "Sesli Anons (1x): knıujk...",
+        "cihaz": "Yerel PC"
+    },
+    {
+        "tarih": "24.03.2026 23:17:33",
+        "kullanici": "Yönetici",
+        "islem": "İnternet QR kodu yenilendi",
+        "cihaz": "Ayarlar"
+    },
+    {
+        "tarih": "24.03.2026 23:17:33",
+        "kullanici": "Yönetici",
+        "islem": "Ayarlar menüsüne giriş yapıldı.",
+        "cihaz": "Bilinmiyor"
+    },
+    {
+        "tarih": "24.03.2026 22:24:09",
+        "kullanici": "Yönetici",
+        "islem": "İnternet QR kodu yenilendi",
+        "cihaz": "Ayarlar"
+    },
+    {
+        "tarih": "24.03.2026 22:24:08",
+        "kullanici": "Yönetici",
+        "islem": "Ayarlar menüsüne giriş yapıldı.",
+        "cihaz": "Bilinmiyor"
+    },
+    {
+        "tarih": "24.03.2026 22:24:04",
+        "kullanici": "Firebase",
+        "islem": "Uzaktan kumanda bağlandı",
+        "cihaz": "Firebase"
+    },
+    {
+        "tarih": "24.03.2026 21:37:14",
+        "kullanici": "Sistem",
+        "islem": "Sesli Anons (2x): Tamam canım benim ya...",
+        "cihaz": "Yerel PC"
+    },
+    {
+        "tarih": "24.03.2026 21:37:13",
+        "kullanici": "Firebase Kumanda",
+        "islem": "Anons: Tamam canım benim ya||2...",
+        "cihaz": "İnternet"
+    },
+    {
+        "tarih": "24.03.2026 21:36:43",
+        "kullanici": "Yönetici",
+        "islem": "İnternet QR kodu yenilendi",
+        "cihaz": "Ayarlar"
+    },
+    {
+        "tarih": "24.03.2026 21:36:42",
+        "kullanici": "Yönetici",
+        "islem": "Ayarlar menüsüne giriş yapıldı.",
+        "cihaz": "Bilinmiyor"
+    },
+    {
+        "tarih": "24.03.2026 21:36:37",
+        "kullanici": "Firebase",
+        "islem": "Uzaktan kumanda bağlandı",
+        "cihaz": "Firebase"
+    },
+    {
+        "tarih": "24.03.2026 21:34:20",
+        "kullanici": "Yönetici",
+        "islem": "İnternet QR kodu yenilendi",
+        "cihaz": "Ayarlar"
+    },
+    {
+        "tarih": "24.03.2026 21:34:20",
+        "kullanici": "Yönetici",
+        "islem": "Ayarlar menüsüne giriş yapıldı.",
+        "cihaz": "Bilinmiyor"
+    },
+    {
+        "tarih": "24.03.2026 21:34:14",
+        "kullanici": "Firebase",
+        "islem": "Uzaktan kumanda bağlandı",
+        "cihaz": "Firebase"
+    },
+    {
+        "tarih": "24.03.2026 21:05:38",
+        "kullanici": "Firebase Kumanda",
+        "islem": "Zil melodisi değiştirildi: ogrt_zil -> Varsayılan",
+        "cihaz": "İnternet"
+    }
+]
