@@ -1,2 +1,0 @@
-# Ozil
-Zil Mobil Kumanda
