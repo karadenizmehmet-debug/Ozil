@@ -1,1 +1,0 @@
-from okul_zil_v4.main_window_parts import OkulZilSistemi
