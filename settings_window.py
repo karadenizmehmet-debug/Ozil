@@ -1,1 +1,0 @@
-from okul_zil_v4.settings_parts import AyarlarPenceresi
