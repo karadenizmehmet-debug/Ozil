@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔊 oZil Kumanda</title>
+<title>📱 oZil Kumanda</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{font-family:'Segoe UI',sans-serif;background-color:#f1f2f6;text-align:center;padding:10px;margin:0}
   h2{color:#2f3542;margin-bottom:10px;font-size:20px}
 
-  /* --- GR EKRANI --- */
+  /* --- G�R�� EKRANI --- */
   #ekran_giris{max-width:360px;margin:60px auto}
   #ekran_giris input{padding:15px;font-size:18px;border-radius:8px;border:1px solid #ced6e0;
     width:100%;margin-bottom:15px;text-align:center;outline:none}
@@ -44,7 +44,7 @@
   .slider-cont{margin-top:10px;padding:10px}
   input[type=range]{width:100%;height:15px;border-radius:5px;background:#dfe4ea;outline:none}
 
-  /* --- ARKI LSTES EKRANI --- */
+  /* --- �ARKI L�STES� EKRANI --- */
   #ekran_sarki{display:none;max-width:500px;margin:0 auto}
   .sarki-item{padding:15px;border-bottom:1px solid #f1f2f6;cursor:pointer;display:flex;
     justify-content:space-between;align-items:center;background:white}
@@ -52,7 +52,7 @@
   .sarki-name{font-weight:bold;color:#2c3e50;text-align:left}
   .play-btn{color:#0984e3;font-size:20px}
 
-  /* --- YNETC EKRANI --- */
+  /* --- Y�NET�C� EKRANI --- */
   #ekran_yonetici{display:none;max-width:400px;margin:0 auto}
   #ekran_yonetici input,#ekran_yonetici select{width:100%;padding:12px;margin:10px 0;
     border-radius:8px;border:1px solid #ddd;font-size:15px;outline:none}
@@ -61,7 +61,7 @@
   .msg-ok{background:#2ed573;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
   .msg-err{background:#ff4757;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
 
-  /* --- BALANTI DURUMU --- */
+  /* --- BA�LANTI DURUMU --- */
   #durum_bar{font-size:12px;padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:8px}
   .durum-bagli{background:#d4edda;color:#155724}
   .durum-bekliyor{background:#fff3cd;color:#856404}
@@ -73,30 +73,30 @@
 </head>
 <body>
 
-<!-- ===================== GR EKRANI ===================== -->
+<!-- ===================== G�R�� EKRANI ===================== -->
 <div id="ekran_giris">
-  <h2>Nimetullah Nahivani HO<br>
-    <span style="font-size:16px;color:#7f8c8d">Mobil Kumanda Girii</span>
+  <h2>Nimetullah Nah�ivani �HO<br>
+    <span style="font-size:16px;color:#7f8c8d">Mobil Kumanda Giri�i</span>
   </h2>
-  <div class="info">nternet zerinden uzaktan kontrol</div>
-  <input type="password" id="inp_sifre" placeholder="Mobil Kumanda ifresi"
+  <div class="info">�nternet �zerinden uzaktan kontrol</div>
+  <input type="password" id="inp_sifre" placeholder="Mobil Kumanda �ifresi"
          onkeydown="if(event.key==='Enter')girisYap()">
-  <button onclick="girisYap()">GR YAP</button>
-  <div class="hata" id="hata_giris">Hatal ifre! Ltfen tekrar deneyin.</div>
+  <button onclick="girisYap()">G�R�� YAP</button>
+  <div class="hata" id="hata_giris">Hatal� �ifre! L�tfen tekrar deneyin.</div>
 </div>
 
 <!-- ===================== KUMANDA EKRANI ===================== -->
 <div id="ekran_kumanda">
-  <h2>Nimetullah Nahivani HO<br>
+  <h2>Nimetullah Nah�ivani �HO<br>
     <span style="font-size:14px;color:#7f8c8d" id="lbl_pc">Kumanda</span>
   </h2>
-  <div id="durum_bar" class="durum-bekliyor">? Balanyor...</div>
+  <div id="durum_bar" class="durum-bekliyor">? Ba�lan�yor...</div>
 
   <!-- Anons -->
   <div class="card">
-    <strong>🔊 Canl Sesli Anons</strong>
-    <div style="display:flex;flex-direction:column;margin-top:10px;gap:8px">
-      <input type="text" id="txt_anons" placeholder="Duyuru metnini yazn..."
+    <strong>?? Canl� Sesli Anons</strong>
+    <div style="display:flex;margin-top:10px;gap:8px">
+      <input type="text" id="txt_anons" placeholder="Duyuru metnini yaz�n..."
              style="flex:1;padding:10px;border:1px solid #ced6e0;border-radius:5px;outline:none;font-size:15px"
              onkeydown="if(event.key==='Enter')anonsGonder()">
       <select id="anons_tekrar" style="padding:10px;border:1px solid #ced6e0;border-radius:5px;
@@ -105,7 +105,7 @@
         <option value="2">2x</option>
         <option value="3">3x</option>
       </select>
-      <button class="btn blue" style="padding:10px 15px;flex-direction:row;box-shadow:none;width:100%"
+      <button class="btn blue" style="padding:10px 15px;flex-direction:row;box-shadow:none;width:auto"
               onclick="anonsGonder()">
         <span style="font-size:18px">🔊</span>&nbsp;Oku
       </button>
@@ -122,54 +122,54 @@
     <div id="vol_val">%80</div>
   </div>
 
-  <!-- Zil butonlar -->
+  <!-- Zil butonlar� -->
   <div class="grid">
     <button class="btn dark"   onclick="komutGonder('toplanma_zil','Toplanma Zili')">
-      <span class="icon">🔊</span>Toplanma</button>
-    <button class="btn blue"   onclick="komutGonder('ogr_zil','renci Zili')">
-      <span class="icon">🔊🔊?</span>renci</button>
-    <button class="btn green"  onclick="komutGonder('ogrt_zil','retmen Zili')">
-      <span class="icon">🔊🔊?</span>retmen</button>
-    <button class="btn orange" onclick="komutGonder('cikis_zil','k Zili')">
-      <span class="icon">🔊</span>k</button>
+      <span class="icon">🔔</span>Toplanma</button>
+    <button class="btn blue"   onclick="komutGonder('ogr_zil','��renci Zili')">
+      <span class="icon">?????</span>��renci</button>
+    <button class="btn green"  onclick="komutGonder('ogrt_zil','��retmen Zili')">
+      <span class="icon">?????</span>��retmen</button>
+    <button class="btn orange" onclick="komutGonder('cikis_zil','��k�� Zili')">
+      <span class="icon">??</span>��k��</button>
   </div>
 
   <div class="grid">
-    <button class="btn red" onclick="komutGonder('istiklal','stiklal Mar')">
-      <span class="icon">🔊🔊</span>stiklal Mar</button>
+    <button class="btn red" onclick="komutGonder('istiklal','�stiklal Mar��')">
+      <span class="icon">????</span>�stiklal Mar��</button>
     <button class="btn red" onclick="komutGonder('siren','Siren')">
-      <span class="icon">🔊</span>Siren Sesi</button>
-    <button class="btn red" onclick="komutGonder('saygi_1','1 Dk Sayg')">
-      <span class="icon">🔊</span>1 Dakika Sayg Duruu</button>
-    <button class="btn red" onclick="komutGonder('saygi_1_ist','1 Dk+stiklal')">
-      <span class="icon">🔊</span>1 Dk Sayg + stiklal</button>
-    <button class="btn red full" onclick="komutGonder('saygi_2_ist','2 Dk+stiklal')">
-      <span class="icon">🔊</span>2 Dakika Sayg Duruu + stiklal Mar</button>
+      <span class="icon">🚨</span>Siren Sesi</button>
+    <button class="btn red" onclick="komutGonder('saygi_1','1 Dk Sayg�')">
+      <span class="icon">??</span>1 Dakika Sayg� Duru�u</button>
+    <button class="btn red" onclick="komutGonder('saygi_1_ist','1 Dk+�stiklal')">
+      <span class="icon">??</span>1 Dk Sayg� + �stiklal</button>
+    <button class="btn red full" onclick="komutGonder('saygi_2_ist','2 Dk+�stiklal')">
+      <span class="icon">??</span>2 Dakika Sayg� Duru�u + �stiklal Mar��</button>
   </div>
 
   <div class="grid">
     <button class="btn purple full" onclick="ekranGoster('zil')">
-      <span class="icon">🔊</span>ZL MELODS SE</button>
+      <span class="icon">??</span>Z�L MELOD�S� SE�</button>
     <button class="btn purple full" onclick="ekranGoster('sarki')">
-      <span class="icon">🔊</span>ARKI LSTES</button>
-    <button class="btn purple full" onclick="komutGonder('muzik_toggle','Mzik Yayn')">
-      <span class="icon">🔊</span>Mzik Yayn (A/Kapat)</button>
+      <span class="icon">??</span>�ARKI L�STES�</button>
+    <button class="btn purple full" onclick="komutGonder('muzik_toggle','M�zik Yay�n�')">
+      <span class="icon">??</span>M�zik Yay�n� (A�/Kapat)</button>
     <button class="btn gray full" onclick="komutGonder('sustur','Sustur')">
-      <span class="icon">🔊</span>SSTEM SUSTUR</button>
+      <span class="icon">??</span>S�STEM� SUSTUR</button>
     <button id="btn_sistem" class="btn full" onclick="sistemToggle()"
             style="background-color:#2ed573;box-shadow:0 4px #27ae60;grid-column:span 2">
-      <span class="icon">?</span><span id="lbl_sistem">SSTEM: AIK</span></button>
+      <span class="icon">?</span><span id="lbl_sistem">S�STEM: A�IK</span></button>
   </div>
 
   <!-- Genel Ayarlar -->
   <div class="card" id="genel_ayar_card" style="display:none">
-    <strong>🔊 Genel Ayarlar</strong>
+    <strong>⚙️ Genel Ayarlar</strong>
     <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-      <span>🔊 Teneffs Mzii:</span>
+      <span>?? Teneff�s M�zi�i:</span>
       <input type="checkbox" id="chk_teneffus" onchange="genelAyarGonder()">
     </div>
     <div style="margin-top:12px">
-      <span>🔊 Mzik Sesi: <span id="lbl_muzik_sesi">%30</span></span>
+      <span>?? M�zik Sesi: <span id="lbl_muzik_sesi">%30</span></span>
       <input type="range" id="rng_muzik_sesi" min="1" max="100" value="30"
              oninput="document.getElementById('lbl_muzik_sesi').textContent='%'+this.value"
              onchange="genelAyarGonder()" style="width:100%;margin-top:6px">
@@ -177,36 +177,36 @@
   </div>
 
   <div class="footer">
-    <a onclick="genelAyarGoster()">🔊 Genel</a>
-    <a onclick="ekranGoster('yonetici')">🔊 ifre</a>
-    <a onclick="qrGoster()">🔊 QR</a>
-    <a onclick="cikisYap()">🔊 k</a>
+    <a onclick="genelAyarGoster()">⚙️ Genel</a>
+    <a onclick="ekranGoster('yonetici')">?? �ifre</a>
+    <a onclick="qrGoster()">📱 QR</a>
+    <a onclick="cikisYap()">?? ��k��</a>
   </div>
 </div>
 
-<!-- ===================== ZL MELODS EKRANI ===================== -->
+<!-- ===================== Z�L MELOD�S� EKRANI ===================== -->
 <div id="ekran_zil" style="display:none;max-width:500px;margin:0 auto">
   <div style="position:sticky;top:0;background:white;padding:15px;
               box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
-    <strong>🔊 Zil Melodisi Se</strong><br>
-    <small style="color:#7f8c8d">Hangi zil iin melodi semek istiyorsunuz?</small><br><br>
+    <strong>?? Zil Melodisi Se�</strong><br>
+    <small style="color:#7f8c8d">Hangi zil i�in melodi se�mek istiyorsunuz?</small><br><br>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn dark" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('toplanma_zil','Toplanma')">🔊 Toplanma</button>
-      <button class="btn blue" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogr_zil','renci')">🔊🔊? renci</button>
-      <button class="btn green" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogrt_zil','retmen')">🔊🔊? retmen</button>
-      <button class="btn orange" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('cikis_zil','k')">🔊 k</button>
+      <button class="btn dark" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('toplanma_zil','Toplanma')">🔔 Toplanma</button>
+      <button class="btn blue" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogr_zil','��renci')">????? ��renci</button>
+      <button class="btn green" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogrt_zil','��retmen')">????? ��retmen</button>
+      <button class="btn orange" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('cikis_zil','��k��')">?? ��k��</button>
     </div>
   </div>
   <div id="zil_secili_tip" style="text-align:center;font-weight:bold;color:#0984e3;margin-bottom:8px"></div>
   <div id="zil_melodi_liste" class="card" style="text-align:left;padding:0">
-    <div class="sarki-item" style="color:#7f8c8d">nce yukardan bir zil tr sein.</div>
+    <div class="sarki-item" style="color:#7f8c8d">�nce yukar�dan bir zil t�r� se�in.</div>
   </div>
   <div style="margin:15px">
-    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Kumandaya Geri Dn</button>
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">� Kumandaya Geri D�n</button>
   </div>
 </div>
 
-<!-- ===================== ARKI LSTES EKRANI ===================== -->
+<!-- ===================== �ARKI L�STES� EKRANI ===================== -->
 <div id="ekran_sarki">
   <div style="position:sticky;top:0;background:white;padding:15px;
               box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
@@ -215,46 +215,46 @@
            oninput="sesGuncelle(this.value,true)" style="margin-top:8px">
   </div>
   <div id="sarki_liste" class="card" style="text-align:left;padding:0">
-    <div class="sarki-item" style="color:#7f8c8d">arklar ykleniyor...</div>
+    <div class="sarki-item" style="color:#7f8c8d">�ark�lar y�kleniyor...</div>
   </div>
   <div style="margin:15px">
     <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">
-       Kumandaya Geri Dn
+      � Kumandaya Geri D�n
     </button>
   </div>
 </div>
 
-<!-- ===================== YNETC EKRANI ===================== -->
+<!-- ===================== Y�NET�C� EKRANI ===================== -->
 <div id="ekran_yonetici">
-  <h2>🔊 Ynetici Girii</h2>
+  <h2>?? Y�netici Giri�i</h2>
   <div id="yon_giris_bolum">
     <div class="card">
-      <p style="color:#7f8c8d">ifre ynetimi iin ynetici ifresini girin.</p>
-      <input type="password" id="inp_yon_sifre" placeholder="Ynetici ifresi"
+      <p style="color:#7f8c8d">�ifre y�netimi i�in y�netici �ifresini girin.</p>
+      <input type="password" id="inp_yon_sifre" placeholder="Y�netici �ifresi"
              onkeydown="if(event.key==='Enter')yoneticiGiris()">
-      <button onclick="yoneticiGiris()" style="background:#e67e22">GR YAP</button>
-      <div class="hata" id="hata_yon" style="display:none">Hatal Ynetici ifresi!</div>
+      <button onclick="yoneticiGiris()" style="background:#e67e22">G�R�� YAP</button>
+      <div class="hata" id="hata_yon" style="display:none">Hatal� Y�netici �ifresi!</div>
     </div>
   </div>
 
   <div id="yon_panel_bolum" style="display:none">
     <div id="yon_mesaj"></div>
     <div class="card">
-      <label style="font-weight:bold">Deitirilecek ifre:</label>
+      <label style="font-weight:bold">De�i�tirilecek �ifre:</label>
       <select id="sifre_tip">
-        <option value="yonetici">🔊 Ynetici ifresi</option>
-        <option value="uygulama">🔊 Uygulama Giri ifresi</option>
-        <option value="mobil">🔊 Mobil Kumanda ifresi</option>
+        <option value="yonetici">?? Y�netici �ifresi</option>
+        <option value="uygulama">?? Uygulama Giri� �ifresi</option>
+        <option value="mobil">?? Mobil Kumanda �ifresi</option>
       </select>
-      <input type="password" id="inp_yeni1" placeholder="Yeni ifre">
-      <input type="password" id="inp_yeni2" placeholder="Yeni ifre (Tekrar)">
-      <button onclick="sifreDegistir()">FREY GNCELLE</button>
+      <input type="password" id="inp_yeni1" placeholder="Yeni �ifre">
+      <input type="password" id="inp_yeni2" placeholder="Yeni �ifre (Tekrar)">
+      <button onclick="sifreDegistir()">��FREY� G�NCELLE</button>
     </div>
   </div>
 
   <div style="margin:15px">
     <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">
-       Kumandaya Geri Dn
+      � Kumandaya Geri D�n
     </button>
   </div>
 </div>
@@ -263,8 +263,8 @@
 <div id="qr_modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;
   background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center">
   <div style="background:white;border-radius:16px;padding:24px;text-align:center;max-width:320px;margin:20px">
-    <h3 style="margin:0 0 8px;color:#2c3e50">🔊 Bu Sayfann QR Kodu</h3>
-    <p style="color:#7f8c8d;font-size:13px;margin-bottom:16px">Telefona eklemek iin tara</p>
+    <h3 style="margin:0 0 8px;color:#2c3e50">?? Bu Sayfan�n QR Kodu</h3>
+    <p style="color:#7f8c8d;font-size:13px;margin-bottom:16px">Telefona eklemek i�in tara</p>
     <div id="qr_container" style="margin:0 auto 16px"></div>
     <p id="qr_url" style="font-size:12px;color:#0984e3;word-break:break-all;margin-bottom:16px"></p>
     <button class="btn blue" onclick="qrKapat()" style="width:100%;padding:12px">Kapat</button>
@@ -281,7 +281,7 @@
 
 <script>
 // ================================================================
-//  YAPILANDIRMA  Firebase konsolunuzdan bu deerleri gncelleyin
+//  YAPILANDIRMA � Firebase konsolunuzdan bu de�erleri g�ncelleyin
 // ================================================================
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyAJSKfy8otqrah-efNzI0OoLlFETqMsJEM",
@@ -293,7 +293,7 @@ const FIREBASE_CONFIG = {
   appId:             "1:120039746207:web:bad5f22a77a4669d1890aa"
 };
 
-// Firebase yollar  okul bilgisayarndaki Python kodu bu yollar dinler
+// Firebase yollar� � okul bilgisayar�ndaki Python kodu bu yollar� dinler
 const DB_YOLU = {
   komut:       "kumanda/komut",
   anons:       "kumanda/anons",
@@ -301,7 +301,7 @@ const DB_YOLU = {
   sarki:       "kumanda/sarki",
   sarki_liste: "kumanda/sarki_liste",
   zil_listesi: "kumanda/zil_listesi", // PC'nin zil melodisi listesi
-  zil_sec:     "kumanda/zil_sec",     // seilen zil melodisi komutu
+  zil_sec:     "kumanda/zil_sec",     // se�ilen zil melodisi komutu
   durum:         "kumanda/durum",
   sistem_durum:  "kumanda/sistem_durum",
   genel_ayar:    "kumanda/genel_ayar",
@@ -313,15 +313,15 @@ const DB_YOLU = {
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
-// ---- Oturum deikenleri ----
+// ---- Oturum de�i�kenleri ----
 let girisYapildi    = false;
 let sistemAcik      = true;
 let yoneticiGirildi = false;
 let mevcutSes       = 80;
 let mobilSifre      = "";   // Firebase'den okunur
-let yoneticiSifre   = "";   // Firebase'den okunur (ynetici girince)
+let yoneticiSifre   = "";   // Firebase'den okunur (y�netici girince)
 
-// ---- Yardmc: SHA-256 hash ----
+// ---- Yard�mc�: SHA-256 hash ----
 async function sha256(metin) {
   const buf  = await crypto.subtle.digest("SHA-256",
                  new TextEncoder().encode(metin));
@@ -337,7 +337,7 @@ function toast(mesaj) {
   setTimeout(() => el.className = "", 3000);
 }
 
-// ---- Ekran geileri ----
+// ---- Ekran ge�i�leri ----
 function ekranGoster(ekran) {
   ["giris","kumanda","sarki","yonetici","zil"].forEach(e =>
     document.getElementById("ekran_" + e).style.display = "none");
@@ -347,7 +347,7 @@ function ekranGoster(ekran) {
 }
 
 // ================================================================
-//  GR
+//  G�R��
 // ================================================================
 async function girisYap() {
   const sifre = document.getElementById("inp_sifre").value;
@@ -357,26 +357,26 @@ async function girisYap() {
     const snap = await db.ref(DB_YOLU.ayarlar).get();
     const ayarlar = snap.exists() ? (snap.val() || {}) : {};
 
-    // 1. Hash karlatrma (en gvenli)
+    // 1. Hash kar��la�t�rma (en g�venli)
     if (ayarlar.mobil_sifre_hash) {
       const hash = await sha256(sifre);
       if (hash === ayarlar.mobil_sifre_hash) { girisBasarili(sifre); return; }
     }
 
-    // 2. Dz metin karlatrma (Firebase'e henz hash yazlmadysa)
+    // 2. D�z metin kar��la�t�rma (Firebase'e hen�z hash yaz�lmad�ysa)
     if (ayarlar.mobil_sifre) {
       if (sifre === ayarlar.mobil_sifre) { girisBasarili(sifre); return; }
     }
 
-    // 3. Firebase'de hi kayt yoksa varsaylan ifre "1234"
+    // 3. Firebase'de hi� kay�t yoksa varsay�lan �ifre "1234"
     if (!ayarlar.mobil_sifre && !ayarlar.mobil_sifre_hash) {
       if (sifre === "1234") { girisBasarili(sifre); return; }
     }
 
   } catch (e) {
-    // Balant hatas durumunda varsaylan ifreyle dene
+    // Ba�lant� hatas� durumunda varsay�lan �ifreyle dene
     if (sifre === "1234") { girisBasarili(sifre); return; }
-    toast("🔊 Balant hatas: " + e.message);
+    toast("?? Ba�lant� hatas�: " + e.message);
     return;
   }
   document.getElementById("hata_giris").style.display = "block";
@@ -406,8 +406,8 @@ function genelAyarGonder() {
       teneffus_aktif: ten,
       muzik_sesi: ses,
       zaman: Date.now()
-    }).then(() => toast("? Ayar gncellendi"))
-      .catch(e => toast("🔊 Hata: " + e.message));
+    }).then(() => toast("? Ayar g�ncellendi"))
+      .catch(e => toast("❌ Hata: " + e.message));
   }, 400);
 }
 
@@ -418,8 +418,8 @@ function sistemToggle() {
     zaman: Date.now()
   }).then(() => {
     _sistemDurumGuncelle(yeniDurum);
-    toast(yeniDurum ? "? Sistem Ald" : "🔊 Sistem Kapatld");
-  }).catch(e => toast("🔊 Hata: " + e.message));
+    toast(yeniDurum ? "? Sistem A��ld�" : "?? Sistem Kapat�ld�");
+  }).catch(e => toast("❌ Hata: " + e.message));
 }
 
 function _sistemDurumGuncelle(aktif) {
@@ -430,11 +430,11 @@ function _sistemDurumGuncelle(aktif) {
   if (aktif) {
     btn.style.backgroundColor = "#2ed573";
     btn.style.boxShadow = "0 4px #27ae60";
-    lbl.textContent = "SSTEM: AIK";
+    lbl.textContent = "S�STEM: A�IK";
   } else {
     btn.style.backgroundColor = "#ff4757";
     btn.style.boxShadow = "0 4px #c0392b";
-    lbl.textContent = "SSTEM: KAPALI";
+    lbl.textContent = "S�STEM: KAPALI";
   }
 }
 
@@ -467,24 +467,24 @@ function cikisYap() {
 }
 
 // ================================================================
-//  FREBASE DNLEYCLER (PC durumu, ses, PC ad)
+//  F�REBASE D�NLEY�C�LER� (PC durumu, ses, PC ad�)
 // ================================================================
 function dinleyicileriBaslat() {
-  // PC balant durumu
+  // PC ba�lant� durumu
   db.ref(DB_YOLU.durum).on("value", snap => {
     const bar = document.getElementById("durum_bar");
     const v   = snap.val() || {};
     if (v.cevrimici) {
-      bar.textContent  = "🔊 Bal  " + (v.pc_adi || "");
+      bar.textContent  = "?? Ba�l� � " + (v.pc_adi || "");
       bar.className    = "durum-bagli";
       if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda";
     } else {
-      bar.textContent = "🔊 PC evrimd";
+      bar.textContent = "?? PC �evrimd���";
       bar.className   = "durum-cevrimdisi";
     }
   });
 
-  // Genel ayarlar (teneffs mzii, mzik sesi)
+  // Genel ayarlar (teneff�s m�zi�i, m�zik sesi)
   db.ref(DB_YOLU.genel_ayar).on("value", snap => {
     const v = snap.val();
     if (v && typeof v === "object") {
@@ -496,7 +496,7 @@ function dinleyicileriBaslat() {
     }
   });
 
-  // Sistem durumu (zil ak/kapal)
+  // Sistem durumu (zil a��k/kapal�)
   db.ref(DB_YOLU.durum).on("value", snap => {
     const v = snap.val() || {};
     if (typeof v.zil_aktif === "boolean") {
@@ -504,7 +504,7 @@ function dinleyicileriBaslat() {
     }
   });
 
-  // Ses seviyesi senkronizasyonu (PC deitirirse buraya yansr)
+  // Ses seviyesi senkronizasyonu (PC de�i�tirirse buraya yans�r)
   db.ref(DB_YOLU.ses).on("value", snap => {
     if (snap.val() !== null) {
       mevcutSes = snap.val();
@@ -516,30 +516,30 @@ function dinleyicileriBaslat() {
 }
 
 // ================================================================
-//  KOMUT GNDERME
+//  KOMUT G�NDERME
 // ================================================================
 function komutGonder(kod, isim) {
   if (!girisYapildi) return;
   db.ref(DB_YOLU.komut).set({
     kod:   kod,
     zaman: Date.now()
-  }).then(() => toast(isim + " ?"))
-    .catch(e  => toast("🔊 Hata: " + e.message));
+  }).then(() => toast(isim + " ✅"))
+    .catch(e  => toast("?? Hata: " + e.message));
 }
 
 function anonsGonder() {
   const metin = document.getElementById("txt_anons").value.trim();
   if (!metin) return;
   const tekrar = document.getElementById("anons_tekrar").value;
-  // Tekrar saysn metne "||N" formatnda ekle  Python taraf okur
+  // Tekrar say�s�n� metne "||N" format�nda ekle � Python taraf� okur
   const veri = tekrar > 1 ? metin + "||" + tekrar : metin;
   db.ref(DB_YOLU.anons).set({
     metin: veri,
     zaman: Date.now()
   }).then(() => {
-    toast("Anons letildi! 🔊 (" + tekrar + "x)");
+    toast("Anons �letildi! ?? (" + tekrar + "x)");
     document.getElementById("txt_anons").value = "";
-  }).catch(e => toast("🔊 Hata: " + e.message));
+  }).catch(e => toast("❌ Hata: " + e.message));
 }
 
 let sesZamanlayici = null;
@@ -549,7 +549,7 @@ function sesGuncelle(val, ikincislider) {
   document.getElementById("vol_val2").textContent = "%" + mevcutSes;
   if (!ikincislider) document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
   else document.getElementById("ses_slider").value = mevcutSes;
-  // Srekli kaydetmemek iin 300ms bekle
+  // S�rekli kaydetmemek i�in 300ms bekle
   clearTimeout(sesZamanlayici);
   sesZamanlayici = setTimeout(() => {
     db.ref(DB_YOLU.ses).set(mevcutSes);
@@ -557,7 +557,7 @@ function sesGuncelle(val, ikincislider) {
 }
 
 // ================================================================
-//  ZL MELODS SEC
+//  Z�L MELOD�S� SE��C�
 // ================================================================
 let seciliZilTip = "";
 let seciliZilAdi = "";
@@ -566,35 +566,35 @@ function zilListesiYukle() {
   const kap = document.getElementById("zil_melodi_liste");
   db.ref(DB_YOLU.zil_listesi).get().then(snap => {
     if (!snap.exists() || !snap.val() || snap.val().length === 0) {
-      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamad.<br><small>PC\'nin melodi listesi bekleniyor.</small></div>';
+      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamad�.<br><small>PC\'nin melodi listesi bekleniyor.</small></div>';
       return;
     }
     window._zilListesi = snap.val();
     if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi);
-    else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukardan bir zil tr sein.</div>';
+    else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukar�dan bir zil t�r� se�in.</div>';
   }).catch(() => {
-    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yklenemedi.</div>';
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste y�klenemedi.</div>';
   });
 }
 
 function zilTipSec(tip, ad) {
   seciliZilTip = tip;
   seciliZilAdi = ad;
-  document.getElementById("zil_secili_tip").textContent = ad + " iin melodi sein:";
+  document.getElementById("zil_secili_tip").textContent = ad + " i�in melodi se�in:";
   const kap = document.getElementById("zil_melodi_liste");
   const liste = window._zilListesi || [];
   if (!liste.length) { zilListesiYukle(); return; }
   kap.innerHTML = "";
-  // "Varsaylan" seenei her zaman en stte
+  // "Varsay�lan" se�ene�i her zaman en �stte
   const varsDiv = document.createElement("div");
   varsDiv.className = "sarki-item";
-  varsDiv.innerHTML = '<span class="sarki-name">? Varsaylan</span><span class="play-btn">?</span>';
-  varsDiv.onclick = () => { zilSecGonder(tip, "Varsaylan", ad); };
+  varsDiv.innerHTML = '<span class="sarki-name">? Varsay�lan</span><span class="play-btn">?</span>';
+  varsDiv.onclick = () => { zilSecGonder(tip, "Varsay�lan", ad); };
   kap.appendChild(varsDiv);
   liste.forEach(melodi => {
     const div = document.createElement("div");
     div.className = "sarki-item";
-    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">?</span>`;
+    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">▶️</span>`;
     div.onclick = () => { zilSecGonder(tip, melodi, ad); };
     kap.appendChild(div);
   });
@@ -605,38 +605,38 @@ function zilSecGonder(tip, melodi, ad) {
     tip: tip,
     melodi: melodi,
     zaman: Date.now()
-  }).then(() => toast("? " + ad + ": " + melodi))
-    .catch(e => toast("🔊 Hata: " + e.message));
+  }).then(() => toast("✅ " + ad + ": " + melodi))
+    .catch(e => toast("❌ Hata: " + e.message));
 }
 
 // ================================================================
-//  ARKI LSTES
+//  �ARKI L�STES�
 // ================================================================
 function sarkiListesiYukle() {
   const kap = document.getElementById("sarki_liste");
   db.ref(DB_YOLU.sarki_liste).get().then(snap => {
     kap.innerHTML = "";
     if (!snap.exists() || !snap.val() || snap.val().length === 0) {
-      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">ark bulunamad.<br><small>PC\'nin ark listesi gndermesi bekleniyor.</small></div>';
+      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">�ark� bulunamad�.<br><small>PC\'nin �ark� listesi g�ndermesi bekleniyor.</small></div>';
       return;
     }
     snap.val().forEach(sarki => {
       const div = document.createElement("div");
       div.className = "sarki-item";
-      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">🔊</span>`;
+      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`;
       div.onclick = () => {
         db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
-        toast("🔊 " + sarki);
+        toast("🎵 " + sarki);
       };
       kap.appendChild(div);
     });
   }).catch(() => {
-    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yklenemedi.</div>';
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste y�klenemedi.</div>';
   });
 }
 
 // ================================================================
-//  YNETC  ifre deitirme
+//  Y�NET�C� � �ifre de�i�tirme
 // ================================================================
 async function yoneticiGiris() {
   const sifre = document.getElementById("inp_yon_sifre").value;
@@ -663,7 +663,7 @@ async function yoneticiGiris() {
       document.getElementById("hata_yon").style.display = "block";
     }
   } catch (e) {
-    toast("🔊 Balant hatas: " + e.message);
+    toast("?? Ba�lant� hatas�: " + e.message);
   }
 }
 
@@ -674,37 +674,37 @@ async function sifreDegistir() {
   const mesajEl = document.getElementById("yon_mesaj");
 
   if (y1 !== y2) {
-    mesajEl.innerHTML = '<div class="msg-err">Hata: ifreler uyumuyor!</div>'; return;
+    mesajEl.innerHTML = '<div class="msg-err">Hata: �ifreler uyu�muyor!</div>'; return;
   }
   if (y1.length < 4) {
-    mesajEl.innerHTML = '<div class="msg-err">Hata: En az 4 karakter olmal!</div>'; return;
+    mesajEl.innerHTML = '<div class="msg-err">Hata: En az 4 karakter olmal�!</div>'; return;
   }
 
   const hash = await sha256(y1);
 
-  // 1. Firebase ayarlar dmne hash'i yaz (tm istemciler okur)
+  // 1. Firebase ayarlar d���m�ne hash'i yaz (t�m istemciler okur)
   const guncelle = {};
   guncelle[tip + "_sifre_hash"] = hash;
   await db.ref(DB_YOLU.ayarlar).update(guncelle);
 
-  // 2. PC'ye ifre deitirme komutu gnder (ana program ayarlar.json'a kaydeder)
+  // 2. PC'ye �ifre de�i�tirme komutu g�nder (ana program ayarlar.json'a kaydeder)
   await db.ref(DB_YOLU.sifre).set({
     tip:   tip,
     hash:  hash,
     zaman: Date.now()
   });
 
-  // 3. Ynetici kendi ifresini deitirdiyse, mevcut oturumda ifresini gncelle
+  // 3. Y�netici kendi �ifresini de�i�tirdiyse, mevcut oturumda �ifresini g�ncelle
   if (tip === "yonetici") yoneticiSifre = y1;
   if (tip === "mobil")    mobilSifre = y1;
 
-  mesajEl.innerHTML = '<div class="msg-ok">? ifre gncellendi ve tm cihazlara yanstld.</div>';
+  mesajEl.innerHTML = '<div class="msg-ok">? �ifre g�ncellendi ve t�m cihazlara yans�t�ld�.</div>';
   document.getElementById("inp_yeni1").value = "";
   document.getElementById("inp_yeni2").value = "";
 }
 
 // ================================================================
-//  SAYFA YKLENINCE  oturum kontrol
+//  SAYFA Y�KLENINCE � oturum kontrol�
 // ================================================================
 window.onload = () => {
   if (sessionStorage.getItem("ozil_giris") === "1") {
