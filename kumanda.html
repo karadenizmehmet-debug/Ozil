@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>?? oZil Kumanda</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Segoe UI',sans-serif;background-color:#f1f2f6;text-align:center;padding:10px;margin:0}
+  h2{color:#2f3542;margin-bottom:10px;font-size:20px}
+
+  /* --- GÝRÝÞ EKRANI --- */
+  #ekran_giris{max-width:360px;margin:60px auto}
+  #ekran_giris input{padding:15px;font-size:18px;border-radius:8px;border:1px solid #ced6e0;
+    width:100%;margin-bottom:15px;text-align:center;outline:none}
+  #ekran_giris button{padding:15px;font-size:18px;background-color:#0984e3;color:white;
+    border:none;border-radius:8px;font-weight:bold;width:100%;box-shadow:0 4px #06528d;cursor:pointer}
+  .hata{color:#e74c3c;font-weight:bold;margin-top:10px;display:none}
+  .info{color:#7f8c8d;margin-bottom:20px;font-size:14px}
+
+  /* --- KUMANDA EKRANI --- */
+  #ekran_kumanda{display:none;max-width:500px;margin:0 auto}
+  .card{background:white;padding:15px;border-radius:15px;box-shadow:0 4px 6px rgba(0,0,0,.1);margin-bottom:15px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .btn{padding:15px 5px;font-size:14px;font-weight:bold;color:#fff;background-color:#0984e3;
+    border:none;border-radius:8px;box-shadow:0 4px #06528d;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;cursor:pointer;width:100%}
+  .btn:active{box-shadow:0 1px #043e6b;transform:translateY(3px)}
+  .full{grid-column:span 2;padding:15px;font-size:16px}
+  .blue{background-color:#0984e3;box-shadow:0 4px #06528d}
+  .green{background-color:#2ecc71;box-shadow:0 4px #27ae60}
+  .orange{background-color:#f39c12;box-shadow:0 4px #e67e22}
+  .red{background-color:#e74c3c;box-shadow:0 4px #c0392b}
+  .dark{background-color:#2c3e50;box-shadow:0 4px #1a252f}
+  .purple{background-color:#8e44ad;box-shadow:0 4px #732d91}
+  .gray{background-color:#57606f;box-shadow:0 4px #3d4450}
+  .icon{font-size:22px;margin-bottom:5px}
+  .footer{margin-top:20px;display:flex;justify-content:space-around;padding-bottom:20px}
+  .footer a{text-decoration:none;color:#0984e3;font-weight:bold;cursor:pointer}
+  #toast{visibility:hidden;background-color:#333;color:#fff;text-align:center;padding:10px;
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);border-radius:5px;z-index:99;
+    min-width:200px}
+  .show{visibility:visible !important;animation:fadein .3s,fadeout .5s 2.5s}
+  .slider-cont{margin-top:10px;padding:10px}
+  input[type=range]{width:100%;height:15px;border-radius:5px;background:#dfe4ea;outline:none}
+
+  /* --- ÞARKI LÝSTESÝ EKRANI --- */
+  #ekran_sarki{display:none;max-width:500px;margin:0 auto}
+  .sarki-item{padding:15px;border-bottom:1px solid #f1f2f6;cursor:pointer;display:flex;
+    justify-content:space-between;align-items:center;background:white}
+  .sarki-item:active{background-color:#dfe4ea}
+  .sarki-name{font-weight:bold;color:#2c3e50;text-align:left}
+  .play-btn{color:#0984e3;font-size:20px}
+
+  /* --- YÖNETÝCÝ EKRANI --- */
+  #ekran_yonetici{display:none;max-width:400px;margin:0 auto}
+  #ekran_yonetici input,#ekran_yonetici select{width:100%;padding:12px;margin:10px 0;
+    border-radius:8px;border:1px solid #ddd;font-size:15px;outline:none}
+  #ekran_yonetici button{width:100%;padding:12px;background:#2ed573;color:white;border:none;
+    border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;margin-top:5px}
+  .msg-ok{background:#2ed573;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
+  .msg-err{background:#ff4757;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
+
+  /* --- BAÐLANTI DURUMU --- */
+  #durum_bar{font-size:12px;padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:8px}
+  .durum-bagli{background:#d4edda;color:#155724}
+  .durum-bekliyor{background:#fff3cd;color:#856404}
+  .durum-cevrimdisi{background:#f8d7da;color:#721c24}
+
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  @keyframes fadeout{from{opacity:1}to{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- ===================== GÝRÝÞ EKRANI ===================== -->
+<div id="ekran_giris">
+  <h2>Nimetullah Nahçivani ÝHO<br>
+    <span style="font-size:16px;color:#7f8c8d">Mobil Kumanda Giriþi</span>
+  </h2>
+  <div class="info">Ýnternet üzerinden uzaktan kontrol</div>
+  <input type="password" id="inp_sifre" placeholder="Mobil Kumanda Þifresi"
+         onkeydown="if(event.key==='Enter')girisYap()">
+  <button onclick="girisYap()">GÝRÝÞ YAP</button>
+  <div class="hata" id="hata_giris">Hatalý Þifre! Lütfen tekrar deneyin.</div>
+</div>
+
+<!-- ===================== KUMANDA EKRANI ===================== -->
+<div id="ekran_kumanda">
+  <h2>Nimetullah Nahçivani ÝHO<br>
+    <span style="font-size:14px;color:#7f8c8d" id="lbl_pc">Kumanda</span>
+  </h2>
+  <div id="durum_bar" class="durum-bekliyor">? Baðlanýyor...</div>
+
+  <!-- Anons -->
+  <div class="card">
+    <strong>?? Canlý Sesli Anons</strong>
+    <div style="display:flex;margin-top:10px;gap:8px">
+      <input type="text" id="txt_anons" placeholder="Duyuru metnini yazýn..."
+             style="flex:1;padding:10px;border:1px solid #ced6e0;border-radius:5px;outline:none;font-size:15px"
+             onkeydown="if(event.key==='Enter')anonsGonder()">
+      <select id="anons_tekrar" style="padding:10px;border:1px solid #ced6e0;border-radius:5px;
+              font-size:14px;font-weight:bold;background:#fff;outline:none;width:60px">
+        <option value="1">1x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+      </select>
+      <button class="btn blue" style="padding:10px 15px;flex-direction:row;box-shadow:none;width:auto"
+              onclick="anonsGonder()">
+        <span style="font-size:18px">??</span>&nbsp;Oku
+      </button>
+    </div>
+  </div>
+
+  <!-- Ses -->
+  <div class="card">
+    <strong>?? Sistem Ses Seviyesi</strong>
+    <div class="slider-cont">
+      <input type="range" id="ses_slider" min="0" max="100" value="80"
+             oninput="sesGuncelle(this.value)">
+    </div>
+    <div id="vol_val">%80</div>
+  </div>
+
+  <!-- Zil butonlarý -->
+  <div class="grid">
+    <button class="btn dark"   onclick="komutGonder('toplanma_zil','Toplanma Zili')">
+      <span class="icon">??</span>Toplanma</button>
+    <button class="btn blue"   onclick="komutGonder('ogr_zil','Öðrenci Zili')">
+      <span class="icon">?????</span>Öðrenci</button>
+    <button class="btn green"  onclick="komutGonder('ogrt_zil','Öðretmen Zili')">
+      <span class="icon">?????</span>Öðretmen</button>
+    <button class="btn orange" onclick="komutGonder('cikis_zil','Çýkýþ Zili')">
+      <span class="icon">??</span>Çýkýþ</button>
+  </div>
+
+  <div class="grid">
+    <button class="btn red" onclick="komutGonder('istiklal','Ýstiklal Marþý')">
+      <span class="icon">????</span>Ýstiklal Marþý</button>
+    <button class="btn red" onclick="komutGonder('siren','Siren')">
+      <span class="icon">??</span>Siren Sesi</button>
+    <button class="btn red" onclick="komutGonder('saygi_1','1 Dk Saygý')">
+      <span class="icon">??</span>1 Dakika Saygý Duruþu</button>
+    <button class="btn red" onclick="komutGonder('saygi_1_ist','1 Dk+Ýstiklal')">
+      <span class="icon">??</span>1 Dk Saygý + Ýstiklal</button>
+    <button class="btn red full" onclick="komutGonder('saygi_2_ist','2 Dk+Ýstiklal')">
+      <span class="icon">??</span>2 Dakika Saygý Duruþu + Ýstiklal Marþý</button>
+  </div>
+
+  <div class="grid">
+    <button class="btn purple full" onclick="ekranGoster('zil')">
+      <span class="icon">??</span>ZÝL MELODÝSÝ SEÇ</button>
+    <button class="btn purple full" onclick="ekranGoster('sarki')">
+      <span class="icon">??</span>ÞARKI LÝSTESÝ</button>
+    <button class="btn purple full" onclick="komutGonder('muzik_toggle','Müzik Yayýný')">
+      <span class="icon">??</span>Müzik Yayýný (Aç/Kapat)</button>
+    <button class="btn gray full" onclick="komutGonder('sustur','Sustur')">
+      <span class="icon">??</span>SÝSTEMÝ SUSTUR</button>
+    <button id="btn_sistem" class="btn full" onclick="sistemToggle()"
+            style="background-color:#2ed573;box-shadow:0 4px #27ae60;grid-column:span 2">
+      <span class="icon">?</span><span id="lbl_sistem">SÝSTEM: AÇIK</span></button>
+  </div>
+
+  <!-- Genel Ayarlar -->
+  <div class="card" id="genel_ayar_card" style="display:none">
+    <strong>?? Genel Ayarlar</strong>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span>?? Teneffüs Müziði:</span>
+      <input type="checkbox" id="chk_teneffus" onchange="genelAyarGonder()">
+    </div>
+    <div style="margin-top:12px">
+      <span>?? Müzik Sesi: <span id="lbl_muzik_sesi">%30</span></span>
+      <input type="range" id="rng_muzik_sesi" min="1" max="100" value="30"
+             oninput="document.getElementById('lbl_muzik_sesi').textContent='%'+this.value"
+             onchange="genelAyarGonder()" style="width:100%;margin-top:6px">
+    </div>
+  </div>
+
+  <div class="footer">
+    <a onclick="genelAyarGoster()">?? Genel</a>
+    <a onclick="ekranGoster('yonetici')">?? Þifre</a>
+    <a onclick="qrGoster()">?? QR</a>
+    <a onclick="cikisYap()">?? Çýkýþ</a>
+  </div>
+</div>
+
+<!-- ===================== ZÝL MELODÝSÝ EKRANI ===================== -->
+<div id="ekran_zil" style="display:none;max-width:500px;margin:0 auto">
+  <div style="position:sticky;top:0;background:white;padding:15px;
+              box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
+    <strong>?? Zil Melodisi Seç</strong><br>
+    <small style="color:#7f8c8d">Hangi zil için melodi seçmek istiyorsunuz?</small><br><br>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn dark" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('toplanma_zil','Toplanma')">?? Toplanma</button>
+      <button class="btn blue" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogr_zil','Öðrenci')">????? Öðrenci</button>
+      <button class="btn green" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogrt_zil','Öðretmen')">????? Öðretmen</button>
+      <button class="btn orange" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('cikis_zil','Çýkýþ')">?? Çýkýþ</button>
+    </div>
+  </div>
+  <div id="zil_secili_tip" style="text-align:center;font-weight:bold;color:#0984e3;margin-bottom:8px"></div>
+  <div id="zil_melodi_liste" class="card" style="text-align:left;padding:0">
+    <div class="sarki-item" style="color:#7f8c8d">Önce yukarýdan bir zil türü seçin.</div>
+  </div>
+  <div style="margin:15px">
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">‹ Kumandaya Geri Dön</button>
+  </div>
+</div>
+
+<!-- ===================== ÞARKI LÝSTESÝ EKRANI ===================== -->
+<div id="ekran_sarki">
+  <div style="position:sticky;top:0;background:white;padding:15px;
+              box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
+    <strong>?? Ses: <span id="vol_val2">%80</span></strong><br>
+    <input type="range" min="0" max="100" value="80"
+           oninput="sesGuncelle(this.value,true)" style="margin-top:8px">
+  </div>
+  <div id="sarki_liste" class="card" style="text-align:left;padding:0">
+    <div class="sarki-item" style="color:#7f8c8d">Þarkýlar yükleniyor...</div>
+  </div>
+  <div style="margin:15px">
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">
+      ‹ Kumandaya Geri Dön
+    </button>
+  </div>
+</div>
+
+<!-- ===================== YÖNETÝCÝ EKRANI ===================== -->
+<div id="ekran_yonetici">
+  <h2>?? Yönetici Giriþi</h2>
+  <div id="yon_giris_bolum">
+    <div class="card">
+      <p style="color:#7f8c8d">Þifre yönetimi için yönetici þifresini girin.</p>
+      <input type="password" id="inp_yon_sifre" placeholder="Yönetici Þifresi"
+             onkeydown="if(event.key==='Enter')yoneticiGiris()">
+      <button onclick="yoneticiGiris()" style="background:#e67e22">GÝRÝÞ YAP</button>
+      <div class="hata" id="hata_yon" style="display:none">Hatalý Yönetici Þifresi!</div>
+    </div>
+  </div>
+
+  <div id="yon_panel_bolum" style="display:none">
+    <div id="yon_mesaj"></div>
+    <div class="card">
+      <label style="font-weight:bold">Deðiþtirilecek Þifre:</label>
+      <select id="sifre_tip">
+        <option value="yonetici">?? Yönetici Þifresi</option>
+        <option value="uygulama">?? Uygulama Giriþ Þifresi</option>
+        <option value="mobil">?? Mobil Kumanda Þifresi</option>
+      </select>
+      <input type="password" id="inp_yeni1" placeholder="Yeni Þifre">
+      <input type="password" id="inp_yeni2" placeholder="Yeni Þifre (Tekrar)">
+      <button onclick="sifreDegistir()">ÞÝFREYÝ GÜNCELLE</button>
+    </div>
+  </div>
+
+  <div style="margin:15px">
+    <button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">
+      ‹ Kumandaya Geri Dön
+    </button>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div id="qr_modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:24px;text-align:center;max-width:320px;margin:20px">
+    <h3 style="margin:0 0 8px;color:#2c3e50">?? Bu Sayfanýn QR Kodu</h3>
+    <p style="color:#7f8c8d;font-size:13px;margin-bottom:16px">Telefona eklemek için tara</p>
+    <div id="qr_container" style="margin:0 auto 16px"></div>
+    <p id="qr_url" style="font-size:12px;color:#0984e3;word-break:break-all;margin-bottom:16px"></p>
+    <button class="btn blue" onclick="qrKapat()" style="width:100%;padding:12px">Kapat</button>
+  </div>
+</div>
+
+<!-- Toast bildirimi -->
+<div id="toast"></div>
+
+<!-- ===================== FIREBASE SDK ===================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ================================================================
+//  YAPILANDIRMA — Firebase konsolunuzdan bu deðerleri güncelleyin
+// ================================================================
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAJSKfy8otqrah-efNzI0OoLlFETqMsJEM",
+  authDomain:        "ozil-99982.firebaseapp.com",
+  databaseURL:       "https://ozil-99982-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "ozil-99982",
+  storageBucket:     "ozil-99982.firebasestorage.app",
+  messagingSenderId: "120039746207",
+  appId:             "1:120039746207:web:bad5f22a77a4669d1890aa"
+};
+
+// Firebase yollarý — okul bilgisayarýndaki Python kodu bu yollarý dinler
+const DB_YOLU = {
+  komut:       "kumanda/komut",
+  anons:       "kumanda/anons",
+  ses:         "kumanda/ses",
+  sarki:       "kumanda/sarki",
+  sarki_liste: "kumanda/sarki_liste",
+  zil_listesi: "kumanda/zil_listesi", // PC'nin zil melodisi listesi
+  zil_sec:     "kumanda/zil_sec",     // seçilen zil melodisi komutu
+  durum:         "kumanda/durum",
+  sistem_durum:  "kumanda/sistem_durum",
+  genel_ayar:    "kumanda/genel_ayar",
+  sifre:       "kumanda/sifre",
+  ayarlar:     "kumanda/ayarlar"
+};
+// ================================================================
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+// ---- Oturum deðiþkenleri ----
+let girisYapildi    = false;
+let sistemAcik      = true;
+let yoneticiGirildi = false;
+let mevcutSes       = 80;
+let mobilSifre      = "";   // Firebase'den okunur
+let yoneticiSifre   = "";   // Firebase'den okunur (yönetici girince)
+
+// ---- Yardýmcý: SHA-256 hash ----
+async function sha256(metin) {
+  const buf  = await crypto.subtle.digest("SHA-256",
+                 new TextEncoder().encode(metin));
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+// ---- Toast bildirimi ----
+function toast(mesaj) {
+  const el = document.getElementById("toast");
+  el.innerHTML = mesaj;
+  el.className = "show";
+  setTimeout(() => el.className = "", 3000);
+}
+
+// ---- Ekran geçiþleri ----
+function ekranGoster(ekran) {
+  ["giris","kumanda","sarki","yonetici","zil"].forEach(e =>
+    document.getElementById("ekran_" + e).style.display = "none");
+  document.getElementById("ekran_" + ekran).style.display = "block";
+  if (ekran === "sarki") sarkiListesiYukle();
+  if (ekran === "zil") zilListesiYukle();
+}
+
+// ================================================================
+//  GÝRÝÞ
+// ================================================================
+async function girisYap() {
+  const sifre = document.getElementById("inp_sifre").value;
+  if (!sifre) return;
+
+  try {
+    const snap = await db.ref(DB_YOLU.ayarlar).get();
+    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
+
+    // 1. Hash karþýlaþtýrma (en güvenli)
+    if (ayarlar.mobil_sifre_hash) {
+      const hash = await sha256(sifre);
+      if (hash === ayarlar.mobil_sifre_hash) { girisBasarili(sifre); return; }
+    }
+
+    // 2. Düz metin karþýlaþtýrma (Firebase'e henüz hash yazýlmadýysa)
+    if (ayarlar.mobil_sifre) {
+      if (sifre === ayarlar.mobil_sifre) { girisBasarili(sifre); return; }
+    }
+
+    // 3. Firebase'de hiç kayýt yoksa varsayýlan þifre "1234"
+    if (!ayarlar.mobil_sifre && !ayarlar.mobil_sifre_hash) {
+      if (sifre === "1234") { girisBasarili(sifre); return; }
+    }
+
+  } catch (e) {
+    // Baðlantý hatasý durumunda varsayýlan þifreyle dene
+    if (sifre === "1234") { girisBasarili(sifre); return; }
+    toast("?? Baðlantý hatasý: " + e.message);
+    return;
+  }
+  document.getElementById("hata_giris").style.display = "block";
+}
+
+function girisBasarili(sifre) {
+  girisYapildi = true;
+  mobilSifre   = sifre;
+  document.getElementById("hata_giris").style.display = "none";
+  sessionStorage.setItem("ozil_giris", "1");
+  ekranGoster("kumanda");
+  dinleyicileriBaslat();
+}
+
+function genelAyarGoster() {
+  const card = document.getElementById("genel_ayar_card");
+  card.style.display = card.style.display === "none" ? "block" : "none";
+}
+
+let _genelAyarTimer = null;
+function genelAyarGonder() {
+  clearTimeout(_genelAyarTimer);
+  _genelAyarTimer = setTimeout(() => {
+    const ten = document.getElementById("chk_teneffus").checked;
+    const ses = parseInt(document.getElementById("rng_muzik_sesi").value);
+    db.ref(DB_YOLU.genel_ayar).set({
+      teneffus_aktif: ten,
+      muzik_sesi: ses,
+      zaman: Date.now()
+    }).then(() => toast("? Ayar güncellendi"))
+      .catch(e => toast("?? Hata: " + e.message));
+  }, 400);
+}
+
+function sistemToggle() {
+  const yeniDurum = !sistemAcik;
+  db.ref(DB_YOLU.sistem_durum).set({
+    aktif: yeniDurum,
+    zaman: Date.now()
+  }).then(() => {
+    _sistemDurumGuncelle(yeniDurum);
+    toast(yeniDurum ? "? Sistem Açýldý" : "?? Sistem Kapatýldý");
+  }).catch(e => toast("?? Hata: " + e.message));
+}
+
+function _sistemDurumGuncelle(aktif) {
+  sistemAcik = aktif;
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
+  if (!btn) return;
+  if (aktif) {
+    btn.style.backgroundColor = "#2ed573";
+    btn.style.boxShadow = "0 4px #27ae60";
+    lbl.textContent = "SÝSTEM: AÇIK";
+  } else {
+    btn.style.backgroundColor = "#ff4757";
+    btn.style.boxShadow = "0 4px #c0392b";
+    lbl.textContent = "SÝSTEM: KAPALI";
+  }
+}
+
+function qrGoster() {
+  const modal = document.getElementById("qr_modal");
+  const container = document.getElementById("qr_container");
+  const urlEl = document.getElementById("qr_url");
+  const url = window.location.href;
+  urlEl.textContent = url;
+  container.innerHTML = "";
+  new QRCode(container, {
+    text: url,
+    width: 200,
+    height: 200,
+    colorDark: "#2c3e50",
+    colorLight: "#ffffff"
+  });
+  modal.style.display = "flex";
+}
+
+function qrKapat() {
+  document.getElementById("qr_modal").style.display = "none";
+}
+
+function cikisYap() {
+  girisYapildi = false;
+  sessionStorage.removeItem("ozil_giris");
+  ekranGoster("giris");
+  document.getElementById("inp_sifre").value = "";
+}
+
+// ================================================================
+//  FÝREBASE DÝNLEYÝCÝLERÝ (PC durumu, ses, PC adý)
+// ================================================================
+function dinleyicileriBaslat() {
+  // PC baðlantý durumu
+  db.ref(DB_YOLU.durum).on("value", snap => {
+    const bar = document.getElementById("durum_bar");
+    const v   = snap.val() || {};
+    if (v.cevrimici) {
+      bar.textContent  = "?? Baðlý — " + (v.pc_adi || "");
+      bar.className    = "durum-bagli";
+      if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda";
+    } else {
+      bar.textContent = "?? PC Çevrimdýþý";
+      bar.className   = "durum-cevrimdisi";
+    }
+  });
+
+  // Genel ayarlar (teneffüs müziði, müzik sesi)
+  db.ref(DB_YOLU.genel_ayar).on("value", snap => {
+    const v = snap.val();
+    if (v && typeof v === "object") {
+      const chk = document.getElementById("chk_teneffus");
+      const rng = document.getElementById("rng_muzik_sesi");
+      const lbl = document.getElementById("lbl_muzik_sesi");
+      if (chk && typeof v.teneffus_aktif === "boolean") chk.checked = v.teneffus_aktif;
+      if (rng && v.muzik_sesi) { rng.value = v.muzik_sesi; if(lbl) lbl.textContent = "%" + v.muzik_sesi; }
+    }
+  });
+
+  // Sistem durumu (zil açýk/kapalý)
+  db.ref(DB_YOLU.durum).on("value", snap => {
+    const v = snap.val() || {};
+    if (typeof v.zil_aktif === "boolean") {
+      _sistemDurumGuncelle(v.zil_aktif);
+    }
+  });
+
+  // Ses seviyesi senkronizasyonu (PC deðiþtirirse buraya yansýr)
+  db.ref(DB_YOLU.ses).on("value", snap => {
+    if (snap.val() !== null) {
+      mevcutSes = snap.val();
+      document.getElementById("ses_slider").value = mevcutSes;
+      document.getElementById("vol_val").textContent = "%" + mevcutSes;
+      document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+    }
+  });
+}
+
+// ================================================================
+//  KOMUT GÖNDERME
+// ================================================================
+function komutGonder(kod, isim) {
+  if (!girisYapildi) return;
+  db.ref(DB_YOLU.komut).set({
+    kod:   kod,
+    zaman: Date.now()
+  }).then(() => toast(isim + " ?"))
+    .catch(e  => toast("?? Hata: " + e.message));
+}
+
+function anonsGonder() {
+  const metin = document.getElementById("txt_anons").value.trim();
+  if (!metin) return;
+  const tekrar = document.getElementById("anons_tekrar").value;
+  // Tekrar sayýsýný metne "||N" formatýnda ekle — Python tarafý okur
+  const veri = tekrar > 1 ? metin + "||" + tekrar : metin;
+  db.ref(DB_YOLU.anons).set({
+    metin: veri,
+    zaman: Date.now()
+  }).then(() => {
+    toast("Anons Ýletildi! ?? (" + tekrar + "x)");
+    document.getElementById("txt_anons").value = "";
+  }).catch(e => toast("?? Hata: " + e.message));
+}
+
+let sesZamanlayici = null;
+function sesGuncelle(val, ikincislider) {
+  mevcutSes = parseInt(val);
+  document.getElementById("vol_val").textContent  = "%" + mevcutSes;
+  document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+  if (!ikincislider) document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
+  else document.getElementById("ses_slider").value = mevcutSes;
+  // Sürekli kaydetmemek için 300ms bekle
+  clearTimeout(sesZamanlayici);
+  sesZamanlayici = setTimeout(() => {
+    db.ref(DB_YOLU.ses).set(mevcutSes);
+  }, 300);
+}
+
+// ================================================================
+//  ZÝL MELODÝSÝ SEÇÝCÝ
+// ================================================================
+let seciliZilTip = "";
+let seciliZilAdi = "";
+
+function zilListesiYukle() {
+  const kap = document.getElementById("zil_melodi_liste");
+  db.ref(DB_YOLU.zil_listesi).get().then(snap => {
+    if (!snap.exists() || !snap.val() || snap.val().length === 0) {
+      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamadý.<br><small>PC\'nin melodi listesi bekleniyor.</small></div>';
+      return;
+    }
+    window._zilListesi = snap.val();
+    if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi);
+    else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukarýdan bir zil türü seçin.</div>';
+  }).catch(() => {
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>';
+  });
+}
+
+function zilTipSec(tip, ad) {
+  seciliZilTip = tip;
+  seciliZilAdi = ad;
+  document.getElementById("zil_secili_tip").textContent = ad + " için melodi seçin:";
+  const kap = document.getElementById("zil_melodi_liste");
+  const liste = window._zilListesi || [];
+  if (!liste.length) { zilListesiYukle(); return; }
+  kap.innerHTML = "";
+  // "Varsayýlan" seçeneði her zaman en üstte
+  const varsDiv = document.createElement("div");
+  varsDiv.className = "sarki-item";
+  varsDiv.innerHTML = '<span class="sarki-name">? Varsayýlan</span><span class="play-btn">?</span>';
+  varsDiv.onclick = () => { zilSecGonder(tip, "Varsayýlan", ad); };
+  kap.appendChild(varsDiv);
+  liste.forEach(melodi => {
+    const div = document.createElement("div");
+    div.className = "sarki-item";
+    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">?</span>`;
+    div.onclick = () => { zilSecGonder(tip, melodi, ad); };
+    kap.appendChild(div);
+  });
+}
+
+function zilSecGonder(tip, melodi, ad) {
+  db.ref(DB_YOLU.zil_sec).set({
+    tip: tip,
+    melodi: melodi,
+    zaman: Date.now()
+  }).then(() => toast("? " + ad + ": " + melodi))
+    .catch(e => toast("?? Hata: " + e.message));
+}
+
+// ================================================================
+//  ÞARKI LÝSTESÝ
+// ================================================================
+function sarkiListesiYukle() {
+  const kap = document.getElementById("sarki_liste");
+  db.ref(DB_YOLU.sarki_liste).get().then(snap => {
+    kap.innerHTML = "";
+    if (!snap.exists() || !snap.val() || snap.val().length === 0) {
+      kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Þarký bulunamadý.<br><small>PC\'nin þarký listesi göndermesi bekleniyor.</small></div>';
+      return;
+    }
+    snap.val().forEach(sarki => {
+      const div = document.createElement("div");
+      div.className = "sarki-item";
+      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">??</span>`;
+      div.onclick = () => {
+        db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
+        toast("?? " + sarki);
+      };
+      kap.appendChild(div);
+    });
+  }).catch(() => {
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>';
+  });
+}
+
+// ================================================================
+//  YÖNETÝCÝ — Þifre deðiþtirme
+// ================================================================
+async function yoneticiGiris() {
+  const sifre = document.getElementById("inp_yon_sifre").value;
+  if (!sifre) return;
+
+  try {
+    const snap = await db.ref(DB_YOLU.ayarlar).get();
+    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
+    let eslesme = false;
+    if (ayarlar.yonetici_sifre_hash) {
+      eslesme = (await sha256(sifre)) === ayarlar.yonetici_sifre_hash;
+    } else if (ayarlar.yonetici_sifre) {
+      eslesme = sifre === ayarlar.yonetici_sifre;
+    } else {
+      eslesme = sifre === "1234";
+    }
+    if (eslesme) {
+      yoneticiGirildi = true;
+      yoneticiSifre = sifre;
+      document.getElementById("hata_yon").style.display = "none";
+      document.getElementById("yon_giris_bolum").style.display = "none";
+      document.getElementById("yon_panel_bolum").style.display = "block";
+    } else {
+      document.getElementById("hata_yon").style.display = "block";
+    }
+  } catch (e) {
+    toast("?? Baðlantý hatasý: " + e.message);
+  }
+}
+
+async function sifreDegistir() {
+  const tip  = document.getElementById("sifre_tip").value;
+  const y1   = document.getElementById("inp_yeni1").value;
+  const y2   = document.getElementById("inp_yeni2").value;
+  const mesajEl = document.getElementById("yon_mesaj");
+
+  if (y1 !== y2) {
+    mesajEl.innerHTML = '<div class="msg-err">Hata: Þifreler uyuþmuyor!</div>'; return;
+  }
+  if (y1.length < 4) {
+    mesajEl.innerHTML = '<div class="msg-err">Hata: En az 4 karakter olmalý!</div>'; return;
+  }
+
+  const hash = await sha256(y1);
+
+  // 1. Firebase ayarlar düðümüne hash'i yaz (tüm istemciler okur)
+  const guncelle = {};
+  guncelle[tip + "_sifre_hash"] = hash;
+  await db.ref(DB_YOLU.ayarlar).update(guncelle);
+
+  // 2. PC'ye þifre deðiþtirme komutu gönder (ana program ayarlar.json'a kaydeder)
+  await db.ref(DB_YOLU.sifre).set({
+    tip:   tip,
+    hash:  hash,
+    zaman: Date.now()
+  });
+
+  // 3. Yönetici kendi þifresini deðiþtirdiyse, mevcut oturumda þifresini güncelle
+  if (tip === "yonetici") yoneticiSifre = y1;
+  if (tip === "mobil")    mobilSifre = y1;
+
+  mesajEl.innerHTML = '<div class="msg-ok">? Þifre güncellendi ve tüm cihazlara yansýtýldý.</div>';
+  document.getElementById("inp_yeni1").value = "";
+  document.getElementById("inp_yeni2").value = "";
+}
+
+// ================================================================
+//  SAYFA YÜKLENINCE — oturum kontrolü
+// ================================================================
+window.onload = () => {
+  if (sessionStorage.getItem("ozil_giris") === "1") {
+    girisYapildi = true;
+    ekranGoster("kumanda");
+    dinleyicileriBaslat();
+  }
+};
+</script>
+</body>
+</html>
