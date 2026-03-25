@@ -168,7 +168,7 @@
       <span class="icon">⏹️</span>SİSTEMİ SUSTUR</button>
     <button id="btn_sistem" class="btn full" onclick="sistemToggle()"
             style="background-color:#2ed573;box-shadow:0 4px #27ae60;grid-column:span 2">
-      <span class="icon">?</span><span id="lbl_sistem">SSTEM: AÇIK</span></button>
+      <span class="icon">?</span><span id="lbl_sistem">SiSTEM: AÇIK</span></button>
   </div>
 
   <!-- Genel Ayarlar -->
@@ -441,11 +441,11 @@ function _sistemDurumGuncelle(aktif) {
   if (aktif) {
     btn.style.backgroundColor = "#2ed573";
     btn.style.boxShadow = "0 4px #27ae60";
-    lbl.textContent = "SSTEM: AÇIK";
+    lbl.textContent = "SİSTEM: AÇIK";
   } else {
     btn.style.backgroundColor = "#ff4757";
     btn.style.boxShadow = "0 4px #c0392b";
-    lbl.textContent = "SSTEM: KAPALI";
+    lbl.textContent = "SİSTEM: KAPALI";
   }
 }
 
