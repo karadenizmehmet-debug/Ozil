@@ -437,10 +437,44 @@ function pcmToWavBlob(float32Chunks, sampleRate) {
 async function mikBaslat() {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) throw new Error('Tarayıcı desteklemiyor');
-  mikStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-  mikAudioCtx = new AudioCtx(); const source = mikAudioCtx.createMediaStreamSource(mikStream); mikProcessor = mikAudioCtx.createScriptProcessor(4096, 1, 1);
-  mikKayitParc = []; source.connect(mikProcessor); mikProcessor.connect(mikAudioCtx.destination);
-  mikProcessor.onaudioprocess = (e) => { if (kayitYapiliyor) mikKayitParc.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+
+  // Mikrofonun donanımsal gürültü engellemesini zorla
+  const constraints = {
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      channelCount: 1
+    }
+  };
+
+  mikStream = await navigator.mediaDevices.getUserMedia(constraints);
+  mikAudioCtx = new AudioCtx();
+  const source = mikAudioCtx.createMediaStreamSource(mikStream);
+
+  // --- WEB AUDIO API GÜRÜLTÜ VE CIZIRTI FİLTRESİ ---
+  // 1. Yüksek frekanslı cızırtıları kes (Lowpass - 3400 Hz üstü)
+  const lowpassFilter = mikAudioCtx.createBiquadFilter();
+  lowpassFilter.type = "lowpass";
+  lowpassFilter.frequency.value = 3400; 
+
+  // 2. Uğultu ve dip gürültüsünü kes (Highpass - 300 Hz altı)
+  const highpassFilter = mikAudioCtx.createBiquadFilter();
+  highpassFilter.type = "highpass";
+  highpassFilter.frequency.value = 300; 
+
+  mikProcessor = mikAudioCtx.createScriptProcessor(4096, 1, 1);
+  mikKayitParc = [];
+
+  // Bağlantı Zinciri: Mikrofon -> Highpass -> Lowpass -> İşlemci -> Çıkış
+  source.connect(highpassFilter);
+  highpassFilter.connect(lowpassFilter);
+  lowpassFilter.connect(mikProcessor);
+  mikProcessor.connect(mikAudioCtx.destination);
+
+  mikProcessor.onaudioprocess = (e) => {
+      if (kayitYapiliyor) mikKayitParc.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  };
 }
 
 async function mikToggle() {
