@@ -56,6 +56,18 @@
   .onayla-btn,.sil-btn,.pasif-btn{background:#2ed573;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px}
   .sil-btn{background:#e74c3c}
   .pasif-btn{background:#f39c12}
+  /* Cihaz Yönetim Stilleri */
+  .cihaz-kart{background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .cihaz-bilgi{flex:1;text-align:left}
+  .cihaz-adi{font-weight:bold;color:#2c3e50;font-size:15px;margin-bottom:4px}
+  .cihaz-durum{font-size:13px;color:#7f8c8d;margin-bottom:4px}
+  .cihaz-durum.aktif::before{content:"● ";color:#2ecc71}
+  .cihaz-durum.pasif::before{content:"● ";color:#e74c3c}
+  .cihaz-id{font-size:12px;color:#0984e3}
+  .cihaz-erisim-btn{background:#2ecc71;color:white;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:bold;transition:all 0.2s;min-width:100px}
+  .cihaz-erisim-btn:hover{background:#27ae60}
+  .cihaz-erisim-btn.kapali{background:#e74c3c}
+  .cihaz-erisim-btn.kapali:hover{background:#c0392b}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
 </style>
@@ -151,9 +163,23 @@
     </div>
   </div>
 
+  <div id="ekran_cihaz_yonetimi" style="display:none;max-width:500px;margin:0 auto">
+    <h2>🖥️ Cihaz Yönetimi</h2>
+    <p style="color:#7f8c8d;font-size:14px;margin-bottom:15px">
+      ⚠️ Bu panel sadece yöneticiler tarafından görülebilir. Okul bilgisayarında kumandayı kapalı tutmak için aşağıdan erişimi kapatın.
+    </p>
+    <div id="cihaz_listesi_container" class="card">
+      <div style="text-align:center;color:#7f8c8d">
+        ⏳ Cihazlar yükleniyor...
+      </div>
+    </div>
+    <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">← Geri Dön</button></div>
+  </div>
+
   <div class="footer">
     <a onclick="genelAyarGoster()">⚙️ Genel</a>
     <a onclick="ekranGoster('yonetim')">🔐 Yönetim</a>
+    <a id="cihaz_yonetimi_btn" onclick="cihazYonetiminiAc()" style="display:none">🖥️ Cihazlar</a>
     <a onclick="qrGoster()">📱 QR</a>
     <a onclick="cikisYap()">🚪 Çıkış</a>
   </div>
@@ -234,7 +260,8 @@ const DB_YOLU = {
   hava: "kumanda/hava",
   mikrofon_url: "kumanda/mikrofon_url",
   bekleyen_kullanicilar: "kumanda/bekleyen_kullanicilar",
-  onayli_kullanicilar: "kumanda/onayli_kullanicilar"
+  onayli_kullanicilar: "kumanda/onayli_kullanicilar",
+  cihazlar: "kumanda/cihazlar"
 };
 
 let db = null;
@@ -251,6 +278,8 @@ let seciliZilAdi = "";
 let localDurumTimer = null;
 let sesZamanlayici = null;
 let genelAyarTimer = null;
+let cihazlarDinleyici = null;
+let mevcutCihazlar = {};
 
 if (typeof firebase !== "undefined") {
   try {
@@ -267,11 +296,12 @@ function toast(mesaj) {
 }
 
 function ekranGoster(ekran) {
-  ["giris", "kumanda", "sarki", "yonetim", "zil"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
+  ["giris", "kumanda", "sarki", "yonetim", "zil", "cihaz_yonetimi"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
   document.getElementById("ekran_" + ekran).style.display = "block";
   if (ekran === "sarki") sarkiListesiYukle();
   if (ekran === "zil") zilListesiYukle();
   if (ekran === "yonetim") yonetimPaneliniGoster();
+  if (ekran === "cihaz_yonetimi") cihazlarDinle();
 }
 
 function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar"); bar.textContent = text; bar.className = cls; }
@@ -372,6 +402,12 @@ async function yonetimPaneliniGoster() {
     </div>
   `;
   await listeleKullanicilar();
+  
+  // Cihaz Yönetimi butonunu göster/gizle
+  const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
+  if (yoneticiMi && cihazBtn) {
+    cihazBtn.style.display = "inline-block";
+  }
 }
 
 async function listeleKullanicilar() {
@@ -802,6 +838,106 @@ async function anonsuFirebaseGonder() {
     document.getElementById("mik_onizleme_kapsayici").style.display = "none";
     seciliWavBlob = null;
   } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
+}
+
+/* ===== CİHAZ YÖNETİMİ FONKSİYONLARI ===== */
+
+// Cihaz Yönetim Panelini Aç
+function cihazYonetiminiAc() {
+  if (!yoneticiMi) {
+    toast("❌ Bu işlem sadece yöneticiler tarafından yapılabilir!");
+    return;
+  }
+  ekranGoster("cihaz_yonetimi");
+}
+
+// Cihazları Firebase'den dinle ve göster
+function cihazlarDinle() {
+  if (!db) return;
+  
+  const cihazlarRef = db.ref(DB_YOLU.cihazlar);
+  
+  // Mevcut dinleyici varsa kapat
+  if (cihazlarDinleyici) cihazlarDinleyici.off();
+  
+  cihazlarDinleyici = cihazlarRef.on("value", snap => {
+    mevcutCihazlar = {};
+    if (!snap.exists()) {
+      document.getElementById("cihaz_listesi_container").innerHTML = 
+        '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
+      return;
+    }
+    
+    const cihazlar = snap.val();
+    let html = '';
+    
+    Object.keys(cihazlar).forEach(cihazId => {
+      const cihaz = cihazlar[cihazId];
+      mevcutCihazlar[cihazId] = cihaz;
+      
+      const uzaktanAcik = cihaz.uzaktan_erisim_acik !== false;
+      const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
+      const durum = cihaz.durum || "bilinmiyor";
+      const zaman = cihaz.zaman || "—";
+      
+      const butonYazi = uzaktanAcik ? "✓ Kapalı" : "✗ Açık";
+      const butonSinif = uzaktanAcik ? "cihaz-erisim-btn kapali" : "cihaz-erisim-btn";
+      
+      html += `
+        <div class="cihaz-kart">
+          <div class="cihaz-bilgi">
+            <div class="cihaz-adi">🖥️ ${escapeHtml(pcAdi)}</div>
+            <div class="cihaz-durum ${durum === 'aktif' ? 'aktif' : 'pasif'}">
+              ${durum === 'aktif' ? 'Aktif' : 'Pasif'} • ${zaman}
+            </div>
+            <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
+          </div>
+          <button class="${butonSinif}" 
+                  onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${uzaktanAcik})"
+                  title="${uzaktanAcik ? 'Uzaktan erişimi aç' : 'Uzaktan erişimi kapat'}">
+            ${butonYazi}
+          </button>
+        </div>
+      `;
+    });
+    
+    document.getElementById("cihaz_listesi_container").innerHTML = html;
+  });
+}
+
+// Cihaz uzaktan erişimini aç/kapat
+function cihazErisimToggle(cihazId, suanAcik) {
+  if (!yoneticiMi) {
+    toast("❌ Yetkiniz yok!");
+    return;
+  }
+  
+  const yeniDurum = !suanAcik;
+  const cihazRef = db.ref(DB_YOLU.cihazlar + "/" + cihazId);
+  
+  cihazRef.update({
+    uzaktan_erisim_acik: yeniDurum,
+    zaman: new Date().toLocaleString("tr-TR")
+  }).then(() => {
+    const mesaj = yeniDurum ? 
+      "✓ Uzaktan erişim açıldı" : 
+      "✗ Uzaktan erişim kapatıldı";
+    toast(mesaj);
+  }).catch(err => {
+    toast("❌ Hata: " + err.message);
+  });
+}
+
+// HTML özel karakterleri escape et (XSS koruması)
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 window.onload = () => {
