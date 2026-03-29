@@ -38,9 +38,9 @@
   .sarki-item:active{background-color:#dfe4ea}
   .sarki-name{font-weight:bold;color:#2c3e50;text-align:left}
   .play-btn{color:#0984e3;font-size:20px}
-  #ekran_yonetici{display:none;max-width:500px;margin:0 auto}
-  #ekran_yonetici input,#ekran_yonetici select{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ddd;font-size:15px;outline:none}
-  #ekran_yonetici button{width:100%;padding:12px;background:#2ed573;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;margin-top:5px}
+  #ekran_yonetim{display:none;max-width:500px;margin:0 auto}
+  #ekran_yonetim input,#ekran_yonetim select{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ddd;font-size:15px;outline:none}
+  #ekran_yonetim button{width:100%;padding:12px;background:#2ed573;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;margin-top:5px}
   .msg-ok{background:#2ed573;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
   .msg-err{background:#ff4757;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
   #durum_bar{font-size:12px;padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:8px}
@@ -51,9 +51,11 @@
   .google-btn img{width:20px;height:20px}
   .kullanici-listesi{max-height:200px;overflow-y:auto;text-align:left;margin-top:10px}
   .kullanici-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #eee}
-  .kullanici-email{font-weight:bold}
-  .onayla-btn,.yetki-kaldir-btn{background:#2ed573;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px}
-  .yetki-kaldir-btn{background:#e74c3c}
+  .kullanici-email{font-weight:bold;word-break:break-all;flex:1}
+  .button-group{display:flex;gap:8px}
+  .onayla-btn,.sil-btn,.pasif-btn{background:#2ed573;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px}
+  .sil-btn{background:#e74c3c}
+  .pasif-btn{background:#f39c12}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
 </style>
@@ -151,7 +153,7 @@
 
   <div class="footer">
     <a onclick="genelAyarGoster()">⚙️ Genel</a>
-    <a onclick="ekranGoster('yonetici')">🔐 Şifre</a>
+    <a onclick="ekranGoster('yonetim')">🔐 Yönetim</a>
     <a onclick="qrGoster()">📱 QR</a>
     <a onclick="cikisYap()">🚪 Çıkış</a>
   </div>
@@ -180,10 +182,10 @@
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön </button></div>
 </div>
 
-<div id="ekran_yonetici">
-  <h2>🔐 Yönetici Paneli</h2>
-  <div id="yonetici_panel_icerik">
-    <!-- Yönetici girişi gerekiyorsa buraya gelecek -->
+<div id="ekran_yonetim">
+  <h2>🔐 Yönetim Paneli</h2>
+  <div id="yonetim_panel_icerik">
+    <!-- Dinamik içerik -->
   </div>
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön </button></div>
 </div>
@@ -238,8 +240,8 @@ const DB_YOLU = {
 let db = null;
 let auth = null;
 let girisYapildi = false;
-let yetkiliMi = false;          // Kullanıcı yetkili mi?
-let yoneticiMi = false;         // Yönetici (karadenizmehmet@gmail.com) mi?
+let yetkiliMi = false;
+let yoneticiMi = false;
 let mevcutKullaniciUid = null;
 let mevcutKullaniciEmail = null;
 let sistemAcik = true;
@@ -265,33 +267,27 @@ function toast(mesaj) {
 }
 
 function ekranGoster(ekran) {
-  ["giris", "kumanda", "sarki", "yonetici", "zil"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
+  ["giris", "kumanda", "sarki", "yonetim", "zil"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
   document.getElementById("ekran_" + ekran).style.display = "block";
   if (ekran === "sarki") sarkiListesiYukle();
   if (ekran === "zil") zilListesiYukle();
-  if (ekran === "yonetici") yoneticiPaneliniGoster();
+  if (ekran === "yonetim") yonetimPaneliniGoster();
 }
 
 function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar"); bar.textContent = text; bar.className = cls; }
 
-// Yetki kontrolü
 function islemIcinYetkiKontrol() {
   if (!girisYapildi) { toast("Lütfen önce giriş yapın!"); return false; }
   if (!yetkiliMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
   return true;
 }
 
-// Giriş başarılı olduğunda çağrılır
 async function girisBasarili(user) {
   girisYapildi = true;
   mevcutKullaniciUid = user.uid;
   mevcutKullaniciEmail = user.email;
   yoneticiMi = (user.email === "karadenizmehmet@gmail.com");
-  
-  // Yetki durumunu kontrol et
   await yetkiKontrolEt(user.uid);
-  
-  // Kullanıcıyı bekleyenler listesine ekle (eğer yetkili değilse ve yönetici değilse)
   if (!yetkiliMi && !yoneticiMi) {
     const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + user.uid);
     const snap = await bekleyenRef.get();
@@ -304,32 +300,27 @@ async function girisBasarili(user) {
       toast("Yönetici onayı bekleniyor. Onaylanınca kumandayı kullanabilirsiniz.");
     }
   }
-  
   sessionStorage.setItem("ozil_giris", "1");
   sessionStorage.setItem("ozil_uid", user.uid);
   sessionStorage.setItem("ozil_email", user.email);
   sessionStorage.setItem("ozil_yetkili", yetkiliMi ? "1" : "0");
   sessionStorage.setItem("ozil_yonetici", yoneticiMi ? "1" : "0");
-  
   ekranGoster("kumanda");
   dinleyicileriBaslat();
   toast(`Hoş geldiniz, ${user.email}${yetkiliMi ? " (Yetkili)" : " (Onay bekliyor)"}`);
 }
 
 async function yetkiKontrolEt(uid) {
-  // Yönetici her zaman yetkilidir
   if (mevcutKullaniciEmail === "karadenizmehmet@gmail.com") {
     yetkiliMi = true;
     return true;
   }
-  // Onaylılar listesinde var mı?
   const onayliRef = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
   const snap = await onayliRef.get();
   yetkiliMi = snap.exists();
   return yetkiliMi;
 }
 
-// Google girişi
 async function googleGirisYap() {
   if (!auth) { toast("Firebase Auth yüklenemedi"); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -358,34 +349,17 @@ async function cikisYap() {
   toast("Çıkış yapıldı");
 }
 
-// Yönetici panelini göster (kullanıcı yönetimi)
-async function yoneticiPaneliniGoster() {
-  const container = document.getElementById("yonetici_panel_icerik");
+// Yönetim paneli (sadece yöneticiye özel)
+async function yonetimPaneliniGoster() {
+  const container = document.getElementById("yonetim_panel_icerik");
   if (!girisYapildi) {
     container.innerHTML = '<div class="card"><p>Lütfen önce giriş yapın.</p><button onclick="googleGirisYap()" class="btn blue">Google ile Giriş Yap</button></div>';
     return;
   }
-  if (!yoneticiMi && !yetkiliMi) {
-    container.innerHTML = '<div class="card"><p>Bu paneli kullanmak için yönetici yetkisi gereklidir.</p></div>';
-    return;
-  }
-  // Yönetici değil ama yetkili kullanıcı sadece şifre değiştirme görebilir (eski sistem)
-  // Aslında şifre değiştirme her yetkiliye açık olabilir. Ama kullanıcı yönetimi sadece yöneticiye.
   if (!yoneticiMi) {
-    container.innerHTML = `<div class="card">
-      <h3>🔑 Şifre Değiştir</h3>
-      <select id="sifre_tip_simple">
-        <option value="mobil">📱 Mobil Kumanda Şifresi</option>
-        <option value="uygulama">⚙️ Uygulama Giriş Şifresi</option>
-        <option value="yonetici">🔑 Yönetici Şifresi</option>
-      </select>
-      <input type="password" id="yeni_sifre1" placeholder="Yeni Şifre">
-      <input type="password" id="yeni_sifre2" placeholder="Yeni Şifre (Tekrar)">
-      <button onclick="sifreDegistirSimple()">ŞİFREYİ GÜNCELLE</button>
-    </div>`;
+    container.innerHTML = '<div class="card"><p style="color:red;">❌ Bu bölüme erişim yetkiniz yok. Sadece sistem yöneticisi erişebilir.</p></div>';
     return;
   }
-  
   // Yönetici paneli (tam yetkili)
   container.innerHTML = `
     <div class="card">
@@ -423,12 +397,14 @@ async function listeleKullanicilar() {
     for (const [uid, data] of Object.entries(bekleyenler)) {
       html += `<div class="kullanici-item">
         <span class="kullanici-email">${escapeHtml(data.email)}</span>
-        <button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button>
+        <div class="button-group">
+          <button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button>
+          <button class="sil-btn" onclick="kullaniciSil('${uid}', 'bekleyen')">Sil</button>
+        </div>
       </div>`;
     }
     bekleyenDiv.innerHTML = html;
   }
-  
   // Onaylılar
   const onayliSnap = await db.ref(DB_YOLU.onayli_kullanicilar).get();
   const onaylilar = onayliSnap.val() || {};
@@ -438,11 +414,13 @@ async function listeleKullanicilar() {
   } else {
     let html = "";
     for (const [uid, data] of Object.entries(onaylilar)) {
-      // Yönetici kendini listeden çıkaramasın (isteğe bağlı)
       if (data.email === "karadenizmehmet@gmail.com") continue;
       html += `<div class="kullanici-item">
         <span class="kullanici-email">${escapeHtml(data.email)}</span>
-        <button class="yetki-kaldir-btn" onclick="kullaniciYetkiKaldir('${uid}')">Yetkiyi Kaldır</button>
+        <div class="button-group">
+          <button class="pasif-btn" onclick="kullaniciPasifYap('${uid}')">Pasif Yap</button>
+          <button class="sil-btn" onclick="kullaniciSil('${uid}', 'onayli')">Sil</button>
+        </div>
       </div>`;
     }
     onayliDiv.innerHTML = html;
@@ -450,7 +428,6 @@ async function listeleKullanicilar() {
 }
 
 async function kullaniciOnayla(uid) {
-  // Bekleyenlerden al, onaylılara ekle
   const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
   const snap = await bekleyenRef.get();
   if (!snap.exists()) return;
@@ -463,8 +440,6 @@ async function kullaniciOnayla(uid) {
   await bekleyenRef.remove();
   toast(`${userData.email} onaylandı.`);
   await listeleKullanicilar();
-  
-  // Eğer bu kullanıcı şu an aktifse ve sayfada ise yetkisini güncelle
   if (mevcutKullaniciUid === uid && !yoneticiMi) {
     yetkiliMi = true;
     sessionStorage.setItem("ozil_yetkili", "1");
@@ -472,15 +447,40 @@ async function kullaniciOnayla(uid) {
   }
 }
 
-async function kullaniciYetkiKaldir(uid) {
-  await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).remove();
-  toast("Yetki kaldırıldı. Kullanıcı artık kumandayı kullanamaz.");
+async function kullaniciPasifYap(uid) {
+  const onayliRef = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
+  const snap = await onayliRef.get();
+  if (!snap.exists()) return;
+  const userData = snap.val();
+  await onayliRef.remove();
+  toast(`${userData.email} yetkisi kaldırıldı (pasif).`);
   await listeleKullanicilar();
   if (mevcutKullaniciUid === uid && !yoneticiMi) {
     yetkiliMi = false;
     sessionStorage.setItem("ozil_yetkili", "0");
     toast("Yetkiniz iptal edildi!");
-    // Sayfayı yenilemek yerine kumanda ekranında kilitli kalacak
+  }
+}
+
+async function kullaniciSil(uid, kaynak) {
+  let email = "";
+  if (kaynak === "bekleyen") {
+    const ref = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
+    const snap = await ref.get();
+    if (snap.exists()) email = snap.val().email;
+    await ref.remove();
+  } else if (kaynak === "onayli") {
+    const ref = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
+    const snap = await ref.get();
+    if (snap.exists()) email = snap.val().email;
+    await ref.remove();
+  }
+  toast(`${email || uid} silindi.`);
+  await listeleKullanicilar();
+  if (mevcutKullaniciUid === uid && !yoneticiMi) {
+    yetkiliMi = false;
+    sessionStorage.setItem("ozil_yetkili", "0");
+    toast("Hesabınız silindi, yetkiniz kalmadı.");
   }
 }
 
@@ -488,15 +488,6 @@ async function sifreDegistirAdmin() {
   const tip = document.getElementById("sifre_tip_admin").value;
   const y1 = document.getElementById("admin_yeni_sifre1").value;
   const y2 = document.getElementById("admin_yeni_sifre2").value;
-  if (y1 !== y2) { toast("Şifreler uyuşmuyor!"); return; }
-  if (y1.length < 4) { toast("En az 4 karakter!"); return; }
-  await sifreGuncelle(tip, y1);
-}
-
-async function sifreDegistirSimple() {
-  const tip = document.getElementById("sifre_tip_simple").value;
-  const y1 = document.getElementById("yeni_sifre1").value;
-  const y2 = document.getElementById("yeni_sifre2").value;
   if (y1 !== y2) { toast("Şifreler uyuşmuyor!"); return; }
   if (y1.length < 4) { toast("En az 4 karakter!"); return; }
   await sifreGuncelle(tip, y1);
@@ -529,10 +520,9 @@ function escapeHtml(str) {
   });
 }
 
-// Firebase veri dinleme ve komutlar (yetki kontrolü eklendi)
+// Firebase veri dinleme
 function dinleyicileriBaslat() {
   if (!db) return;
-  // Sistem durumu dinleme
   db.ref(DB_YOLU.durum).on("value", snap => {
     const v = snap.val() || {};
     if (v.cevrimici) {
@@ -569,7 +559,7 @@ function dinleyicileriBaslat() {
   });
 }
 
-// Yetkili komutlar (sadece yetkili kullanıcılar çalıştırabilir)
+// Yetkili komutlar (sadece yetkili kullanıcılar)
 async function komutGonder(kod, isim) {
   if (!islemIcinYetkiKontrol()) return;
   try {
@@ -835,7 +825,6 @@ async function anonsuFirebaseGonder() {
   } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
 }
 
-// Oturum kontrolü
 window.onload = () => {
   const uid = sessionStorage.getItem("ozil_uid");
   const email = sessionStorage.getItem("ozil_email");
@@ -849,7 +838,6 @@ window.onload = () => {
     yoneticiMi = yonetici;
     ekranGoster("kumanda");
     dinleyicileriBaslat();
-    // Arka planda yetkiyi yeniden kontrol et (yönetici panelinde değişiklik olabilir)
     yetkiKontrolEt(uid).then(y => {
       if (y !== yetkiliMi) {
         yetkiliMi = y;
