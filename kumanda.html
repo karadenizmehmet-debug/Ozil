@@ -163,19 +163,6 @@
     </div>
   </div>
 
-  <div id="ekran_cihaz_yonetimi" style="display:none;max-width:500px;margin:0 auto">
-    <h2>🖥️ Cihaz Yönetimi</h2>
-    <p style="color:#7f8c8d;font-size:14px;margin-bottom:15px">
-      ⚠️ Bu panel sadece yöneticiler tarafından görülebilir. Okul bilgisayarında kumandayı kapalı tutmak için aşağıdan erişimi kapatın.
-    </p>
-    <div id="cihaz_listesi_container" class="card">
-      <div style="text-align:center;color:#7f8c8d">
-        ⏳ Cihazlar yükleniyor...
-      </div>
-    </div>
-    <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">← Geri Dön</button></div>
-  </div>
-
   <div class="footer">
     <a onclick="genelAyarGoster()">⚙️ Genel</a>
     <a onclick="ekranGoster('yonetim')">🔐 Yönetim</a>
@@ -183,6 +170,19 @@
     <a onclick="qrGoster()">📱 QR</a>
     <a onclick="cikisYap()">🚪 Çıkış</a>
   </div>
+</div>
+
+<div id="ekran_cihaz_yonetimi" style="display:none;max-width:500px;margin:0 auto">
+  <h2>🖥️ Cihaz Yönetimi</h2>
+  <p style="color:#7f8c8d;font-size:14px;margin-bottom:15px">
+    ⚠️ Sadece yöneticiler görebilir. Kendi bilgisayarınızda test yaparken zil bilgisayarının komut almasını engellemek için cihaz erişimini kapatabilirsiniz.
+  </p>
+  <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;">
+    <div style="text-align:center;color:#7f8c8d">
+      ⏳ Cihazlar yükleniyor...
+    </div>
+  </div>
+  <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">← Geri Dön</button></div>
 </div>
 
 <div id="ekran_zil" style="display:none;max-width:500px;margin:0 auto">
@@ -211,8 +211,7 @@
 <div id="ekran_yonetim">
   <h2>🔐 Yönetim Paneli</h2>
   <div id="yonetim_panel_icerik">
-    <!-- Dinamik içerik -->
-  </div>
+    </div>
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön </button></div>
 </div>
 
@@ -278,8 +277,6 @@ let seciliZilAdi = "";
 let localDurumTimer = null;
 let sesZamanlayici = null;
 let genelAyarTimer = null;
-let cihazlarDinleyici = null;
-let mevcutCihazlar = {};
 
 if (typeof firebase !== "undefined") {
   try {
@@ -296,8 +293,13 @@ function toast(mesaj) {
 }
 
 function ekranGoster(ekran) {
-  ["giris", "kumanda", "sarki", "yonetim", "zil", "cihaz_yonetimi"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
-  document.getElementById("ekran_" + ekran).style.display = "block";
+  ["giris", "kumanda", "sarki", "yonetim", "zil", "cihaz_yonetimi"].forEach(e => {
+    const el = document.getElementById("ekran_" + e);
+    if(el) el.style.display = "none";
+  });
+  const gosterilecek = document.getElementById("ekran_" + ekran);
+  if(gosterilecek) gosterilecek.style.display = "block";
+  
   if (ekran === "sarki") sarkiListesiYukle();
   if (ekran === "zil") zilListesiYukle();
   if (ekran === "yonetim") yonetimPaneliniGoster();
@@ -317,6 +319,13 @@ async function girisBasarili(user) {
   mevcutKullaniciUid = user.uid;
   mevcutKullaniciEmail = user.email;
   yoneticiMi = (user.email === "karadenizmehmet@gmail.com");
+  
+  // YÖNETİCİ BUTONUNU GİRİŞ YAPAR YAPMAZ GÖSTER
+  const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
+  if (yoneticiMi && cihazBtn) {
+    cihazBtn.style.display = "inline-block";
+  }
+
   await yetkiKontrolEt(user.uid);
   if (!yetkiliMi && !yoneticiMi) {
     const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + user.uid);
@@ -374,12 +383,16 @@ async function cikisYap() {
   yetkiliMi = false;
   yoneticiMi = false;
   sessionStorage.clear();
+  
+  const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
+  if(cihazBtn) cihazBtn.style.display = "none";
+
   if (localDurumTimer) clearInterval(localDurumTimer);
   ekranGoster("giris");
   toast("Çıkış yapıldı");
 }
 
-// Yönetim paneli (sadece yöneticiye özel) - Şifre değiştirme kaldırıldı
+// Yönetim paneli
 async function yonetimPaneliniGoster() {
   const container = document.getElementById("yonetim_panel_icerik");
   if (!girisYapildi) {
@@ -390,7 +403,7 @@ async function yonetimPaneliniGoster() {
     container.innerHTML = '<div class="card"><p style="color:red;">❌ Bu bölüme erişim yetkiniz yok. Sadece sistem yöneticisi erişebilir.</p></div>';
     return;
   }
-  // Yönetici paneli - sadece kullanıcı yönetimi
+  
   container.innerHTML = `
     <div class="card">
       <h3>👥 Onay Bekleyen Kullanıcılar</h3>
@@ -402,16 +415,9 @@ async function yonetimPaneliniGoster() {
     </div>
   `;
   await listeleKullanicilar();
-  
-  // Cihaz Yönetimi butonunu göster/gizle
-  const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-  if (yoneticiMi && cihazBtn) {
-    cihazBtn.style.display = "inline-block";
-  }
 }
 
 async function listeleKullanicilar() {
-  // Bekleyenler
   try {
     const bekleyenSnap = await db.ref(DB_YOLU.bekleyen_kullanicilar).get();
     const bekleyenler = bekleyenSnap.val() || {};
@@ -433,7 +439,6 @@ async function listeleKullanicilar() {
     }
   } catch(e) { toast("Bekleyenler listelenirken hata: " + e.message); }
   
-  // Onaylılar
   try {
     const onayliSnap = await db.ref(DB_YOLU.onayli_kullanicilar).get();
     const onaylilar = onayliSnap.val() || {};
@@ -520,22 +525,7 @@ async function kullaniciSil(uid, kaynak) {
   } catch(e) { toast("Silme hatası: " + e.message); }
 }
 
-async function sha256(metin) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(metin));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === "&") return "&amp;";
-    if (m === "<") return "&lt;";
-    if (m === ">") return "&gt;";
-    return m;
-  });
-}
-
-// Firebase veri dinleme (aynı)
+// Firebase veri dinleme
 function dinleyicileriBaslat() {
   if (!db) return;
   db.ref(DB_YOLU.durum).on("value", snap => {
@@ -574,7 +564,6 @@ function dinleyicileriBaslat() {
   });
 }
 
-// Yetkili komutlar (sadece yetkili kullanıcılar)
 async function komutGonder(kod, isim) {
   if (!islemIcinYetkiKontrol()) return;
   try {
@@ -725,7 +714,6 @@ function qrGoster() {
 }
 function qrKapat() { document.getElementById("qr_modal").style.display = "none"; }
 
-// Mikrofon ile anons (yetki kontrolü eklendi)
 let kayitYapiliyor=false, mikStream=null, mikAudioCtx=null, mikProcessor=null, mikKayitParc=[];
 let seciliWavBlob = null;
 
@@ -842,7 +830,6 @@ async function anonsuFirebaseGonder() {
 
 /* ===== CİHAZ YÖNETİMİ FONKSİYONLARI ===== */
 
-// Cihaz Yönetim Panelini Aç
 function cihazYonetiminiAc() {
   if (!yoneticiMi) {
     toast("❌ Bu işlem sadece yöneticiler tarafından yapılabilir!");
@@ -851,17 +838,15 @@ function cihazYonetiminiAc() {
   ekranGoster("cihaz_yonetimi");
 }
 
-// Cihazları Firebase'den dinle ve göster
 function cihazlarDinle() {
   if (!db) return;
   
   const cihazlarRef = db.ref(DB_YOLU.cihazlar);
   
-  // Mevcut dinleyici varsa kapat
-  if (cihazlarDinleyici) cihazlarDinleyici.off();
+  // ÖNCEKİ DİNLEYİCİYİ DOĞRU ŞEKİLDE TEMİZLE (Beyaz Ekran / Çökme Çözümü)
+  cihazlarRef.off("value");
   
-  cihazlarDinleyici = cihazlarRef.on("value", snap => {
-    mevcutCihazlar = {};
+  cihazlarRef.on("value", snap => {
     if (!snap.exists()) {
       document.getElementById("cihaz_listesi_container").innerHTML = 
         '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
@@ -873,28 +858,30 @@ function cihazlarDinle() {
     
     Object.keys(cihazlar).forEach(cihazId => {
       const cihaz = cihazlar[cihazId];
-      mevcutCihazlar[cihazId] = cihaz;
       
       const uzaktanAcik = cihaz.uzaktan_erisim_acik !== false;
       const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
-      const durum = cihaz.durum || "bilinmiyor";
-      const zaman = cihaz.zaman || "—";
+      // Cihazın durumunu çevrimiçi/çevrimdışı verisine göre al:
+      const cihazAktif = cihaz.cevrimici === true;
+      const zaman = cihaz.guncelleme || cihaz.zaman || "—";
       
-      const butonYazi = uzaktanAcik ? "✓ Kapalı" : "✗ Açık";
+      // Buton tasarımını düzenledim (Açıksa kapat seçeneği Kırmızı, Kapalıysa Aç seçeneği Yeşil olsun)
+      const butonYazi = uzaktanAcik ? "Erişimi Kapat" : "Erişimi Aç";
       const butonSinif = uzaktanAcik ? "cihaz-erisim-btn kapali" : "cihaz-erisim-btn";
+      const durumYazi = cihazAktif ? "Çevrimiçi" : "Çevrimdışı";
       
       html += `
         <div class="cihaz-kart">
           <div class="cihaz-bilgi">
             <div class="cihaz-adi">🖥️ ${escapeHtml(pcAdi)}</div>
-            <div class="cihaz-durum ${durum === 'aktif' ? 'aktif' : 'pasif'}">
-              ${durum === 'aktif' ? 'Aktif' : 'Pasif'} • ${zaman}
+            <div class="cihaz-durum ${cihazAktif ? 'aktif' : 'pasif'}">
+              ${durumYazi} • ${escapeHtml(zaman)}
             </div>
             <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
           </div>
           <button class="${butonSinif}" 
                   onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${uzaktanAcik})"
-                  title="${uzaktanAcik ? 'Uzaktan erişimi aç' : 'Uzaktan erişimi kapat'}">
+                  title="${uzaktanAcik ? 'Bu cihazın uzaktan komut almasını engelle' : 'Bu cihazın uzaktan komut almasına izin ver'}">
             ${butonYazi}
           </button>
         </div>
@@ -905,7 +892,6 @@ function cihazlarDinle() {
   });
 }
 
-// Cihaz uzaktan erişimini aç/kapat
 function cihazErisimToggle(cihazId, suanAcik) {
   if (!yoneticiMi) {
     toast("❌ Yetkiniz yok!");
@@ -920,15 +906,14 @@ function cihazErisimToggle(cihazId, suanAcik) {
     zaman: new Date().toLocaleString("tr-TR")
   }).then(() => {
     const mesaj = yeniDurum ? 
-      "✓ Uzaktan erişim açıldı" : 
-      "✗ Uzaktan erişim kapatıldı";
+      "✓ Uzaktan erişim AÇILDI" : 
+      "✗ Uzaktan erişim KAPATILDI";
     toast(mesaj);
   }).catch(err => {
     toast("❌ Hata: " + err.message);
   });
 }
 
-// HTML özel karakterleri escape et (XSS koruması)
 function escapeHtml(text) {
   const map = {
     '&': '&amp;',
@@ -945,12 +930,20 @@ window.onload = () => {
   const email = sessionStorage.getItem("ozil_email");
   const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
   const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
+  
   if (uid && email) {
     girisYapildi = true;
     mevcutKullaniciUid = uid;
     mevcutKullaniciEmail = email;
     yetkiliMi = yetkili;
     yoneticiMi = yonetici;
+    
+    // YÖNETİCİ BUTONUNU SAYFA YENİLENDİĞİNDE DE GÖSTER
+    const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
+    if (yoneticiMi && cihazBtn) {
+      cihazBtn.style.display = "inline-block";
+    }
+
     ekranGoster("kumanda");
     dinleyicileriBaslat();
     yetkiKontrolEt(uid).then(y => {
