@@ -47,6 +47,8 @@
   .durum-bagli{background:#d4edda;color:#155724}
   .durum-bekliyor{background:#fff3cd;color:#856404}
   .durum-cevrimdisi{background:#f8d7da;color:#721c24}
+  .google-btn{background-color:#fff;color:#757575;border:1px solid #ddd;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:15px}
+  .google-btn img{width:20px;height:20px}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
 </style>
@@ -54,10 +56,18 @@
 <body>
 <div id="ekran_giris">
   <h2>Nimetullah Nahçivani İHO<br><span style="font-size:16px;color:#7f8c8d">Mobil Kumanda Girişi</span></h2>
-  <div class="info">İnternet üzerinden uzaktan kontrol</div>
-  <input type="password" id="inp_sifre" placeholder="Mobil Kumanda Şifresi" onkeydown="if(event.key==='Enter')girisYap()">
-  <button onclick="girisYap()">GİRİŞ YAP</button>
+  <div class="info" id="giris_mod_bilgi">İnternet üzerinden uzaktan kontrol</div>
+  <!-- Google Giriş Butonu (Firebase modunda gösterilecek) -->
+  <button id="googleGirisBtn" class="google-btn" style="display:none" onclick="googleGirisYap()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Google ile Giriş Yap
+  </button>
+  <!-- Şifreli giriş alanı (Local mod için) -->
+  <div id="sifreliGirisDiv" style="display:none">
+    <input type="password" id="inp_sifre" placeholder="Mobil Kumanda Şifresi" onkeydown="if(event.key==='Enter')sifreliGirisYap()">
+    <button onclick="sifreliGirisYap()">GİRİŞ YAP</button>
+  </div>
   <div class="hata" id="hata_giris">Hatalı Şifre! Lütfen tekrar deneyin.</div>
+  <div class="hata" id="hata_google">Google Girişi başarısız veya yetkisiz e-posta!</div>
 </div>
 
 <div id="ekran_kumanda">
@@ -212,6 +222,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
@@ -243,28 +254,128 @@ const DB_YOLU = {
   mikrofon_url: "kumanda/mikrofon_url"
 };
 const URL_PARAM = new URLSearchParams(window.location.search);
-const CALISMA_MODU = URL_PARAM.get("mode") || ((location.protocol.startsWith("http") && /:(5000) /.test(location.host)) ? "local" : "firebase");
+const CALISMA_MODU = URL_PARAM.get("mode") || ((location.protocol.startsWith("http") && /:(5000)/.test(location.host)) ? "local" : "firebase");
 const LOCAL_API = URL_PARAM.get("api") || "";
 
 let db = null;
+let auth = null;
+let girisYapildi = false; let sistemAcik = true; let yoneticiGirildi = false;
+let mevcutSes = 80; let mobilSifre = ""; let yoneticiSifre = ""; let seciliZilTip = ""; let seciliZilAdi = "";
+let localDurumTimer = null; let sesZamanlayici = null; let genelAyarTimer = null;
+let onayliKullanici = false;  // Yetkili kullanıcı mı?
+
 if (typeof firebase !== "undefined") {
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
-  } catch (e) {}
+    auth = firebase.auth();
+  } catch (e) { console.error(e); }
 }
 
-let girisYapildi = false; let sistemAcik = true; let yoneticiGirildi = false;
-let mevcutSes = 80; let mobilSifre = ""; let yoneticiSifre = ""; let seciliZilTip = ""; let seciliZilAdi = "";
-let localDurumTimer = null; let sesZamanlayici = null; let genelAyarTimer = null;
+// Moda göre giriş arayüzünü ayarla
+function girisArayuzunuAyarla() {
+  const googleBtn = document.getElementById("googleGirisBtn");
+  const sifreDiv = document.getElementById("sifreliGirisDiv");
+  const info = document.querySelector("#ekran_giris .info");
+  if (CALISMA_MODU === "local") {
+    googleBtn.style.display = "none";
+    sifreDiv.style.display = "block";
+    if (info) info.textContent = "Yerel ağ üzerinden kontrol (şifre ile)";
+  } else {
+    googleBtn.style.display = "block";
+    sifreDiv.style.display = "none";
+    if (info) info.textContent = "İnternet üzerinden uzaktan kontrol (Google ile)";
+  }
+}
+
+// Google ile giriş
+async function googleGirisYap() {
+  if (!auth) { toast("Firebase Auth yüklenemedi"); return; }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.addScope('email');
+  try {
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    const email = user.email;
+    if (email === "karadenizmehmet@gmail.com") {
+      onayliKullanici = true;
+      girisBasarili(email);
+      toast(`Hoş geldiniz, ${email} (Yetkili)`);
+    } else {
+      onayliKullanici = false;
+      document.getElementById("hata_google").style.display = "block";
+      document.getElementById("hata_google").innerText = "Bu e-posta adresi yetkili değil! Sadece karadenizmehmet@gmail.com yetkilidir.";
+      await auth.signOut();
+      toast("Yetkisiz e-posta!");
+    }
+  } catch (error) {
+    console.error(error);
+    document.getElementById("hata_google").style.display = "block";
+    document.getElementById("hata_google").innerText = "Google girişi başarısız: " + error.message;
+    toast("Giriş hatası: " + error.message);
+  }
+}
+
+// Şifreli giriş (yerel mod)
+async function sifreliGirisYap() {
+  const sifre = document.getElementById("inp_sifre").value;
+  if (!sifre) return;
+  try {
+    const snap = await db.ref(DB_YOLU.ayarlar).get();
+    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
+    let eslesme = false;
+    if (ayarlar.mobil_sifre_hash) {
+      const hash = await sha256(sifre);
+      if (hash === ayarlar.mobil_sifre_hash) eslesme = true;
+    } else if (ayarlar.mobil_sifre && sifre === ayarlar.mobil_sifre) {
+      eslesme = true;
+    } else if (!ayarlar.mobil_sifre && !ayarlar.mobil_sifre_hash && sifre === "1234") {
+      eslesme = true;
+    }
+    if (eslesme) {
+      onayliKullanici = true; // Yerel modda giren herkes yetkili kabul edilsin
+      girisBasarili("yerel_kullanici");
+      toast("✅ Yerel ağ bağlantısı hazır");
+    } else {
+      document.getElementById("hata_giris").style.display = "block";
+    }
+  } catch (e) {
+    if (sifre === "1234") {
+      onayliKullanici = true;
+      girisBasarili("yerel_kullanici");
+      toast("✅ Yerel ağ bağlantısı hazır (varsayılan şifre)");
+    } else {
+      document.getElementById("hata_giris").style.display = "block";
+      toast("❌ Bağlantı hatası: " + e.message);
+    }
+  }
+}
+
+function girisBasarili(kullaniciId) {
+  girisYapildi = true;
+  document.getElementById("hata_giris").style.display = "none";
+  document.getElementById("hata_google").style.display = "none";
+  sessionStorage.setItem("ozil_giris", "1");
+  sessionStorage.setItem("ozil_onayli", onayliKullanici ? "1" : "0");
+  if (CALISMA_MODU !== "local") {
+    // Firebase kullanıcı bilgilerini sakla
+    if (auth && auth.currentUser) {
+      sessionStorage.setItem("ozil_email", auth.currentUser.email);
+    }
+  }
+  ekranGoster("kumanda");
+  dinleyicileriBaslat();
+}
 
 function apiUrl(path) { return `${LOCAL_API}${path}`; }
 async function apiFetch(path, options = {}) {
   const cfg = Object.assign({ credentials: "include", headers: { "Content-Type": "application/json" } }, options || {});
   cfg.headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
-  const res = await fetch(apiUrl(path), cfg); let data = null;
+  const res = await fetch(apiUrl(path), cfg);
+  let data = null;
   try { data = await res.json(); } catch (e) { data = null; }
-  if (!res.ok) throw new Error((data && data.mesaj) || `HTTP ${res.status}`); return data;
+  if (!res.ok) throw new Error((data && data.mesaj) || `HTTP ${res.status}`);
+  return data;
 }
 async function sha256(metin) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(metin));
@@ -277,37 +388,22 @@ function toast(mesaj) {
 function ekranGoster(ekran) {
   ["giris", "kumanda", "sarki", "yonetici", "zil"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
   document.getElementById("ekran_" + ekran).style.display = "block";
-  if (ekran === "sarki") sarkiListesiYukle(); if (ekran === "zil") zilListesiYukle();
+  if (ekran === "sarki") sarkiListesiYukle();
+  if (ekran === "zil") zilListesiYukle();
 }
 function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar"); bar.textContent = text; bar.className = cls; }
-function girisBasarili(sifre) {
-  girisYapildi = true; mobilSifre = sifre; document.getElementById("hata_giris").style.display = "none";
-  sessionStorage.setItem("ozil_giris", "1"); ekranGoster("kumanda"); dinleyicileriBaslat();
-}
-async function girisYap() {
-  const sifre = document.getElementById("inp_sifre").value; if (!sifre) return;
-  if (CALISMA_MODU === "local") {
-    try { const veri = await apiFetch("/api/giris", { method: "POST", body: JSON.stringify({ sifre }) });
-      if (veri.pc_adi) document.getElementById("lbl_pc").textContent = veri.pc_adi + " - Kumanda";
-      girisBasarili(sifre); toast("✅ Yerel ağ bağlantısı hazır");
-    } catch (e) { document.getElementById("hata_giris").style.display = "block"; toast("❌ " + e.message); } return;
-  }
-  try {
-    const snap = await db.ref(DB_YOLU.ayarlar).get(); const ayarlar = snap.exists() ? (snap.val() || {}) : {};
-    if (ayarlar.mobil_sifre_hash) { const hash = await sha256(sifre); if (hash === ayarlar.mobil_sifre_hash) { girisBasarili(sifre); return; } }
-    if (ayarlar.mobil_sifre && sifre === ayarlar.mobil_sifre) { girisBasarili(sifre); return; }
-    if (!ayarlar.mobil_sifre && !ayarlar.mobil_sifre_hash && sifre === "1234") { girisBasarili(sifre); return; }
-  } catch (e) { if (sifre === "1234") { girisBasarili(sifre); return; } toast("❌ Bağlantı hatası: " + e.message); return; }
-  document.getElementById("hata_giris").style.display = "block";
-}
 function genelAyarGoster() { const card = document.getElementById("genel_ayar_card"); card.style.display = card.style.display === "none" ? "block" : "none"; }
 function genelAyarGonder() {
   clearTimeout(genelAyarTimer);
   genelAyarTimer = setTimeout(async () => {
-    const ten = document.getElementById("chk_teneffus").checked; const ses = parseInt(document.getElementById("rng_muzik_sesi").value, 10);
+    const ten = document.getElementById("chk_teneffus").checked;
+    const ses = parseInt(document.getElementById("rng_muzik_sesi").value, 10);
     try {
-      if (CALISMA_MODU === "local") { await apiFetch("/api/genel_ayar", { method: "POST", body: JSON.stringify({ teneffus_aktif: ten, muzik_sesi: ses }) }); }
-      else { await db.ref(DB_YOLU.genel_ayar).set({ teneffus_aktif: ten, muzik_sesi: ses, zaman: Date.now() }); }
+      if (CALISMA_MODU === "local") {
+        await apiFetch("/api/genel_ayar", { method: "POST", body: JSON.stringify({ teneffus_aktif: ten, muzik_sesi: ses }) });
+      } else {
+        await db.ref(DB_YOLU.genel_ayar).set({ teneffus_aktif: ten, muzik_sesi: ses, zaman: Date.now() });
+      }
       toast("✅ Ayar güncellendi");
     } catch (e) { toast("❌ Hata: " + e.message); }
   }, 350);
@@ -315,178 +411,417 @@ function genelAyarGonder() {
 async function sistemToggle() {
   const yeniDurum = !sistemAcik;
   try {
-    if (CALISMA_MODU === "local") { await apiFetch("/api/sistem_durum", { method: "POST", body: JSON.stringify({ aktif: yeniDurum }) }); }
-    else { await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() }); }
-    _sistemDurumGuncelle(yeniDurum); toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
+    if (CALISMA_MODU === "local") {
+      await apiFetch("/api/sistem_durum", { method: "POST", body: JSON.stringify({ aktif: yeniDurum }) });
+    } else {
+      await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() });
+    }
+    _sistemDurumGuncelle(yeniDurum);
+    toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
   } catch (e) { toast("❌ Hata: " + e.message); }
 }
 function _sistemDurumGuncelle(aktif) {
-  sistemAcik = aktif; const btn = document.getElementById("btn_sistem"); const lbl = document.getElementById("lbl_sistem");
+  sistemAcik = aktif;
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
   if (!btn || !lbl) return;
   if (aktif) { btn.style.backgroundColor = "#2ed573"; btn.style.boxShadow = "0 4px #27ae60"; lbl.innerHTML = "🟢 SİSTEM: AÇIK"; }
   else { btn.style.backgroundColor = "#ff4757"; btn.style.boxShadow = "0 4px #c0392b"; lbl.innerHTML = "🔴 SİSTEM: KAPALI"; }
 }
 function qrGoster() {
-  const modal = document.getElementById("qr_modal"); const container = document.getElementById("qr_container");
-  const urlEl = document.getElementById("qr_url"); const url = window.location.href; urlEl.textContent = url; container.innerHTML = "";
-  new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#2c3e50", colorLight: "#ffffff" }); modal.style.display = "flex";
+  const modal = document.getElementById("qr_modal");
+  const container = document.getElementById("qr_container");
+  const urlEl = document.getElementById("qr_url");
+  const url = window.location.href;
+  urlEl.textContent = url;
+  container.innerHTML = "";
+  new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#2c3e50", colorLight: "#ffffff" });
+  modal.style.display = "flex";
 }
 function qrKapat() { document.getElementById("qr_modal").style.display = "none"; }
 async function cikisYap() {
-  girisYapildi = false; yoneticiGirildi = false; sessionStorage.removeItem("ozil_giris");
+  girisYapildi = false;
+  yoneticiGirildi = false;
+  onayliKullanici = false;
+  sessionStorage.removeItem("ozil_giris");
+  sessionStorage.removeItem("ozil_onayli");
   if (localDurumTimer) { clearInterval(localDurumTimer); localDurumTimer = null; }
-  if (CALISMA_MODU === "local") { try { await apiFetch("/api/cikis", { method: "POST" }); } catch (e) {} }
-  ekranGoster("giris"); document.getElementById("inp_sifre").value = "";
+  if (CALISMA_MODU === "local") {
+    try { await apiFetch("/api/cikis", { method: "POST" }); } catch (e) {}
+  } else {
+    if (auth) {
+      try { await auth.signOut(); } catch(e) {}
+    }
+  }
+  ekranGoster("giris");
+  document.getElementById("inp_sifre").value = "";
 }
 function uygulaDurumVerisi(v) {
-  if (!v) return; const pcEtiket = document.getElementById("lbl_pc"); const havaEl = document.getElementById("hava_bilgi");
+  if (!v) return;
+  const pcEtiket = document.getElementById("lbl_pc");
+  const havaEl = document.getElementById("hava_bilgi");
   if (v.pc_adi) pcEtiket.textContent = v.pc_adi + " - Kumanda";
   if (typeof v.mevcut_ses !== "undefined" && v.mevcut_ses !== null) {
-    mevcutSes = parseInt(v.mevcut_ses, 10); document.getElementById("ses_slider").value = mevcutSes;
-    document.getElementById("vol_val").textContent = "%" + mevcutSes; document.getElementById("vol_val2").textContent = "%" + mevcutSes;
-    const ikinci = document.querySelector("#ekran_sarki input[type=range]"); if (ikinci) ikinci.value = mevcutSes;
+    mevcutSes = parseInt(v.mevcut_ses, 10);
+    document.getElementById("ses_slider").value = mevcutSes;
+    document.getElementById("vol_val").textContent = "%" + mevcutSes;
+    document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+    const ikinci = document.querySelector("#ekran_sarki input[type=range]");
+    if (ikinci) ikinci.value = mevcutSes;
   }
   if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif);
   if (v.genel_ayar) {
-    document.getElementById("chk_teneffus").checked = !!v.genel_ayar.teneffus_aktif; const muz = parseInt(v.genel_ayar.muzik_sesi || 30, 10);
-    document.getElementById("rng_muzik_sesi").value = muz; document.getElementById("lbl_muzik_sesi").textContent = "%" + muz;
+    document.getElementById("chk_teneffus").checked = !!v.genel_ayar.teneffus_aktif;
+    const muz = parseInt(v.genel_ayar.muzik_sesi || 30, 10);
+    document.getElementById("rng_muzik_sesi").value = muz;
+    document.getElementById("lbl_muzik_sesi").textContent = "%" + muz;
   }
-  if (havaEl) { if (v.hava && v.hava.sehir) havaEl.textContent = `${v.hava.sehir} - ${v.hava.durum || ""} ${v.hava.sicaklik ? v.hava.sicaklik + "°C" : ""}`.trim(); else havaEl.textContent = "Veri yok"; }
+  if (havaEl) {
+    if (v.hava && v.hava.sehir) havaEl.textContent = `${v.hava.sehir} - ${v.hava.durum || ""} ${v.hava.sicaklik ? v.hava.sicaklik + "°C" : ""}`.trim();
+    else havaEl.textContent = "Veri yok";
+  }
 }
 async function localDurumYenile() {
-  try { const veri = await apiFetch("/api/durum"); uygulaDurumVerisi(veri); durumBarYaz(`🟢 Bağlı ${veri.pc_adi || ""}`, "durum-bagli"); }
-  catch (e) { durumBarYaz("🔴 Yerel ağ bağlantısı yok", "durum-cevrimdisi"); }
+  try {
+    const veri = await apiFetch("/api/durum");
+    uygulaDurumVerisi(veri);
+    durumBarYaz(`🟢 Bağlı ${veri.pc_adi || ""}`, "durum-bagli");
+  } catch (e) {
+    durumBarYaz("🔴 Yerel ağ bağlantısı yok", "durum-cevrimdisi");
+  }
 }
 function dinleyicileriBaslat() {
-  if (CALISMA_MODU === "local") { durumBarYaz("⏳ Yerel ağ kontrol ediliyor...", "durum-bekliyor"); localDurumYenile(); if (localDurumTimer) clearInterval(localDurumTimer); localDurumTimer = setInterval(localDurumYenile, 2000); return; }
-  db.ref(DB_YOLU.durum).on("value", snap => { const v = snap.val() || {}; if (v.cevrimici) { durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli"); if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda"; } else { durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi"); } });
-  db.ref(DB_YOLU.genel_ayar).on("value", snap => { const v = snap.val(); if (v && typeof v === "object") { document.getElementById("chk_teneffus").checked = !!v.teneffus_aktif; if (v.muzik_sesi !== undefined) { document.getElementById("rng_muzik_sesi").value = v.muzik_sesi; document.getElementById("lbl_muzik_sesi").textContent = "%" + v.muzik_sesi; } } });
-  db.ref(DB_YOLU.durum).on("value", snap => { const v = snap.val() || {}; if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif); });
-  db.ref(DB_YOLU.hava).on("value", snap => { const v = snap.val(); const el = document.getElementById("hava_bilgi"); if (!el) return; if (v && v.sehir) el.textContent = `${v.sehir} - ${v.durum || ""} ${v.sicaklik ? v.sicaklik + "°C" : ""}`.trim(); else el.textContent = "Veri yok"; });
-  db.ref(DB_YOLU.ses).on("value", snap => { if (snap.val() !== null) { mevcutSes = snap.val(); document.getElementById("ses_slider").value = mevcutSes; document.getElementById("vol_val").textContent = "%" + mevcutSes; document.getElementById("vol_val2").textContent = "%" + mevcutSes; } });
+  if (CALISMA_MODU === "local") {
+    durumBarYaz("⏳ Yerel ağ kontrol ediliyor...", "durum-bekliyor");
+    localDurumYenile();
+    if (localDurumTimer) clearInterval(localDurumTimer);
+    localDurumTimer = setInterval(localDurumYenile, 2000);
+    return;
+  }
+  db.ref(DB_YOLU.durum).on("value", snap => {
+    const v = snap.val() || {};
+    if (v.cevrimici) {
+      durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
+      if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda";
+    } else {
+      durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
+    }
+  });
+  db.ref(DB_YOLU.genel_ayar).on("value", snap => {
+    const v = snap.val();
+    if (v && typeof v === "object") {
+      document.getElementById("chk_teneffus").checked = !!v.teneffus_aktif;
+      if (v.muzik_sesi !== undefined) {
+        document.getElementById("rng_muzik_sesi").value = v.muzik_sesi;
+        document.getElementById("lbl_muzik_sesi").textContent = "%" + v.muzik_sesi;
+      }
+    }
+  });
+  db.ref(DB_YOLU.durum).on("value", snap => {
+    const v = snap.val() || {};
+    if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif);
+  });
+  db.ref(DB_YOLU.hava).on("value", snap => {
+    const v = snap.val();
+    const el = document.getElementById("hava_bilgi");
+    if (!el) return;
+    if (v && v.sehir) el.textContent = `${v.sehir} - ${v.durum || ""} ${v.sicaklik ? v.sicaklik + "°C" : ""}`.trim();
+    else el.textContent = "Veri yok";
+  });
+  db.ref(DB_YOLU.ses).on("value", snap => {
+    if (snap.val() !== null) {
+      mevcutSes = snap.val();
+      document.getElementById("ses_slider").value = mevcutSes;
+      document.getElementById("vol_val").textContent = "%" + mevcutSes;
+      document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+    }
+  });
 }
-async function komutGonder(kod, isim) { if (!girisYapildi) return; try { if (CALISMA_MODU === "local") { await apiFetch("/api/komut", { method: "POST", body: JSON.stringify({ kod }) }); } else { await db.ref(DB_YOLU.komut).set({ kod, zaman: Date.now() }); } toast(isim + " ✅"); } catch (e) { toast("❌ Hata: " + e.message); } }
+async function komutGonder(kod, isim) {
+  if (!girisYapildi || !onayliKullanici) { toast("Yetkisiz erişim!"); return; }
+  try {
+    if (CALISMA_MODU === "local") {
+      await apiFetch("/api/komut", { method: "POST", body: JSON.stringify({ kod }) });
+    } else {
+      await db.ref(DB_YOLU.komut).set({ kod, zaman: Date.now() });
+    }
+    toast(isim + " ✅");
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
 async function anonsGonder() {
-  const metin = document.getElementById("txt_anons").value.trim(); if (!metin) return; const tekrar = parseInt(document.getElementById("anons_tekrar").value, 10) || 1; const veri = tekrar > 1 ? `${metin}||${tekrar}` : metin;
-  try { if (CALISMA_MODU === "local") { await apiFetch("/api/anons", { method: "POST", body: JSON.stringify({ metin: veri }) }); } else { await db.ref(DB_YOLU.anons).set({ metin: veri, zaman: Date.now() }); } toast(`Anons İletildi! 🔊 (${tekrar}x)`); document.getElementById("txt_anons").value = ""; } catch (e) { toast("❌ Hata: " + e.message); }
+  if (!girisYapildi || !onayliKullanici) { toast("Yetkisiz erişim!"); return; }
+  const metin = document.getElementById("txt_anons").value.trim();
+  if (!metin) return;
+  const tekrar = parseInt(document.getElementById("anons_tekrar").value, 10) || 1;
+  const veri = tekrar > 1 ? `${metin}||${tekrar}` : metin;
+  try {
+    if (CALISMA_MODU === "local") {
+      await apiFetch("/api/anons", { method: "POST", body: JSON.stringify({ metin: veri }) });
+    } else {
+      await db.ref(DB_YOLU.anons).set({ metin: veri, zaman: Date.now() });
+    }
+    toast(`Anons İletildi! 🔊 (${tekrar}x)`);
+    document.getElementById("txt_anons").value = "";
+  } catch (e) { toast("❌ Hata: " + e.message); }
 }
 function sesGuncelle(val, ikincislider) {
-  mevcutSes = parseInt(val, 10); document.getElementById("vol_val").textContent = "%" + mevcutSes; document.getElementById("vol_val2").textContent = "%" + mevcutSes;
-  if (!ikincislider) document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes; else document.getElementById("ses_slider").value = mevcutSes;
-  clearTimeout(sesZamanlayici); sesZamanlayici = setTimeout(async () => { try { if (CALISMA_MODU === "local") { await apiFetch("/api/ses", { method: "POST", body: JSON.stringify({ seviye: mevcutSes }) }); } else { await db.ref(DB_YOLU.ses).set(mevcutSes); } } catch (e) { toast("❌ Hata: " + e.message); } }, 300);
+  mevcutSes = parseInt(val, 10);
+  document.getElementById("vol_val").textContent = "%" + mevcutSes;
+  document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+  if (!ikincislider) document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
+  else document.getElementById("ses_slider").value = mevcutSes;
+  clearTimeout(sesZamanlayici);
+  sesZamanlayici = setTimeout(async () => {
+    try {
+      if (CALISMA_MODU === "local") {
+        await apiFetch("/api/ses", { method: "POST", body: JSON.stringify({ seviye: mevcutSes }) });
+      } else {
+        await db.ref(DB_YOLU.ses).set(mevcutSes);
+      }
+    } catch (e) { toast("❌ Hata: " + e.message); }
+  }, 300);
 }
 async function zilListesiYukle() {
-  const kap = document.getElementById("zil_melodi_liste"); try { let liste = []; if (CALISMA_MODU === "local") { const veri = await apiFetch("/api/zil_listesi"); liste = veri.liste || []; } else { const snap = await db.ref(DB_YOLU.zil_listesi).get(); liste = snap.exists() ? (snap.val() || []) : []; }
-  if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamadı.</div>'; return; } window._zilListesi = liste; if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi); else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukarıdan bir zil türü seçin.</div>'; } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
+  const kap = document.getElementById("zil_melodi_liste");
+  try {
+    let liste = [];
+    if (CALISMA_MODU === "local") {
+      const veri = await apiFetch("/api/zil_listesi");
+      liste = veri.liste || [];
+    } else {
+      const snap = await db.ref(DB_YOLU.zil_listesi).get();
+      liste = snap.exists() ? (snap.val() || []) : [];
+    }
+    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamadı.</div>'; return; }
+    window._zilListesi = liste;
+    if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi);
+    else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukarıdan bir zil türü seçin.</div>';
+  } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
 }
 function zilTipSec(tip, ad) {
-  seciliZilTip = tip; seciliZilAdi = ad; document.getElementById("zil_secili_tip").textContent = ad + " için melodi seçin:";
-  const kap = document.getElementById("zil_melodi_liste"); const liste = window._zilListesi || []; if (!liste.length) { zilListesiYukle(); return; } kap.innerHTML = "";
-  const varsDiv = document.createElement("div"); varsDiv.className = "sarki-item"; varsDiv.innerHTML = '<span class="sarki-name">🎵 Varsayılan</span><span class="play-btn">▶️</span>'; varsDiv.onclick = () => { zilSecGonder(tip, "Varsayılan", ad); }; kap.appendChild(varsDiv);
-  liste.forEach(melodi => { const div = document.createElement("div"); div.className = "sarki-item"; div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">▶️</span>`; div.onclick = () => { zilSecGonder(tip, melodi, ad); }; kap.appendChild(div); });
+  seciliZilTip = tip;
+  seciliZilAdi = ad;
+  document.getElementById("zil_secili_tip").textContent = ad + " için melodi seçin:";
+  const kap = document.getElementById("zil_melodi_liste");
+  const liste = window._zilListesi || [];
+  if (!liste.length) { zilListesiYukle(); return; }
+  kap.innerHTML = "";
+  const varsDiv = document.createElement("div");
+  varsDiv.className = "sarki-item";
+  varsDiv.innerHTML = '<span class="sarki-name">🎵 Varsayılan</span><span class="play-btn">▶️</span>';
+  varsDiv.onclick = () => { zilSecGonder(tip, "Varsayılan", ad); };
+  kap.appendChild(varsDiv);
+  liste.forEach(melodi => {
+    const div = document.createElement("div");
+    div.className = "sarki-item";
+    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">▶️</span>`;
+    div.onclick = () => { zilSecGonder(tip, melodi, ad); };
+    kap.appendChild(div);
+  });
 }
-async function zilSecGonder(tip, melodi, ad) { try { if (CALISMA_MODU === "local") { await apiFetch("/api/zil_sec", { method: "POST", body: JSON.stringify({ tip, melodi }) }); } else { await db.ref(DB_YOLU.zil_sec).set({ tip, melodi, zaman: Date.now() }); } toast("✅ " + ad + ": " + melodi); } catch (e) { toast("❌ Hata: " + e.message); } }
+async function zilSecGonder(tip, melodi, ad) {
+  if (!onayliKullanici) { toast("Yetkisiz!"); return; }
+  try {
+    if (CALISMA_MODU === "local") {
+      await apiFetch("/api/zil_sec", { method: "POST", body: JSON.stringify({ tip, melodi }) });
+    } else {
+      await db.ref(DB_YOLU.zil_sec).set({ tip, melodi, zaman: Date.now() });
+    }
+    toast("✅ " + ad + ": " + melodi);
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
 async function sarkiListesiYukle() {
-  const kap = document.getElementById("sarki_liste"); kap.innerHTML = ""; try { let liste = []; if (CALISMA_MODU === "local") { const veri = await apiFetch("/api/sarki_listesi"); liste = veri.liste || []; } else { const snap = await db.ref(DB_YOLU.sarki_liste).get(); liste = snap.exists() ? (snap.val() || []) : []; }
-  if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkı bulunamadı.</div>'; return; }
-  liste.forEach(sarki => { const div = document.createElement("div"); div.className = "sarki-item"; div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`; div.onclick = async () => { try { if (CALISMA_MODU === "local") { await apiFetch("/api/sarki", { method: "POST", body: JSON.stringify({ ad: sarki }) }); } else { await db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() }); } toast("🎵 " + sarki); } catch (e) { toast("❌ Hata: " + e.message); } }; kap.appendChild(div); }); } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
+  const kap = document.getElementById("sarki_liste");
+  kap.innerHTML = "";
+  try {
+    let liste = [];
+    if (CALISMA_MODU === "local") {
+      const veri = await apiFetch("/api/sarki_listesi");
+      liste = veri.liste || [];
+    } else {
+      const snap = await db.ref(DB_YOLU.sarki_liste).get();
+      liste = snap.exists() ? (snap.val() || []) : [];
+    }
+    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkı bulunamadı.</div>'; return; }
+    liste.forEach(sarki => {
+      const div = document.createElement("div");
+      div.className = "sarki-item";
+      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`;
+      div.onclick = async () => {
+        if (!onayliKullanici) { toast("Yetkisiz!"); return; }
+        try {
+          if (CALISMA_MODU === "local") {
+            await apiFetch("/api/sarki", { method: "POST", body: JSON.stringify({ ad: sarki }) });
+          } else {
+            await db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
+          }
+          toast("🎵 " + sarki);
+        } catch (e) { toast("❌ Hata: " + e.message); }
+      };
+      kap.appendChild(div);
+    });
+  } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
 }
 async function yoneticiGiris() {
-  const sifre = document.getElementById("inp_yon_sifre").value; if (!sifre) return;
-  if (CALISMA_MODU === "local") { try { await apiFetch("/api/yonetici_giris", { method: "POST", body: JSON.stringify({ sifre }) }); yoneticiGirildi = true; yoneticiSifre = sifre; document.getElementById("hata_yon").style.display = "none"; document.getElementById("yon_giris_bolum").style.display = "none"; document.getElementById("yon_panel_bolum").style.display = "block"; } catch (e) { document.getElementById("hata_yon").style.display = "block"; toast("❌ " + e.message); } return; }
-  try { const snap = await db.ref(DB_YOLU.ayarlar).get(); const ayarlar = snap.exists() ? (snap.val() || {}) : {}; let eslesme = false; if (ayarlar.yonetici_sifre_hash) eslesme = (await sha256(sifre)) === ayarlar.yonetici_sifre_hash; else if (ayarlar.yonetici_sifre) eslesme = sifre === ayarlar.yonetici_sifre; else eslesme = sifre === "1234";
-  if (eslesme) { yoneticiGirildi = true; yoneticiSifre = sifre; document.getElementById("hata_yon").style.display = "none"; document.getElementById("yon_giris_bolum").style.display = "none"; document.getElementById("yon_panel_bolum").style.display = "block"; } else { document.getElementById("hata_yon").style.display = "block"; } } catch (e) { toast("❌ Bağlantı hatası: " + e.message); }
+  const sifre = document.getElementById("inp_yon_sifre").value;
+  if (!sifre) return;
+  if (CALISMA_MODU === "local") {
+    try {
+      await apiFetch("/api/yonetici_giris", { method: "POST", body: JSON.stringify({ sifre }) });
+      yoneticiGirildi = true;
+      yoneticiSifre = sifre;
+      document.getElementById("hata_yon").style.display = "none";
+      document.getElementById("yon_giris_bolum").style.display = "none";
+      document.getElementById("yon_panel_bolum").style.display = "block";
+    } catch (e) {
+      document.getElementById("hata_yon").style.display = "block";
+      toast("❌ " + e.message);
+    }
+    return;
+  }
+  try {
+    const snap = await db.ref(DB_YOLU.ayarlar).get();
+    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
+    let eslesme = false;
+    if (ayarlar.yonetici_sifre_hash) eslesme = (await sha256(sifre)) === ayarlar.yonetici_sifre_hash;
+    else if (ayarlar.yonetici_sifre) eslesme = sifre === ayarlar.yonetici_sifre;
+    else eslesme = sifre === "1234";
+    if (eslesme) {
+      yoneticiGirildi = true;
+      yoneticiSifre = sifre;
+      document.getElementById("hata_yon").style.display = "none";
+      document.getElementById("yon_giris_bolum").style.display = "none";
+      document.getElementById("yon_panel_bolum").style.display = "block";
+    } else {
+      document.getElementById("hata_yon").style.display = "block";
+    }
+  } catch (e) { toast("❌ Bağlantı hatası: " + e.message); }
 }
 async function sifreDegistir() {
-  const tip = document.getElementById("sifre_tip").value; const y1 = document.getElementById("inp_yeni1").value; const y2 = document.getElementById("inp_yeni2").value; const mesajEl = document.getElementById("yon_mesaj");
+  const tip = document.getElementById("sifre_tip").value;
+  const y1 = document.getElementById("inp_yeni1").value;
+  const y2 = document.getElementById("inp_yeni2").value;
+  const mesajEl = document.getElementById("yon_mesaj");
   if (y1 !== y2) { mesajEl.innerHTML = '<div class="msg-err">Hata: Şifreler uyuşmuyor!</div>'; return; }
   if (y1.length < 4) { mesajEl.innerHTML = '<div class="msg-err">Hata: En az 4 karakter olmalı!</div>'; return; }
-  try { if (CALISMA_MODU === "local") { await apiFetch("/api/sifre", { method: "POST", body: JSON.stringify({ tip, yeni: y1 }) }); } else { const hash = await sha256(y1); const guncelle = {}; guncelle[tip + "_sifre_hash"] = hash; await db.ref(DB_YOLU.ayarlar).update(guncelle); await db.ref(DB_YOLU.sifre).set({ tip, hash, zaman: Date.now() }); }
-  if (tip === "yonetici") yoneticiSifre = y1; if (tip === "mobil") mobilSifre = y1; mesajEl.innerHTML = '<div class="msg-ok">✅ Şifre güncellendi.</div>'; document.getElementById("inp_yeni1").value = ""; document.getElementById("inp_yeni2").value = ""; } catch (e) { mesajEl.innerHTML = `<div class="msg-err">Hata: ${e.message}</div>`; }
+  try {
+    if (CALISMA_MODU === "local") {
+      await apiFetch("/api/sifre", { method: "POST", body: JSON.stringify({ tip, yeni: y1 }) });
+    } else {
+      const hash = await sha256(y1);
+      const guncelle = {};
+      guncelle[tip + "_sifre_hash"] = hash;
+      await db.ref(DB_YOLU.ayarlar).update(guncelle);
+      await db.ref(DB_YOLU.sifre).set({ tip, hash, zaman: Date.now() });
+    }
+    if (tip === "yonetici") yoneticiSifre = y1;
+    if (tip === "mobil") mobilSifre = y1;
+    mesajEl.innerHTML = '<div class="msg-ok">✅ Şifre güncellendi.</div>';
+    document.getElementById("inp_yeni1").value = "";
+    document.getElementById("inp_yeni2").value = "";
+  } catch (e) { mesajEl.innerHTML = `<div class="msg-err">Hata: ${e.message}</div>`; }
 }
 
-// =================== MİKROFON SES KAYDI VE FİREBASE YÜKLEMESİ ===================
+// =================== MİKROFON KAYIT (Aynı) ===================
 let kayitYapiliyor=false, mikStream=null, mikAudioCtx=null, mikProcessor=null, mikKayitParc=[];
 let seciliWavBlob = null;
 
 function mikDurum(txt, renk) {
-  const d = document.getElementById("mik_durum"); const b = document.getElementById("btn_mik"); if (d) d.textContent = txt; if (!b) return;
+  const d = document.getElementById("mik_durum");
+  const b = document.getElementById("btn_mik");
+  if (d) d.textContent = txt;
+  if (!b) return;
   if (renk === "kayit") { b.style.backgroundColor = "#e74c3c"; b.style.boxShadow = "0 4px #c0392b"; }
   else if (renk === "isleniyor") { b.style.backgroundColor = "#f39c12"; b.style.boxShadow = "0 4px #e67e22"; }
   else { b.style.backgroundColor = "#2ed573"; b.style.boxShadow = "0 4px #27ae60"; }
 }
-
 function pcmToWavBlob(float32Chunks, sampleRate) {
-  let totalLength = 0; for (const arr of float32Chunks) totalLength += arr.length;
-  const pcm16 = new Int16Array(totalLength); let offset = 0;
+  let totalLength = 0;
+  for (const arr of float32Chunks) totalLength += arr.length;
+  const pcm16 = new Int16Array(totalLength);
+  let offset = 0;
   for (const arr of float32Chunks) {
     for (let i = 0; i < arr.length; i++) {
-      let s = Math.max(-1, Math.min(1, arr[i])); pcm16[offset++] = s < 0 ? s * 0x8000 : s * 0x7fff;
+      let s = Math.max(-1, Math.min(1, arr[i]));
+      pcm16[offset++] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
   }
-  const buffer = new ArrayBuffer(44 + pcm16.length * 2); const view = new DataView(buffer);
+  const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+  const view = new DataView(buffer);
   const writeString = (o, str) => { for (let i = 0; i < str.length; i++) view.setUint8(o + i, str.charCodeAt(i)); };
-  writeString(0, 'RIFF'); view.setUint32(4, 36 + pcm16.length * 2, true); writeString(8, 'WAVE'); writeString(12, 'fmt ');
-  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeString(36, 'data');
-  view.setUint32(40, pcm16.length * 2, true); let pos = 44;
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + pcm16.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, pcm16.length * 2, true);
+  let pos = 44;
   for (let i = 0; i < pcm16.length; i++, pos += 2) view.setInt16(pos, pcm16[i], true);
   return new Blob([view], { type: 'audio/wav' });
 }
-
 async function mikBaslat() {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) throw new Error('Tarayıcı desteklemiyor');
-
   const constraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } };
   mikStream = await navigator.mediaDevices.getUserMedia(constraints);
   mikAudioCtx = new AudioCtx();
   const source = mikAudioCtx.createMediaStreamSource(mikStream);
-
   const lowpassFilter = mikAudioCtx.createBiquadFilter();
-  lowpassFilter.type = "lowpass"; lowpassFilter.frequency.value = 3400; 
-
+  lowpassFilter.type = "lowpass"; lowpassFilter.frequency.value = 3400;
   const highpassFilter = mikAudioCtx.createBiquadFilter();
-  highpassFilter.type = "highpass"; highpassFilter.frequency.value = 300; 
-
+  highpassFilter.type = "highpass"; highpassFilter.frequency.value = 300;
   mikProcessor = mikAudioCtx.createScriptProcessor(4096, 1, 1);
   mikKayitParc = [];
-
-  source.connect(highpassFilter); highpassFilter.connect(lowpassFilter);
-  lowpassFilter.connect(mikProcessor); mikProcessor.connect(mikAudioCtx.destination);
-
+  source.connect(highpassFilter);
+  highpassFilter.connect(lowpassFilter);
+  lowpassFilter.connect(mikProcessor);
+  mikProcessor.connect(mikAudioCtx.destination);
   mikProcessor.onaudioprocess = (e) => {
-      if (kayitYapiliyor) mikKayitParc.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    if (kayitYapiliyor) mikKayitParc.push(new Float32Array(e.inputBuffer.getChannelData(0)));
   };
 }
-
 async function mikToggle() {
+  if (!onayliKullanici) { toast("Yetkisiz!"); return; }
   if (!kayitYapiliyor) {
     try {
-      await mikBaslat(); kayitYapiliyor = true;
+      await mikBaslat();
+      kayitYapiliyor = true;
       mikDurum('🔴 Kayıt yapılıyor... Konuşun, bitince tekrar basın.', 'kayit');
-      document.getElementById("mik_icon").textContent = "⏹️"; document.getElementById("mik_yazi").textContent = "Kaydı Bitir";
+      document.getElementById("mik_icon").textContent = "⏹️";
+      document.getElementById("mik_yazi").textContent = "Kaydı Bitir";
       document.getElementById("mik_onizleme_kapsayici").style.display = "none";
-    } catch (e) { kayitYapiliyor = false; mikDurum('❌ Mikrofon izni verilmedi', 'hazir'); toast('Mikrofon izni gerekli'); }
+    } catch (e) {
+      kayitYapiliyor = false;
+      mikDurum('❌ Mikrofon izni verilmedi', 'hazir');
+      toast('Mikrofon izni gerekli');
+    }
   } else {
-    kayitYapiliyor = false; mikDurum('⏳ Ses hazırlanıyor...', 'isleniyor');
-    try { if (mikProcessor) { mikProcessor.disconnect(); mikProcessor.onaudioprocess = null; } } catch (e) {}
-    try { if (mikAudioCtx) await mikAudioCtx.close(); } catch (e) {}
-    try { if (mikStream) mikStream.getTracks().forEach(tr => tr.stop()); } catch (e) {}
+    kayitYapiliyor = false;
+    mikDurum('⏳ Ses hazırlanıyor...', 'isleniyor');
+    try { if (mikProcessor) { mikProcessor.disconnect(); mikProcessor.onaudioprocess = null; } } catch(e) {}
+    try { if (mikAudioCtx) await mikAudioCtx.close(); } catch(e) {}
+    try { if (mikStream) mikStream.getTracks().forEach(tr => tr.stop()); } catch(e) {}
     mikProcessor = null; mikAudioCtx = null; mikStream = null;
-    
-    seciliWavBlob = pcmToWavBlob(mikKayitParc, 44100); mikKayitParc = [];
+    seciliWavBlob = pcmToWavBlob(mikKayitParc, 44100);
+    mikKayitParc = [];
     const url = URL.createObjectURL(seciliWavBlob);
     document.getElementById("ses_onizleme").src = url;
     document.getElementById("mik_onizleme_kapsayici").style.display = "block";
-    
-    document.getElementById("mik_icon").textContent = "🎙️"; document.getElementById("mik_yazi").textContent = "Yeniden Kaydet";
+    document.getElementById("mik_icon").textContent = "🎙️";
+    document.getElementById("mik_yazi").textContent = "Yeniden Kaydet";
     mikDurum('✅ Kayıt hazır! Dinleyebilir veya gönderebilirsiniz.', 'hazir');
   }
 }
-
 async function anonsuFirebaseGonder() {
   if (!seciliWavBlob) return;
+  if (!onayliKullanici) { toast("Yetkisiz!"); return; }
   mikDurum('⏳ Yükleniyor...', 'isleniyor');
   try {
     const depolama = firebase.storage();
@@ -494,19 +829,29 @@ async function anonsuFirebaseGonder() {
     const ref = depolama.ref(dosyaAdi);
     await ref.put(seciliWavBlob);
     const indirmeUrl = await ref.getDownloadURL();
-    
-    // GÜNCELLENDİ: path (dosyaAdi) de gönderiliyor, indirme bitince silinsin diye
     await db.ref(DB_YOLU.mikrofon_url).set({ url: indirmeUrl, path: dosyaAdi, zaman: Date.now() });
-    
-    mikDurum('✅ Anons başarıyla gönderildi!', 'hazir'); toast('🚀 Anons Gönderildi!');
-    document.getElementById("mik_onizleme_kapsayici").style.display = "none"; seciliWavBlob = null;
+    mikDurum('✅ Anons başarıyla gönderildi!', 'hazir');
+    toast('🚀 Anons Gönderildi!');
+    document.getElementById("mik_onizleme_kapsayici").style.display = "none";
+    seciliWavBlob = null;
   } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
 }
 
 window.onload = () => {
-  const info = document.querySelector("#ekran_giris .info");
-  if (info) info.textContent = CALISMA_MODU === "local" ? "Yerel ağ üzerinden kontrol" : "İnternet üzerinden uzaktan kontrol";
-  if (sessionStorage.getItem("ozil_giris") === "1") { girisYapildi = true; ekranGoster("kumanda"); dinleyicileriBaslat(); }
+  girisArayuzunuAyarla();
+  const onayli = sessionStorage.getItem("ozil_onayli");
+  if (sessionStorage.getItem("ozil_giris") === "1" && onayli === "1") {
+    girisYapildi = true;
+    onayliKullanici = true;
+    ekranGoster("kumanda");
+    dinleyicileriBaslat();
+  } else if (sessionStorage.getItem("ozil_giris") === "1" && onayli !== "1") {
+    // Yetkisiz oturum varsa temizle
+    sessionStorage.clear();
+    ekranGoster("giris");
+  } else {
+    ekranGoster("giris");
+  }
 };
 </script>
 </body>
