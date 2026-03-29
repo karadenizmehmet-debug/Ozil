@@ -349,7 +349,7 @@ async function cikisYap() {
   toast("Çıkış yapıldı");
 }
 
-// Yönetim paneli (sadece yöneticiye özel)
+// Yönetim paneli (sadece yöneticiye özel) - Şifre değiştirme kaldırıldı
 async function yonetimPaneliniGoster() {
   const container = document.getElementById("yonetim_panel_icerik");
   if (!girisYapildi) {
@@ -360,7 +360,7 @@ async function yonetimPaneliniGoster() {
     container.innerHTML = '<div class="card"><p style="color:red;">❌ Bu bölüme erişim yetkiniz yok. Sadece sistem yöneticisi erişebilir.</p></div>';
     return;
   }
-  // Yönetici paneli (tam yetkili)
+  // Yönetici paneli - sadece kullanıcı yönetimi
   container.innerHTML = `
     <div class="card">
       <h3>👥 Onay Bekleyen Kullanıcılar</h3>
@@ -370,139 +370,118 @@ async function yonetimPaneliniGoster() {
       <h3>✅ Onaylı Kullanıcılar</h3>
       <div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div>
     </div>
-    <div class="card">
-      <h3>🔑 Şifre Değiştir</h3>
-      <select id="sifre_tip_admin">
-        <option value="mobil">📱 Mobil Kumanda Şifresi</option>
-        <option value="uygulama">⚙️ Uygulama Giriş Şifresi</option>
-        <option value="yonetici">🔑 Yönetici Şifresi</option>
-      </select>
-      <input type="password" id="admin_yeni_sifre1" placeholder="Yeni Şifre">
-      <input type="password" id="admin_yeni_sifre2" placeholder="Yeni Şifre (Tekrar)">
-      <button onclick="sifreDegistirAdmin()">ŞİFREYİ GÜNCELLE</button>
-    </div>
   `;
   await listeleKullanicilar();
 }
 
 async function listeleKullanicilar() {
   // Bekleyenler
-  const bekleyenSnap = await db.ref(DB_YOLU.bekleyen_kullanicilar).get();
-  const bekleyenler = bekleyenSnap.val() || {};
-  const bekleyenDiv = document.getElementById("bekleyen_liste");
-  if (Object.keys(bekleyenler).length === 0) {
-    bekleyenDiv.innerHTML = "<p>Bekleyen kullanıcı yok.</p>";
-  } else {
-    let html = "";
-    for (const [uid, data] of Object.entries(bekleyenler)) {
-      html += `<div class="kullanici-item">
-        <span class="kullanici-email">${escapeHtml(data.email)}</span>
-        <div class="button-group">
-          <button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button>
-          <button class="sil-btn" onclick="kullaniciSil('${uid}', 'bekleyen')">Sil</button>
-        </div>
-      </div>`;
+  try {
+    const bekleyenSnap = await db.ref(DB_YOLU.bekleyen_kullanicilar).get();
+    const bekleyenler = bekleyenSnap.val() || {};
+    const bekleyenDiv = document.getElementById("bekleyen_liste");
+    if (Object.keys(bekleyenler).length === 0) {
+      bekleyenDiv.innerHTML = "<p>Bekleyen kullanıcı yok.</p>";
+    } else {
+      let html = "";
+      for (const [uid, data] of Object.entries(bekleyenler)) {
+        html += `<div class="kullanici-item">
+          <span class="kullanici-email">${escapeHtml(data.email)}</span>
+          <div class="button-group">
+            <button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button>
+            <button class="sil-btn" onclick="kullaniciSil('${uid}', 'bekleyen')">Sil</button>
+          </div>
+        </div>`;
+      }
+      bekleyenDiv.innerHTML = html;
     }
-    bekleyenDiv.innerHTML = html;
-  }
+  } catch(e) { toast("Bekleyenler listelenirken hata: " + e.message); }
+  
   // Onaylılar
-  const onayliSnap = await db.ref(DB_YOLU.onayli_kullanicilar).get();
-  const onaylilar = onayliSnap.val() || {};
-  const onayliDiv = document.getElementById("onayli_liste");
-  if (Object.keys(onaylilar).length === 0) {
-    onayliDiv.innerHTML = "<p>Henüz onaylı kullanıcı yok.</p>";
-  } else {
-    let html = "";
-    for (const [uid, data] of Object.entries(onaylilar)) {
-      if (data.email === "karadenizmehmet@gmail.com") continue;
-      html += `<div class="kullanici-item">
-        <span class="kullanici-email">${escapeHtml(data.email)}</span>
-        <div class="button-group">
-          <button class="pasif-btn" onclick="kullaniciPasifYap('${uid}')">Pasif Yap</button>
-          <button class="sil-btn" onclick="kullaniciSil('${uid}', 'onayli')">Sil</button>
-        </div>
-      </div>`;
+  try {
+    const onayliSnap = await db.ref(DB_YOLU.onayli_kullanicilar).get();
+    const onaylilar = onayliSnap.val() || {};
+    const onayliDiv = document.getElementById("onayli_liste");
+    if (Object.keys(onaylilar).length === 0) {
+      onayliDiv.innerHTML = "<p>Henüz onaylı kullanıcı yok.</p>";
+    } else {
+      let html = "";
+      for (const [uid, data] of Object.entries(onaylilar)) {
+        if (data.email === "karadenizmehmet@gmail.com") continue;
+        html += `<div class="kullanici-item">
+          <span class="kullanici-email">${escapeHtml(data.email)}</span>
+          <div class="button-group">
+            <button class="pasif-btn" onclick="kullaniciPasifYap('${uid}')">Pasif Yap</button>
+            <button class="sil-btn" onclick="kullaniciSil('${uid}', 'onayli')">Sil</button>
+          </div>
+        </div>`;
+      }
+      onayliDiv.innerHTML = html;
     }
-    onayliDiv.innerHTML = html;
-  }
+  } catch(e) { toast("Onaylılar listelenirken hata: " + e.message); }
 }
 
 async function kullaniciOnayla(uid) {
-  const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
-  const snap = await bekleyenRef.get();
-  if (!snap.exists()) return;
-  const userData = snap.val();
-  await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).set({
-    email: userData.email,
-    uid: uid,
-    onay_tarihi: Date.now()
-  });
-  await bekleyenRef.remove();
-  toast(`${userData.email} onaylandı.`);
-  await listeleKullanicilar();
-  if (mevcutKullaniciUid === uid && !yoneticiMi) {
-    yetkiliMi = true;
-    sessionStorage.setItem("ozil_yetkili", "1");
-    toast("Yetkiniz güncellendi! Artık kumandayı kullanabilirsiniz.");
-  }
+  try {
+    const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
+    const snap = await bekleyenRef.get();
+    if (!snap.exists()) { toast("Kullanıcı bulunamadı!"); return; }
+    const userData = snap.val();
+    await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).set({
+      email: userData.email,
+      uid: uid,
+      onay_tarihi: Date.now()
+    });
+    await bekleyenRef.remove();
+    toast(`${userData.email} onaylandı.`);
+    await listeleKullanicilar();
+    if (mevcutKullaniciUid === uid && !yoneticiMi) {
+      yetkiliMi = true;
+      sessionStorage.setItem("ozil_yetkili", "1");
+      toast("Yetkiniz güncellendi! Artık kumandayı kullanabilirsiniz.");
+    }
+  } catch(e) { toast("Onaylama hatası: " + e.message); }
 }
 
 async function kullaniciPasifYap(uid) {
-  const onayliRef = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
-  const snap = await onayliRef.get();
-  if (!snap.exists()) return;
-  const userData = snap.val();
-  await onayliRef.remove();
-  toast(`${userData.email} yetkisi kaldırıldı (pasif).`);
-  await listeleKullanicilar();
-  if (mevcutKullaniciUid === uid && !yoneticiMi) {
-    yetkiliMi = false;
-    sessionStorage.setItem("ozil_yetkili", "0");
-    toast("Yetkiniz iptal edildi!");
-  }
+  try {
+    const onayliRef = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
+    const snap = await onayliRef.get();
+    if (!snap.exists()) { toast("Kullanıcı bulunamadı!"); return; }
+    const userData = snap.val();
+    await onayliRef.remove();
+    toast(`${userData.email} yetkisi kaldırıldı (pasif).`);
+    await listeleKullanicilar();
+    if (mevcutKullaniciUid === uid && !yoneticiMi) {
+      yetkiliMi = false;
+      sessionStorage.setItem("ozil_yetkili", "0");
+      toast("Yetkiniz iptal edildi!");
+    }
+  } catch(e) { toast("Pasif yapma hatası: " + e.message); }
 }
 
 async function kullaniciSil(uid, kaynak) {
-  let email = "";
-  if (kaynak === "bekleyen") {
-    const ref = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
-    const snap = await ref.get();
-    if (snap.exists()) email = snap.val().email;
-    await ref.remove();
-  } else if (kaynak === "onayli") {
-    const ref = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
-    const snap = await ref.get();
-    if (snap.exists()) email = snap.val().email;
-    await ref.remove();
-  }
-  toast(`${email || uid} silindi.`);
-  await listeleKullanicilar();
-  if (mevcutKullaniciUid === uid && !yoneticiMi) {
-    yetkiliMi = false;
-    sessionStorage.setItem("ozil_yetkili", "0");
-    toast("Hesabınız silindi, yetkiniz kalmadı.");
-  }
-}
-
-async function sifreDegistirAdmin() {
-  const tip = document.getElementById("sifre_tip_admin").value;
-  const y1 = document.getElementById("admin_yeni_sifre1").value;
-  const y2 = document.getElementById("admin_yeni_sifre2").value;
-  if (y1 !== y2) { toast("Şifreler uyuşmuyor!"); return; }
-  if (y1.length < 4) { toast("En az 4 karakter!"); return; }
-  await sifreGuncelle(tip, y1);
-}
-
-async function sifreGuncelle(tip, yeni) {
   try {
-    const hash = await sha256(yeni);
-    const guncelle = {};
-    guncelle[tip + "_sifre_hash"] = hash;
-    await db.ref(DB_YOLU.ayarlar).update(guncelle);
-    await db.ref(DB_YOLU.sifre).set({ tip, hash, zaman: Date.now() });
-    toast("Şifre güncellendi!");
-    document.querySelectorAll("input[type=password]").forEach(inp => inp.value = "");
-  } catch(e) { toast("Hata: " + e.message); }
+    let email = "";
+    if (kaynak === "bekleyen") {
+      const ref = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
+      const snap = await ref.get();
+      if (snap.exists()) email = snap.val().email;
+      await ref.remove();
+    } else if (kaynak === "onayli") {
+      const ref = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
+      const snap = await ref.get();
+      if (snap.exists()) email = snap.val().email;
+      await ref.remove();
+    }
+    toast(`${email || uid} silindi.`);
+    await listeleKullanicilar();
+    if (mevcutKullaniciUid === uid && !yoneticiMi) {
+      yetkiliMi = false;
+      sessionStorage.setItem("ozil_yetkili", "0");
+      toast("Hesabınız silindi, yetkiniz kalmadı.");
+    }
+  } catch(e) { toast("Silme hatası: " + e.message); }
 }
 
 async function sha256(metin) {
@@ -520,7 +499,7 @@ function escapeHtml(str) {
   });
 }
 
-// Firebase veri dinleme
+// Firebase veri dinleme (aynı)
 function dinleyicileriBaslat() {
   if (!db) return;
   db.ref(DB_YOLU.durum).on("value", snap => {
