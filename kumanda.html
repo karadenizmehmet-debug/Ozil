@@ -187,7 +187,7 @@
 
 <div id="ekran_zil" style="display:none;max-width:500px;margin:0 auto">
   <div style="position:sticky;top:0;background:white;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
-    <strong>🎵 Zil Melodisi Se</strong><br><small style="color:#7f8c8d">Hangi zil için melodi seçmek istiyorsunuz?</small><br><br>
+    <strong>🎵 Zil Melodisi Seç</strong><br><small style="color:#7f8c8d">Hangi zil için melodi seçmek istiyorsunuz?</small><br><br>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn dark" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('toplanma_zil','Toplanma')">🔔 Toplanma</button>
       <button class="btn blue" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogr_zil','Öğrenci')">🧑‍🎓 Öğrenci</button>
@@ -842,8 +842,6 @@ function cihazlarDinle() {
   if (!db) return;
   
   const cihazlarRef = db.ref(DB_YOLU.cihazlar);
-  
-  // ÖNCEKİ DİNLEYİCİYİ DOĞRU ŞEKİLDE TEMİZLE (Beyaz Ekran / Çökme Çözümü)
   cihazlarRef.off("value");
   
   cihazlarRef.on("value", snap => {
@@ -858,14 +856,12 @@ function cihazlarDinle() {
     
     Object.keys(cihazlar).forEach(cihazId => {
       const cihaz = cihazlar[cihazId];
-      
+      // Boolean kontrolünü daha sıkı yapıyoruz (Firebase bazen farklı dönebilir)
       const uzaktanAcik = cihaz.uzaktan_erisim_acik !== false;
       const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
-      // Cihazın durumunu çevrimiçi/çevrimdışı verisine göre al:
       const cihazAktif = cihaz.cevrimici === true;
       const zaman = cihaz.guncelleme || cihaz.zaman || "—";
       
-      // Buton tasarımını düzenledim (Açıksa kapat seçeneği Kırmızı, Kapalıysa Aç seçeneği Yeşil olsun)
       const butonYazi = uzaktanAcik ? "Erişimi Kapat" : "Erişimi Aç";
       const butonSinif = uzaktanAcik ? "cihaz-erisim-btn kapali" : "cihaz-erisim-btn";
       const durumYazi = cihazAktif ? "Çevrimiçi" : "Çevrimdışı";
@@ -880,8 +876,7 @@ function cihazlarDinle() {
             <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
           </div>
           <button class="${butonSinif}" 
-                  onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${uzaktanAcik})"
-                  title="${uzaktanAcik ? 'Bu cihazın uzaktan komut almasını engelle' : 'Bu cihazın uzaktan komut almasına izin ver'}">
+                  onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${uzaktanAcik})">
             ${butonYazi}
           </button>
         </div>
@@ -899,29 +894,23 @@ function cihazErisimToggle(cihazId, suanAcik) {
   }
   
   const yeniDurum = !suanAcik;
-  const cihazRef = db.ref(DB_YOLU.cihazlar + "/" + cihazId);
+  const cihazPath = DB_YOLU.cihazlar + "/" + cihazId;
+  const simdi = new Date().toLocaleString("tr-TR");
   
-  cihazRef.update({
+  // KRİTİK GÜNCELLEME: Python'un anında tepki vermesi için veriyi güncelliyoruz.
+  db.ref(cihazPath).update({
     uzaktan_erisim_acik: yeniDurum,
-    zaman: new Date().toLocaleString("tr-TR")
+    guncelleme: simdi,
+    zaman_ms: Date.now() // Python listener'ın değişikliği her seferinde görmesi için
   }).then(() => {
-    const mesaj = yeniDurum ? 
-      "✓ Uzaktan erişim AÇILDI" : 
-      "✗ Uzaktan erişim KAPATILDI";
-    toast(mesaj);
+    toast(yeniDurum ? "✅ Erişim Yetkisi Verildi" : "🚫 Erişim Kapatıldı");
   }).catch(err => {
     toast("❌ Hata: " + err.message);
   });
 }
 
 function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
   return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
@@ -938,11 +927,8 @@ window.onload = () => {
     yetkiliMi = yetkili;
     yoneticiMi = yonetici;
     
-    // YÖNETİCİ BUTONUNU SAYFA YENİLENDİĞİNDE DE GÖSTER
     const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-    if (yoneticiMi && cihazBtn) {
-      cihazBtn.style.display = "inline-block";
-    }
+    if (yoneticiMi && cihazBtn) { cihazBtn.style.display = "inline-block"; }
 
     ekranGoster("kumanda");
     dinleyicileriBaslat();
