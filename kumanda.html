@@ -38,7 +38,7 @@
   .sarki-item:active{background-color:#dfe4ea}
   .sarki-name{font-weight:bold;color:#2c3e50;text-align:left}
   .play-btn{color:#0984e3;font-size:20px}
-  #ekran_yonetici{display:none;max-width:400px;margin:0 auto}
+  #ekran_yonetici{display:none;max-width:500px;margin:0 auto}
   #ekran_yonetici input,#ekran_yonetici select{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ddd;font-size:15px;outline:none}
   #ekran_yonetici button{width:100%;padding:12px;background:#2ed573;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;margin-top:5px}
   .msg-ok{background:#2ed573;color:white;padding:10px;border-radius:5px;margin-bottom:10px}
@@ -49,6 +49,11 @@
   .durum-cevrimdisi{background:#f8d7da;color:#721c24}
   .google-btn{background-color:#fff;color:#757575;border:1px solid #ddd;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:15px}
   .google-btn img{width:20px;height:20px}
+  .kullanici-listesi{max-height:200px;overflow-y:auto;text-align:left;margin-top:10px}
+  .kullanici-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #eee}
+  .kullanici-email{font-weight:bold}
+  .onayla-btn,.yetki-kaldir-btn{background:#2ed573;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px}
+  .yetki-kaldir-btn{background:#e74c3c}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
 </style>
@@ -56,18 +61,11 @@
 <body>
 <div id="ekran_giris">
   <h2>Nimetullah Nahçivani İHO<br><span style="font-size:16px;color:#7f8c8d">Mobil Kumanda Girişi</span></h2>
-  <div class="info" id="giris_mod_bilgi">İnternet üzerinden uzaktan kontrol</div>
-  <!-- Google Giriş Butonu (Firebase modunda gösterilecek) -->
-  <button id="googleGirisBtn" class="google-btn" style="display:none" onclick="googleGirisYap()">
+  <div class="info" id="giris_mod_bilgi">Google hesabı ile giriş yapın</div>
+  <button id="googleGirisBtn" class="google-btn" onclick="googleGirisYap()">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Google ile Giriş Yap
   </button>
-  <!-- Şifreli giriş alanı (Local mod için) -->
-  <div id="sifreliGirisDiv" style="display:none">
-    <input type="password" id="inp_sifre" placeholder="Mobil Kumanda Şifresi" onkeydown="if(event.key==='Enter')sifreliGirisYap()">
-    <button onclick="sifreliGirisYap()">GİRİŞ YAP</button>
-  </div>
-  <div class="hata" id="hata_giris">Hatalı Şifre! Lütfen tekrar deneyin.</div>
-  <div class="hata" id="hata_google">Google Girişi başarısız veya yetkisiz e-posta!</div>
+  <div class="hata" id="hata_google">Giriş başarısız!</div>
 </div>
 
 <div id="ekran_kumanda">
@@ -183,28 +181,9 @@
 </div>
 
 <div id="ekran_yonetici">
-  <h2>🔐 Yönetici Girişi</h2>
-  <div id="yon_giris_bolum">
-    <div class="card">
-      <p style="color:#7f8c8d">Şifre ynetimi için yönetici Şifresini girin.</p>
-      <input type="password" id="inp_yon_sifre" placeholder="Yönetici Şifresi" onkeydown="if(event.key==='Enter')yoneticiGiris()">
-      <button onclick="yoneticiGiris()" style="background:#e67e22">GİRİŞ YAP</button>
-      <div class="hata" id="hata_yon" style="display:none">Hatalı Yönetici Şifresi!</div>
-    </div>
-  </div>
-  <div id="yon_panel_bolum" style="display:none">
-    <div id="yon_mesaj"></div>
-    <div class="card">
-      <label style="font-weight:bold">Değiştirilecek Şifre:</label>
-      <select id="sifre_tip">
-        <option value="yonetici">🔑 Yönetici Şifresi</option>
-        <option value="uygulama">⚙️ Uygulama Giriş Şifresi</option>
-        <option value="mobil">📱 Mobil Kumanda Şifresi</option>
-      </select>
-      <input type="password" id="inp_yeni1" placeholder="Yeni Şifre">
-      <input type="password" id="inp_yeni2" placeholder="Yeni Şifre (Tekrar)">
-      <button onclick="sifreDegistir()">ŞİFREYİ GÜNCELLE</button>
-    </div>
+  <h2>🔐 Yönetici Paneli</h2>
+  <div id="yonetici_panel_icerik">
+    <!-- Yönetici girişi gerekiyorsa buraya gelecek -->
   </div>
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön </button></div>
 </div>
@@ -251,18 +230,25 @@ const DB_YOLU = {
   sifre: "kumanda/sifre",
   ayarlar: "kumanda/ayarlar",
   hava: "kumanda/hava",
-  mikrofon_url: "kumanda/mikrofon_url"
+  mikrofon_url: "kumanda/mikrofon_url",
+  bekleyen_kullanicilar: "kumanda/bekleyen_kullanicilar",
+  onayli_kullanicilar: "kumanda/onayli_kullanicilar"
 };
-const URL_PARAM = new URLSearchParams(window.location.search);
-const CALISMA_MODU = URL_PARAM.get("mode") || ((location.protocol.startsWith("http") && /:(5000)/.test(location.host)) ? "local" : "firebase");
-const LOCAL_API = URL_PARAM.get("api") || "";
 
 let db = null;
 let auth = null;
-let girisYapildi = false; let sistemAcik = true; let yoneticiGirildi = false;
-let mevcutSes = 80; let mobilSifre = ""; let yoneticiSifre = ""; let seciliZilTip = ""; let seciliZilAdi = "";
-let localDurumTimer = null; let sesZamanlayici = null; let genelAyarTimer = null;
-let onayliKullanici = false;  // Yetkili kullanıcı mı?
+let girisYapildi = false;
+let yetkiliMi = false;          // Kullanıcı yetkili mi?
+let yoneticiMi = false;         // Yönetici (karadenizmehmet@gmail.com) mi?
+let mevcutKullaniciUid = null;
+let mevcutKullaniciEmail = null;
+let sistemAcik = true;
+let mevcutSes = 80;
+let seciliZilTip = "";
+let seciliZilAdi = "";
+let localDurumTimer = null;
+let sesZamanlayici = null;
+let genelAyarTimer = null;
 
 if (typeof firebase !== "undefined") {
   try {
@@ -272,23 +258,78 @@ if (typeof firebase !== "undefined") {
   } catch (e) { console.error(e); }
 }
 
-// Moda göre giriş arayüzünü ayarla
-function girisArayuzunuAyarla() {
-  const googleBtn = document.getElementById("googleGirisBtn");
-  const sifreDiv = document.getElementById("sifreliGirisDiv");
-  const info = document.querySelector("#ekran_giris .info");
-  if (CALISMA_MODU === "local") {
-    googleBtn.style.display = "none";
-    sifreDiv.style.display = "block";
-    if (info) info.textContent = "Yerel ağ üzerinden kontrol (şifre ile)";
-  } else {
-    googleBtn.style.display = "block";
-    sifreDiv.style.display = "none";
-    if (info) info.textContent = "İnternet üzerinden uzaktan kontrol (Google ile)";
-  }
+// Yardımcı fonksiyonlar
+function toast(mesaj) {
+  const el = document.getElementById("toast");
+  el.innerHTML = mesaj; el.className = "show"; setTimeout(() => el.className = "", 3000);
 }
 
-// Google ile giriş
+function ekranGoster(ekran) {
+  ["giris", "kumanda", "sarki", "yonetici", "zil"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
+  document.getElementById("ekran_" + ekran).style.display = "block";
+  if (ekran === "sarki") sarkiListesiYukle();
+  if (ekran === "zil") zilListesiYukle();
+  if (ekran === "yonetici") yoneticiPaneliniGoster();
+}
+
+function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar"); bar.textContent = text; bar.className = cls; }
+
+// Yetki kontrolü
+function islemIcinYetkiKontrol() {
+  if (!girisYapildi) { toast("Lütfen önce giriş yapın!"); return false; }
+  if (!yetkiliMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
+  return true;
+}
+
+// Giriş başarılı olduğunda çağrılır
+async function girisBasarili(user) {
+  girisYapildi = true;
+  mevcutKullaniciUid = user.uid;
+  mevcutKullaniciEmail = user.email;
+  yoneticiMi = (user.email === "karadenizmehmet@gmail.com");
+  
+  // Yetki durumunu kontrol et
+  await yetkiKontrolEt(user.uid);
+  
+  // Kullanıcıyı bekleyenler listesine ekle (eğer yetkili değilse ve yönetici değilse)
+  if (!yetkiliMi && !yoneticiMi) {
+    const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + user.uid);
+    const snap = await bekleyenRef.get();
+    if (!snap.exists()) {
+      await bekleyenRef.set({
+        email: user.email,
+        uid: user.uid,
+        tarih: Date.now()
+      });
+      toast("Yönetici onayı bekleniyor. Onaylanınca kumandayı kullanabilirsiniz.");
+    }
+  }
+  
+  sessionStorage.setItem("ozil_giris", "1");
+  sessionStorage.setItem("ozil_uid", user.uid);
+  sessionStorage.setItem("ozil_email", user.email);
+  sessionStorage.setItem("ozil_yetkili", yetkiliMi ? "1" : "0");
+  sessionStorage.setItem("ozil_yonetici", yoneticiMi ? "1" : "0");
+  
+  ekranGoster("kumanda");
+  dinleyicileriBaslat();
+  toast(`Hoş geldiniz, ${user.email}${yetkiliMi ? " (Yetkili)" : " (Onay bekliyor)"}`);
+}
+
+async function yetkiKontrolEt(uid) {
+  // Yönetici her zaman yetkilidir
+  if (mevcutKullaniciEmail === "karadenizmehmet@gmail.com") {
+    yetkiliMi = true;
+    return true;
+  }
+  // Onaylılar listesinde var mı?
+  const onayliRef = db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid);
+  const snap = await onayliRef.get();
+  yetkiliMi = snap.exists();
+  return yetkiliMi;
+}
+
+// Google girişi
 async function googleGirisYap() {
   if (!auth) { toast("Firebase Auth yüklenemedi"); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -296,208 +337,202 @@ async function googleGirisYap() {
   try {
     const result = await auth.signInWithPopup(provider);
     const user = result.user;
-    const email = user.email;
-    if (email === "karadenizmehmet@gmail.com") {
-      onayliKullanici = true;
-      girisBasarili(email);
-      toast(`Hoş geldiniz, ${email} (Yetkili)`);
-    } else {
-      onayliKullanici = false;
-      document.getElementById("hata_google").style.display = "block";
-      document.getElementById("hata_google").innerText = "Bu e-posta adresi yetkili değil! Sadece karadenizmehmet@gmail.com yetkilidir.";
-      await auth.signOut();
-      toast("Yetkisiz e-posta!");
-    }
+    document.getElementById("hata_google").style.display = "none";
+    await girisBasarili(user);
   } catch (error) {
     console.error(error);
     document.getElementById("hata_google").style.display = "block";
-    document.getElementById("hata_google").innerText = "Google girişi başarısız: " + error.message;
+    document.getElementById("hata_google").innerText = "Giriş başarısız: " + error.message;
     toast("Giriş hatası: " + error.message);
   }
 }
 
-// Şifreli giriş (yerel mod)
-async function sifreliGirisYap() {
-  const sifre = document.getElementById("inp_sifre").value;
-  if (!sifre) return;
+async function cikisYap() {
+  if (auth) await auth.signOut();
+  girisYapildi = false;
+  yetkiliMi = false;
+  yoneticiMi = false;
+  sessionStorage.clear();
+  if (localDurumTimer) clearInterval(localDurumTimer);
+  ekranGoster("giris");
+  toast("Çıkış yapıldı");
+}
+
+// Yönetici panelini göster (kullanıcı yönetimi)
+async function yoneticiPaneliniGoster() {
+  const container = document.getElementById("yonetici_panel_icerik");
+  if (!girisYapildi) {
+    container.innerHTML = '<div class="card"><p>Lütfen önce giriş yapın.</p><button onclick="googleGirisYap()" class="btn blue">Google ile Giriş Yap</button></div>';
+    return;
+  }
+  if (!yoneticiMi && !yetkiliMi) {
+    container.innerHTML = '<div class="card"><p>Bu paneli kullanmak için yönetici yetkisi gereklidir.</p></div>';
+    return;
+  }
+  // Yönetici değil ama yetkili kullanıcı sadece şifre değiştirme görebilir (eski sistem)
+  // Aslında şifre değiştirme her yetkiliye açık olabilir. Ama kullanıcı yönetimi sadece yöneticiye.
+  if (!yoneticiMi) {
+    container.innerHTML = `<div class="card">
+      <h3>🔑 Şifre Değiştir</h3>
+      <select id="sifre_tip_simple">
+        <option value="mobil">📱 Mobil Kumanda Şifresi</option>
+        <option value="uygulama">⚙️ Uygulama Giriş Şifresi</option>
+        <option value="yonetici">🔑 Yönetici Şifresi</option>
+      </select>
+      <input type="password" id="yeni_sifre1" placeholder="Yeni Şifre">
+      <input type="password" id="yeni_sifre2" placeholder="Yeni Şifre (Tekrar)">
+      <button onclick="sifreDegistirSimple()">ŞİFREYİ GÜNCELLE</button>
+    </div>`;
+    return;
+  }
+  
+  // Yönetici paneli (tam yetkili)
+  container.innerHTML = `
+    <div class="card">
+      <h3>👥 Onay Bekleyen Kullanıcılar</h3>
+      <div id="bekleyen_liste" class="kullanici-listesi">Yükleniyor...</div>
+    </div>
+    <div class="card">
+      <h3>✅ Onaylı Kullanıcılar</h3>
+      <div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div>
+    </div>
+    <div class="card">
+      <h3>🔑 Şifre Değiştir</h3>
+      <select id="sifre_tip_admin">
+        <option value="mobil">📱 Mobil Kumanda Şifresi</option>
+        <option value="uygulama">⚙️ Uygulama Giriş Şifresi</option>
+        <option value="yonetici">🔑 Yönetici Şifresi</option>
+      </select>
+      <input type="password" id="admin_yeni_sifre1" placeholder="Yeni Şifre">
+      <input type="password" id="admin_yeni_sifre2" placeholder="Yeni Şifre (Tekrar)">
+      <button onclick="sifreDegistirAdmin()">ŞİFREYİ GÜNCELLE</button>
+    </div>
+  `;
+  await listeleKullanicilar();
+}
+
+async function listeleKullanicilar() {
+  // Bekleyenler
+  const bekleyenSnap = await db.ref(DB_YOLU.bekleyen_kullanicilar).get();
+  const bekleyenler = bekleyenSnap.val() || {};
+  const bekleyenDiv = document.getElementById("bekleyen_liste");
+  if (Object.keys(bekleyenler).length === 0) {
+    bekleyenDiv.innerHTML = "<p>Bekleyen kullanıcı yok.</p>";
+  } else {
+    let html = "";
+    for (const [uid, data] of Object.entries(bekleyenler)) {
+      html += `<div class="kullanici-item">
+        <span class="kullanici-email">${escapeHtml(data.email)}</span>
+        <button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button>
+      </div>`;
+    }
+    bekleyenDiv.innerHTML = html;
+  }
+  
+  // Onaylılar
+  const onayliSnap = await db.ref(DB_YOLU.onayli_kullanicilar).get();
+  const onaylilar = onayliSnap.val() || {};
+  const onayliDiv = document.getElementById("onayli_liste");
+  if (Object.keys(onaylilar).length === 0) {
+    onayliDiv.innerHTML = "<p>Henüz onaylı kullanıcı yok.</p>";
+  } else {
+    let html = "";
+    for (const [uid, data] of Object.entries(onaylilar)) {
+      // Yönetici kendini listeden çıkaramasın (isteğe bağlı)
+      if (data.email === "karadenizmehmet@gmail.com") continue;
+      html += `<div class="kullanici-item">
+        <span class="kullanici-email">${escapeHtml(data.email)}</span>
+        <button class="yetki-kaldir-btn" onclick="kullaniciYetkiKaldir('${uid}')">Yetkiyi Kaldır</button>
+      </div>`;
+    }
+    onayliDiv.innerHTML = html;
+  }
+}
+
+async function kullaniciOnayla(uid) {
+  // Bekleyenlerden al, onaylılara ekle
+  const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + uid);
+  const snap = await bekleyenRef.get();
+  if (!snap.exists()) return;
+  const userData = snap.val();
+  await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).set({
+    email: userData.email,
+    uid: uid,
+    onay_tarihi: Date.now()
+  });
+  await bekleyenRef.remove();
+  toast(`${userData.email} onaylandı.`);
+  await listeleKullanicilar();
+  
+  // Eğer bu kullanıcı şu an aktifse ve sayfada ise yetkisini güncelle
+  if (mevcutKullaniciUid === uid && !yoneticiMi) {
+    yetkiliMi = true;
+    sessionStorage.setItem("ozil_yetkili", "1");
+    toast("Yetkiniz güncellendi! Artık kumandayı kullanabilirsiniz.");
+  }
+}
+
+async function kullaniciYetkiKaldir(uid) {
+  await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).remove();
+  toast("Yetki kaldırıldı. Kullanıcı artık kumandayı kullanamaz.");
+  await listeleKullanicilar();
+  if (mevcutKullaniciUid === uid && !yoneticiMi) {
+    yetkiliMi = false;
+    sessionStorage.setItem("ozil_yetkili", "0");
+    toast("Yetkiniz iptal edildi!");
+    // Sayfayı yenilemek yerine kumanda ekranında kilitli kalacak
+  }
+}
+
+async function sifreDegistirAdmin() {
+  const tip = document.getElementById("sifre_tip_admin").value;
+  const y1 = document.getElementById("admin_yeni_sifre1").value;
+  const y2 = document.getElementById("admin_yeni_sifre2").value;
+  if (y1 !== y2) { toast("Şifreler uyuşmuyor!"); return; }
+  if (y1.length < 4) { toast("En az 4 karakter!"); return; }
+  await sifreGuncelle(tip, y1);
+}
+
+async function sifreDegistirSimple() {
+  const tip = document.getElementById("sifre_tip_simple").value;
+  const y1 = document.getElementById("yeni_sifre1").value;
+  const y2 = document.getElementById("yeni_sifre2").value;
+  if (y1 !== y2) { toast("Şifreler uyuşmuyor!"); return; }
+  if (y1.length < 4) { toast("En az 4 karakter!"); return; }
+  await sifreGuncelle(tip, y1);
+}
+
+async function sifreGuncelle(tip, yeni) {
   try {
-    const snap = await db.ref(DB_YOLU.ayarlar).get();
-    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
-    let eslesme = false;
-    if (ayarlar.mobil_sifre_hash) {
-      const hash = await sha256(sifre);
-      if (hash === ayarlar.mobil_sifre_hash) eslesme = true;
-    } else if (ayarlar.mobil_sifre && sifre === ayarlar.mobil_sifre) {
-      eslesme = true;
-    } else if (!ayarlar.mobil_sifre && !ayarlar.mobil_sifre_hash && sifre === "1234") {
-      eslesme = true;
-    }
-    if (eslesme) {
-      onayliKullanici = true; // Yerel modda giren herkes yetkili kabul edilsin
-      girisBasarili("yerel_kullanici");
-      toast("✅ Yerel ağ bağlantısı hazır");
-    } else {
-      document.getElementById("hata_giris").style.display = "block";
-    }
-  } catch (e) {
-    if (sifre === "1234") {
-      onayliKullanici = true;
-      girisBasarili("yerel_kullanici");
-      toast("✅ Yerel ağ bağlantısı hazır (varsayılan şifre)");
-    } else {
-      document.getElementById("hata_giris").style.display = "block";
-      toast("❌ Bağlantı hatası: " + e.message);
-    }
-  }
+    const hash = await sha256(yeni);
+    const guncelle = {};
+    guncelle[tip + "_sifre_hash"] = hash;
+    await db.ref(DB_YOLU.ayarlar).update(guncelle);
+    await db.ref(DB_YOLU.sifre).set({ tip, hash, zaman: Date.now() });
+    toast("Şifre güncellendi!");
+    document.querySelectorAll("input[type=password]").forEach(inp => inp.value = "");
+  } catch(e) { toast("Hata: " + e.message); }
 }
 
-function girisBasarili(kullaniciId) {
-  girisYapildi = true;
-  document.getElementById("hata_giris").style.display = "none";
-  document.getElementById("hata_google").style.display = "none";
-  sessionStorage.setItem("ozil_giris", "1");
-  sessionStorage.setItem("ozil_onayli", onayliKullanici ? "1" : "0");
-  if (CALISMA_MODU !== "local") {
-    // Firebase kullanıcı bilgilerini sakla
-    if (auth && auth.currentUser) {
-      sessionStorage.setItem("ozil_email", auth.currentUser.email);
-    }
-  }
-  ekranGoster("kumanda");
-  dinleyicileriBaslat();
-}
-
-function apiUrl(path) { return `${LOCAL_API}${path}`; }
-async function apiFetch(path, options = {}) {
-  const cfg = Object.assign({ credentials: "include", headers: { "Content-Type": "application/json" } }, options || {});
-  cfg.headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
-  const res = await fetch(apiUrl(path), cfg);
-  let data = null;
-  try { data = await res.json(); } catch (e) { data = null; }
-  if (!res.ok) throw new Error((data && data.mesaj) || `HTTP ${res.status}`);
-  return data;
-}
 async function sha256(metin) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(metin));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
-function toast(mesaj) {
-  const el = document.getElementById("toast");
-  el.innerHTML = mesaj; el.className = "show"; setTimeout(() => el.className = "", 3000);
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === "&") return "&amp;";
+    if (m === "<") return "&lt;";
+    if (m === ">") return "&gt;";
+    return m;
+  });
 }
-function ekranGoster(ekran) {
-  ["giris", "kumanda", "sarki", "yonetici", "zil"].forEach(e => document.getElementById("ekran_" + e).style.display = "none");
-  document.getElementById("ekran_" + ekran).style.display = "block";
-  if (ekran === "sarki") sarkiListesiYukle();
-  if (ekran === "zil") zilListesiYukle();
-}
-function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar"); bar.textContent = text; bar.className = cls; }
-function genelAyarGoster() { const card = document.getElementById("genel_ayar_card"); card.style.display = card.style.display === "none" ? "block" : "none"; }
-function genelAyarGonder() {
-  clearTimeout(genelAyarTimer);
-  genelAyarTimer = setTimeout(async () => {
-    const ten = document.getElementById("chk_teneffus").checked;
-    const ses = parseInt(document.getElementById("rng_muzik_sesi").value, 10);
-    try {
-      if (CALISMA_MODU === "local") {
-        await apiFetch("/api/genel_ayar", { method: "POST", body: JSON.stringify({ teneffus_aktif: ten, muzik_sesi: ses }) });
-      } else {
-        await db.ref(DB_YOLU.genel_ayar).set({ teneffus_aktif: ten, muzik_sesi: ses, zaman: Date.now() });
-      }
-      toast("✅ Ayar güncellendi");
-    } catch (e) { toast("❌ Hata: " + e.message); }
-  }, 350);
-}
-async function sistemToggle() {
-  const yeniDurum = !sistemAcik;
-  try {
-    if (CALISMA_MODU === "local") {
-      await apiFetch("/api/sistem_durum", { method: "POST", body: JSON.stringify({ aktif: yeniDurum }) });
-    } else {
-      await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() });
-    }
-    _sistemDurumGuncelle(yeniDurum);
-    toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
-  } catch (e) { toast("❌ Hata: " + e.message); }
-}
-function _sistemDurumGuncelle(aktif) {
-  sistemAcik = aktif;
-  const btn = document.getElementById("btn_sistem");
-  const lbl = document.getElementById("lbl_sistem");
-  if (!btn || !lbl) return;
-  if (aktif) { btn.style.backgroundColor = "#2ed573"; btn.style.boxShadow = "0 4px #27ae60"; lbl.innerHTML = "🟢 SİSTEM: AÇIK"; }
-  else { btn.style.backgroundColor = "#ff4757"; btn.style.boxShadow = "0 4px #c0392b"; lbl.innerHTML = "🔴 SİSTEM: KAPALI"; }
-}
-function qrGoster() {
-  const modal = document.getElementById("qr_modal");
-  const container = document.getElementById("qr_container");
-  const urlEl = document.getElementById("qr_url");
-  const url = window.location.href;
-  urlEl.textContent = url;
-  container.innerHTML = "";
-  new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#2c3e50", colorLight: "#ffffff" });
-  modal.style.display = "flex";
-}
-function qrKapat() { document.getElementById("qr_modal").style.display = "none"; }
-async function cikisYap() {
-  girisYapildi = false;
-  yoneticiGirildi = false;
-  onayliKullanici = false;
-  sessionStorage.removeItem("ozil_giris");
-  sessionStorage.removeItem("ozil_onayli");
-  if (localDurumTimer) { clearInterval(localDurumTimer); localDurumTimer = null; }
-  if (CALISMA_MODU === "local") {
-    try { await apiFetch("/api/cikis", { method: "POST" }); } catch (e) {}
-  } else {
-    if (auth) {
-      try { await auth.signOut(); } catch(e) {}
-    }
-  }
-  ekranGoster("giris");
-  document.getElementById("inp_sifre").value = "";
-}
-function uygulaDurumVerisi(v) {
-  if (!v) return;
-  const pcEtiket = document.getElementById("lbl_pc");
-  const havaEl = document.getElementById("hava_bilgi");
-  if (v.pc_adi) pcEtiket.textContent = v.pc_adi + " - Kumanda";
-  if (typeof v.mevcut_ses !== "undefined" && v.mevcut_ses !== null) {
-    mevcutSes = parseInt(v.mevcut_ses, 10);
-    document.getElementById("ses_slider").value = mevcutSes;
-    document.getElementById("vol_val").textContent = "%" + mevcutSes;
-    document.getElementById("vol_val2").textContent = "%" + mevcutSes;
-    const ikinci = document.querySelector("#ekran_sarki input[type=range]");
-    if (ikinci) ikinci.value = mevcutSes;
-  }
-  if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif);
-  if (v.genel_ayar) {
-    document.getElementById("chk_teneffus").checked = !!v.genel_ayar.teneffus_aktif;
-    const muz = parseInt(v.genel_ayar.muzik_sesi || 30, 10);
-    document.getElementById("rng_muzik_sesi").value = muz;
-    document.getElementById("lbl_muzik_sesi").textContent = "%" + muz;
-  }
-  if (havaEl) {
-    if (v.hava && v.hava.sehir) havaEl.textContent = `${v.hava.sehir} - ${v.hava.durum || ""} ${v.hava.sicaklik ? v.hava.sicaklik + "°C" : ""}`.trim();
-    else havaEl.textContent = "Veri yok";
-  }
-}
-async function localDurumYenile() {
-  try {
-    const veri = await apiFetch("/api/durum");
-    uygulaDurumVerisi(veri);
-    durumBarYaz(`🟢 Bağlı ${veri.pc_adi || ""}`, "durum-bagli");
-  } catch (e) {
-    durumBarYaz("🔴 Yerel ağ bağlantısı yok", "durum-cevrimdisi");
-  }
-}
+
+// Firebase veri dinleme ve komutlar (yetki kontrolü eklendi)
 function dinleyicileriBaslat() {
-  if (CALISMA_MODU === "local") {
-    durumBarYaz("⏳ Yerel ağ kontrol ediliyor...", "durum-bekliyor");
-    localDurumYenile();
-    if (localDurumTimer) clearInterval(localDurumTimer);
-    localDurumTimer = setInterval(localDurumYenile, 2000);
-    return;
-  }
+  if (!db) return;
+  // Sistem durumu dinleme
   db.ref(DB_YOLU.durum).on("value", snap => {
     const v = snap.val() || {};
     if (v.cevrimici) {
@@ -505,6 +540,13 @@ function dinleyicileriBaslat() {
       if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda";
     } else {
       durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
+    }
+    if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif);
+    if (v.mevcut_ses !== undefined) {
+      mevcutSes = v.mevcut_ses;
+      document.getElementById("ses_slider").value = mevcutSes;
+      document.getElementById("vol_val").innerHTML = "%" + mevcutSes;
+      document.getElementById("vol_val2").innerHTML = "%" + mevcutSes;
     }
   });
   db.ref(DB_YOLU.genel_ayar).on("value", snap => {
@@ -517,54 +559,40 @@ function dinleyicileriBaslat() {
       }
     }
   });
-  db.ref(DB_YOLU.durum).on("value", snap => {
-    const v = snap.val() || {};
-    if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif);
-  });
   db.ref(DB_YOLU.hava).on("value", snap => {
     const v = snap.val();
     const el = document.getElementById("hava_bilgi");
-    if (!el) return;
-    if (v && v.sehir) el.textContent = `${v.sehir} - ${v.durum || ""} ${v.sicaklik ? v.sicaklik + "°C" : ""}`.trim();
-    else el.textContent = "Veri yok";
-  });
-  db.ref(DB_YOLU.ses).on("value", snap => {
-    if (snap.val() !== null) {
-      mevcutSes = snap.val();
-      document.getElementById("ses_slider").value = mevcutSes;
-      document.getElementById("vol_val").textContent = "%" + mevcutSes;
-      document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+    if (el) {
+      if (v && v.sehir) el.textContent = `${v.sehir} - ${v.durum || ""} ${v.sicaklik ? v.sicaklik + "°C" : ""}`.trim();
+      else el.textContent = "Veri yok";
     }
   });
 }
+
+// Yetkili komutlar (sadece yetkili kullanıcılar çalıştırabilir)
 async function komutGonder(kod, isim) {
-  if (!girisYapildi || !onayliKullanici) { toast("Yetkisiz erişim!"); return; }
+  if (!islemIcinYetkiKontrol()) return;
   try {
-    if (CALISMA_MODU === "local") {
-      await apiFetch("/api/komut", { method: "POST", body: JSON.stringify({ kod }) });
-    } else {
-      await db.ref(DB_YOLU.komut).set({ kod, zaman: Date.now() });
-    }
+    await db.ref(DB_YOLU.komut).set({ kod, zaman: Date.now() });
     toast(isim + " ✅");
   } catch (e) { toast("❌ Hata: " + e.message); }
 }
+
 async function anonsGonder() {
-  if (!girisYapildi || !onayliKullanici) { toast("Yetkisiz erişim!"); return; }
+  if (!islemIcinYetkiKontrol()) return;
   const metin = document.getElementById("txt_anons").value.trim();
   if (!metin) return;
   const tekrar = parseInt(document.getElementById("anons_tekrar").value, 10) || 1;
   const veri = tekrar > 1 ? `${metin}||${tekrar}` : metin;
   try {
-    if (CALISMA_MODU === "local") {
-      await apiFetch("/api/anons", { method: "POST", body: JSON.stringify({ metin: veri }) });
-    } else {
-      await db.ref(DB_YOLU.anons).set({ metin: veri, zaman: Date.now() });
-    }
+    await db.ref(DB_YOLU.anons).set({ metin: veri, zaman: Date.now() });
     toast(`Anons İletildi! 🔊 (${tekrar}x)`);
     document.getElementById("txt_anons").value = "";
   } catch (e) { toast("❌ Hata: " + e.message); }
 }
+
 function sesGuncelle(val, ikincislider) {
+  if (!islemIcinYetkiKontrol()) return;
   mevcutSes = parseInt(val, 10);
   document.getElementById("vol_val").textContent = "%" + mevcutSes;
   document.getElementById("vol_val2").textContent = "%" + mevcutSes;
@@ -572,32 +600,61 @@ function sesGuncelle(val, ikincislider) {
   else document.getElementById("ses_slider").value = mevcutSes;
   clearTimeout(sesZamanlayici);
   sesZamanlayici = setTimeout(async () => {
-    try {
-      if (CALISMA_MODU === "local") {
-        await apiFetch("/api/ses", { method: "POST", body: JSON.stringify({ seviye: mevcutSes }) });
-      } else {
-        await db.ref(DB_YOLU.ses).set(mevcutSes);
-      }
-    } catch (e) { toast("❌ Hata: " + e.message); }
+    try { await db.ref(DB_YOLU.ses).set(mevcutSes); }
+    catch(e) { toast("❌ Hata: " + e.message); }
   }, 300);
 }
+
+async function sistemToggle() {
+  if (!islemIcinYetkiKontrol()) return;
+  const yeniDurum = !sistemAcik;
+  try {
+    await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() });
+    _sistemDurumGuncelle(yeniDurum);
+    toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+function _sistemDurumGuncelle(aktif) {
+  sistemAcik = aktif;
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
+  if (btn) {
+    if (aktif) { btn.style.backgroundColor = "#2ed573"; btn.style.boxShadow = "0 4px #27ae60"; lbl.innerHTML = "🟢 SİSTEM: AÇIK"; }
+    else { btn.style.backgroundColor = "#ff4757"; btn.style.boxShadow = "0 4px #c0392b"; lbl.innerHTML = "🔴 SİSTEM: KAPALI"; }
+  }
+}
+
+function genelAyarGoster() { 
+  const card = document.getElementById("genel_ayar_card"); 
+  if (card) card.style.display = card.style.display === "none" ? "block" : "none"; 
+}
+
+function genelAyarGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+  clearTimeout(genelAyarTimer);
+  genelAyarTimer = setTimeout(async () => {
+    const ten = document.getElementById("chk_teneffus").checked;
+    const ses = parseInt(document.getElementById("rng_muzik_sesi").value, 10);
+    try {
+      await db.ref(DB_YOLU.genel_ayar).set({ teneffus_aktif: ten, muzik_sesi: ses, zaman: Date.now() });
+      toast("✅ Ayar güncellendi");
+    } catch (e) { toast("❌ Hata: " + e.message); }
+  }, 350);
+}
+
 async function zilListesiYukle() {
   const kap = document.getElementById("zil_melodi_liste");
   try {
-    let liste = [];
-    if (CALISMA_MODU === "local") {
-      const veri = await apiFetch("/api/zil_listesi");
-      liste = veri.liste || [];
-    } else {
-      const snap = await db.ref(DB_YOLU.zil_listesi).get();
-      liste = snap.exists() ? (snap.val() || []) : [];
-    }
+    const snap = await db.ref(DB_YOLU.zil_listesi).get();
+    let liste = snap.exists() ? (snap.val() || []) : [];
     if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamadı.</div>'; return; }
     window._zilListesi = liste;
     if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi);
     else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukarıdan bir zil türü seçin.</div>';
   } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
 }
+
 function zilTipSec(tip, ad) {
   seciliZilTip = tip;
   seciliZilAdi = ad;
@@ -619,42 +676,30 @@ function zilTipSec(tip, ad) {
     kap.appendChild(div);
   });
 }
+
 async function zilSecGonder(tip, melodi, ad) {
-  if (!onayliKullanici) { toast("Yetkisiz!"); return; }
+  if (!islemIcinYetkiKontrol()) return;
   try {
-    if (CALISMA_MODU === "local") {
-      await apiFetch("/api/zil_sec", { method: "POST", body: JSON.stringify({ tip, melodi }) });
-    } else {
-      await db.ref(DB_YOLU.zil_sec).set({ tip, melodi, zaman: Date.now() });
-    }
+    await db.ref(DB_YOLU.zil_sec).set({ tip, melodi, zaman: Date.now() });
     toast("✅ " + ad + ": " + melodi);
   } catch (e) { toast("❌ Hata: " + e.message); }
 }
+
 async function sarkiListesiYukle() {
   const kap = document.getElementById("sarki_liste");
   kap.innerHTML = "";
   try {
-    let liste = [];
-    if (CALISMA_MODU === "local") {
-      const veri = await apiFetch("/api/sarki_listesi");
-      liste = veri.liste || [];
-    } else {
-      const snap = await db.ref(DB_YOLU.sarki_liste).get();
-      liste = snap.exists() ? (snap.val() || []) : [];
-    }
+    const snap = await db.ref(DB_YOLU.sarki_liste).get();
+    let liste = snap.exists() ? (snap.val() || []) : [];
     if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkı bulunamadı.</div>'; return; }
     liste.forEach(sarki => {
       const div = document.createElement("div");
       div.className = "sarki-item";
       div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`;
       div.onclick = async () => {
-        if (!onayliKullanici) { toast("Yetkisiz!"); return; }
+        if (!islemIcinYetkiKontrol()) return;
         try {
-          if (CALISMA_MODU === "local") {
-            await apiFetch("/api/sarki", { method: "POST", body: JSON.stringify({ ad: sarki }) });
-          } else {
-            await db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
-          }
+          await db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
           toast("🎵 " + sarki);
         } catch (e) { toast("❌ Hata: " + e.message); }
       };
@@ -662,67 +707,20 @@ async function sarkiListesiYukle() {
     });
   } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
 }
-async function yoneticiGiris() {
-  const sifre = document.getElementById("inp_yon_sifre").value;
-  if (!sifre) return;
-  if (CALISMA_MODU === "local") {
-    try {
-      await apiFetch("/api/yonetici_giris", { method: "POST", body: JSON.stringify({ sifre }) });
-      yoneticiGirildi = true;
-      yoneticiSifre = sifre;
-      document.getElementById("hata_yon").style.display = "none";
-      document.getElementById("yon_giris_bolum").style.display = "none";
-      document.getElementById("yon_panel_bolum").style.display = "block";
-    } catch (e) {
-      document.getElementById("hata_yon").style.display = "block";
-      toast("❌ " + e.message);
-    }
-    return;
-  }
-  try {
-    const snap = await db.ref(DB_YOLU.ayarlar).get();
-    const ayarlar = snap.exists() ? (snap.val() || {}) : {};
-    let eslesme = false;
-    if (ayarlar.yonetici_sifre_hash) eslesme = (await sha256(sifre)) === ayarlar.yonetici_sifre_hash;
-    else if (ayarlar.yonetici_sifre) eslesme = sifre === ayarlar.yonetici_sifre;
-    else eslesme = sifre === "1234";
-    if (eslesme) {
-      yoneticiGirildi = true;
-      yoneticiSifre = sifre;
-      document.getElementById("hata_yon").style.display = "none";
-      document.getElementById("yon_giris_bolum").style.display = "none";
-      document.getElementById("yon_panel_bolum").style.display = "block";
-    } else {
-      document.getElementById("hata_yon").style.display = "block";
-    }
-  } catch (e) { toast("❌ Bağlantı hatası: " + e.message); }
-}
-async function sifreDegistir() {
-  const tip = document.getElementById("sifre_tip").value;
-  const y1 = document.getElementById("inp_yeni1").value;
-  const y2 = document.getElementById("inp_yeni2").value;
-  const mesajEl = document.getElementById("yon_mesaj");
-  if (y1 !== y2) { mesajEl.innerHTML = '<div class="msg-err">Hata: Şifreler uyuşmuyor!</div>'; return; }
-  if (y1.length < 4) { mesajEl.innerHTML = '<div class="msg-err">Hata: En az 4 karakter olmalı!</div>'; return; }
-  try {
-    if (CALISMA_MODU === "local") {
-      await apiFetch("/api/sifre", { method: "POST", body: JSON.stringify({ tip, yeni: y1 }) });
-    } else {
-      const hash = await sha256(y1);
-      const guncelle = {};
-      guncelle[tip + "_sifre_hash"] = hash;
-      await db.ref(DB_YOLU.ayarlar).update(guncelle);
-      await db.ref(DB_YOLU.sifre).set({ tip, hash, zaman: Date.now() });
-    }
-    if (tip === "yonetici") yoneticiSifre = y1;
-    if (tip === "mobil") mobilSifre = y1;
-    mesajEl.innerHTML = '<div class="msg-ok">✅ Şifre güncellendi.</div>';
-    document.getElementById("inp_yeni1").value = "";
-    document.getElementById("inp_yeni2").value = "";
-  } catch (e) { mesajEl.innerHTML = `<div class="msg-err">Hata: ${e.message}</div>`; }
-}
 
-// =================== MİKROFON KAYIT (Aynı) ===================
+function qrGoster() {
+  const modal = document.getElementById("qr_modal");
+  const container = document.getElementById("qr_container");
+  const urlEl = document.getElementById("qr_url");
+  const url = window.location.href;
+  urlEl.textContent = url;
+  container.innerHTML = "";
+  new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#2c3e50", colorLight: "#ffffff" });
+  modal.style.display = "flex";
+}
+function qrKapat() { document.getElementById("qr_modal").style.display = "none"; }
+
+// Mikrofon ile anons (yetki kontrolü eklendi)
 let kayitYapiliyor=false, mikStream=null, mikAudioCtx=null, mikProcessor=null, mikKayitParc=[];
 let seciliWavBlob = null;
 
@@ -788,7 +786,7 @@ async function mikBaslat() {
   };
 }
 async function mikToggle() {
-  if (!onayliKullanici) { toast("Yetkisiz!"); return; }
+  if (!islemIcinYetkiKontrol()) return;
   if (!kayitYapiliyor) {
     try {
       await mikBaslat();
@@ -820,8 +818,8 @@ async function mikToggle() {
   }
 }
 async function anonsuFirebaseGonder() {
+  if (!islemIcinYetkiKontrol()) return;
   if (!seciliWavBlob) return;
-  if (!onayliKullanici) { toast("Yetkisiz!"); return; }
   mikDurum('⏳ Yükleniyor...', 'isleniyor');
   try {
     const depolama = firebase.storage();
@@ -837,18 +835,29 @@ async function anonsuFirebaseGonder() {
   } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
 }
 
+// Oturum kontrolü
 window.onload = () => {
-  girisArayuzunuAyarla();
-  const onayli = sessionStorage.getItem("ozil_onayli");
-  if (sessionStorage.getItem("ozil_giris") === "1" && onayli === "1") {
+  const uid = sessionStorage.getItem("ozil_uid");
+  const email = sessionStorage.getItem("ozil_email");
+  const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
+  const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
+  if (uid && email) {
     girisYapildi = true;
-    onayliKullanici = true;
+    mevcutKullaniciUid = uid;
+    mevcutKullaniciEmail = email;
+    yetkiliMi = yetkili;
+    yoneticiMi = yonetici;
     ekranGoster("kumanda");
     dinleyicileriBaslat();
-  } else if (sessionStorage.getItem("ozil_giris") === "1" && onayli !== "1") {
-    // Yetkisiz oturum varsa temizle
-    sessionStorage.clear();
-    ekranGoster("giris");
+    // Arka planda yetkiyi yeniden kontrol et (yönetici panelinde değişiklik olabilir)
+    yetkiKontrolEt(uid).then(y => {
+      if (y !== yetkiliMi) {
+        yetkiliMi = y;
+        sessionStorage.setItem("ozil_yetkili", y ? "1" : "0");
+        if (!y) toast("Yetkiniz iptal edildi!");
+        else toast("Yetkiniz yeniden onaylandı!");
+      }
+    });
   } else {
     ekranGoster("giris");
   }
