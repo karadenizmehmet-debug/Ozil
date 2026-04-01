@@ -326,6 +326,7 @@ try {
   if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
   db   = firebase.database();
   auth = firebase.auth();
+  console.log("[HTML] Firebase başlatıldı");
 } catch(e) { console.error("[Firebase]", e); }
 
 // ═══════════════════════════════════════════════════
@@ -424,9 +425,11 @@ async function cikisYap() {
 }
 
 // ═══════════════════════════════════════════════════
-//  DİNLEYİCİLER
+//  DİNLEYİCİLER (DÜZELTİLMİŞ VERSİYON)
 // ═══════════════════════════════════════════════════
 function dinleyicileriBaslat() {
+  console.log("[HTML] Dinleyiciler başlatılıyor...");
+  
   // Firebase durum
   db.ref(DB.durum).on("value", sn => {
     const v = sn.val();
@@ -445,27 +448,25 @@ function dinleyicileriBaslat() {
     _sistemDurumGuncelle(acik);
   });
 
-  // Ses seviyesi
+  // Ses seviyesi - DÜZELTİLMİŞ (isSesSending kontrolü KALDIRILDI)
   db.ref(DB.ses).on("value", sn => {
     const v = sn.val();
-    console.log("[HTML] Firebase ses değişti:", v, "isSesSending:", isSesSending); // DEBUG
-    
-    // isSesSending kontrolünü kaldır - PC'den gelen her değişiklik işlensin
+    console.log("[HTML] Ses değişikliği yakalandı:", v);
     if (v !== null) {
-        mevcutSes = parseInt(v);
-        document.getElementById("ses_slider").value = mevcutSes;
-        document.getElementById("vol_val").textContent = "%" + mevcutSes;
-        
-        // Şarkı listesi sayfasındaki slider'ı da güncelle
-        const sarkiSlider = document.querySelector("#ekran_sarki input[type=range]");
-        if (sarkiSlider) {
-            sarkiSlider.value = mevcutSes;
-            const volVal2 = document.getElementById("vol_val2");
-            if (volVal2) volVal2.textContent = "%" + mevcutSes;
-        }
-        console.log("[HTML] Slider güncellendi:", mevcutSes);
+      mevcutSes = parseInt(v);
+      document.getElementById("ses_slider").value = mevcutSes;
+      document.getElementById("vol_val").textContent = "%" + mevcutSes;
+      
+      // Şarkı listesi sayfasındaki slider'ı da güncelle
+      const sarkiSlider = document.querySelector("#ekran_sarki input[type=range]");
+      if (sarkiSlider) {
+        sarkiSlider.value = mevcutSes;
+        const volVal2 = document.getElementById("vol_val2");
+        if (volVal2) volVal2.textContent = "%" + mevcutSes;
+      }
+      console.log("[HTML] Slider güncellendi:", mevcutSes);
     }
-});
+  });
 
   // Genel ayar
   db.ref(DB.genel_ayar).on("value", sn => {
@@ -492,6 +493,19 @@ function dinleyicileriBaslat() {
     for (const [k,v2] of Object.entries(ikonlar)) { if (d.includes(k)) { ikon = v2; break; } }
     document.getElementById("hava_bilgi").innerHTML =
       `${ikon} <b>${v.sehir||""}</b> — ${v.sicaklik !== undefined ? v.sicaklik+"°C" : "--"} <span style="color:#636e72;font-size:13px">${v.durum||""}</span>`;
+  });
+  
+  console.log("[HTML] Tüm dinleyiciler başlatıldı!");
+  
+  // Mevcut ses değerini hemen oku ve uygula
+  db.ref(DB.ses).once("value").then(sn => {
+    const val = sn.val();
+    if (val !== null) {
+      console.log("[HTML] Başlangıç ses değeri:", val);
+      mevcutSes = parseInt(val);
+      document.getElementById("ses_slider").value = mevcutSes;
+      document.getElementById("vol_val").textContent = "%" + mevcutSes;
+    }
   });
 }
 
@@ -568,7 +582,6 @@ function sesGuncelle(val, ikinci = false) {
       toast("❌ " + e.message); 
     } finally { 
       isSesSending = false;
-      console.log("[HTML] isSesSending resetlendi");
     }
   }, 800);
 }
@@ -885,7 +898,6 @@ function qrKapat() { document.getElementById("qr_modal").classList.remove("show"
 //  LOG
 // ═══════════════════════════════════════════════════
 function log_yaz(kullanici, islem, cihaz) {
-  // Sadece konsola — PC tarafı kendi log dosyasına yazar
   console.log(`[${new Date().toLocaleTimeString()}] ${kullanici} — ${islem} — ${cihaz}`);
 }
 
@@ -893,12 +905,15 @@ function log_yaz(kullanici, islem, cihaz) {
 //  SAYFA BAŞLATMA
 // ═══════════════════════════════════════════════════
 window.onload = () => {
+  console.log("[HTML] Sayfa yüklendi, Firebase başlatılıyor...");
+  
   const uid     = sessionStorage.getItem("ozil_uid");
   const email   = sessionStorage.getItem("ozil_email");
   const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
   const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
 
   if (uid && email) {
+    console.log("[HTML] Oturum var, kullanıcı:", email);
     girisYapildi = true; mevcutUid = uid; mevcutEmail = email;
     yetkiliMi = yetkili; yoneticiMi = yonetici;
     if (yoneticiMi) document.getElementById("cihaz_btn").style.display = "";
@@ -913,6 +928,7 @@ window.onload = () => {
       }
     });
   } else {
+    console.log("[HTML] Oturum yok, giriş ekranı gösteriliyor");
     ekranGoster("giris");
   }
 };
