@@ -448,12 +448,24 @@ function dinleyicileriBaslat() {
   // Ses seviyesi
   db.ref(DB.ses).on("value", sn => {
     const v = sn.val();
-    if (v !== null && !isSesSending) {
-      mevcutSes = parseInt(v);
-      document.getElementById("ses_slider").value = mevcutSes;
-      document.getElementById("vol_val").textContent = "%" + mevcutSes;
+    console.log("[HTML] Firebase ses değişti:", v, "isSesSending:", isSesSending); // DEBUG
+    
+    // isSesSending kontrolünü kaldır - PC'den gelen her değişiklik işlensin
+    if (v !== null) {
+        mevcutSes = parseInt(v);
+        document.getElementById("ses_slider").value = mevcutSes;
+        document.getElementById("vol_val").textContent = "%" + mevcutSes;
+        
+        // Şarkı listesi sayfasındaki slider'ı da güncelle
+        const sarkiSlider = document.querySelector("#ekran_sarki input[type=range]");
+        if (sarkiSlider) {
+            sarkiSlider.value = mevcutSes;
+            const volVal2 = document.getElementById("vol_val2");
+            if (volVal2) volVal2.textContent = "%" + mevcutSes;
+        }
+        console.log("[HTML] Slider güncellendi:", mevcutSes);
     }
-  });
+});
 
   // Genel ayar
   db.ref(DB.genel_ayar).on("value", sn => {
@@ -538,18 +550,26 @@ function sesGuncelle(val, ikinci = false) {
   mevcutSes = parseInt(val);
   document.getElementById("vol_val").textContent  = "%" + mevcutSes;
   document.getElementById("vol_val2").textContent = "%" + mevcutSes;
+  
   if (!ikinci) {
     const s2 = document.querySelector("#ekran_sarki input[type=range]");
     if (s2) s2.value = mevcutSes;
   } else {
     document.getElementById("ses_slider").value = mevcutSes;
   }
+  
   clearTimeout(sesZamanlayici);
   sesZamanlayici = setTimeout(async () => {
     isSesSending = true;
-    try { await db.ref(DB.ses).set(mevcutSes); }
-    catch(e) { toast("❌ " + e.message); }
-    finally { isSesSending = false; }
+    try { 
+      await db.ref(DB.ses).set(mevcutSes);
+      console.log("[HTML] Ses Firebase'e yazıldı:", mevcutSes);
+    } catch(e) { 
+      toast("❌ " + e.message); 
+    } finally { 
+      isSesSending = false;
+      console.log("[HTML] isSesSending resetlendi");
+    }
   }, 800);
 }
 
