@@ -68,6 +68,25 @@
   .cihaz-erisim-btn:hover{background:#27ae60}
   .cihaz-erisim-btn.kapali{background:#e74c3c}
   .cihaz-erisim-btn.kapali:hover{background:#c0392b}
+  /* Kullanıcı & Ders Durum Kartları */
+  .user-bar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-radius:12px;padding:10px 15px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+  .user-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);object-fit:cover;flex-shrink:0}
+  .user-avatar-placeholder{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .user-info{flex:1;text-align:left}
+  .user-name{font-weight:700;font-size:14px;line-height:1.2}
+  .user-email{font-size:11px;opacity:0.8}
+  .ders-bar{background:white;border-radius:12px;padding:10px 15px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid #6366f1}
+  .ders-bar.ders-aktif{border-left-color:#3b82f6;background:#eff6ff}
+  .ders-bar.teneffus-aktif{border-left-color:#22c55e;background:#f0fdf4}
+  .ders-bar.bekleme{border-left-color:#f59e0b;background:#fffbeb}
+  .ders-bar.bitti{border-left-color:#94a3b8;background:#f8fafc}
+  .ders-durum-metin{font-weight:700;font-size:14px;color:#0f172a}
+  .ders-durum-alt{font-size:11px;color:#64748b;margin-top:2px}
+  .ders-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;color:white;flex-shrink:0}
+  .badge-ders{background:#3b82f6}
+  .badge-teneffus{background:#22c55e}
+  .badge-bekle{background:#f59e0b;color:white}
+  .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
 </style>
@@ -83,8 +102,24 @@
 </div>
 
 <div id="ekran_kumanda">
-  <h2>Nimetullah Nahçivani İHO<br><span style="font-size:14px;color:#7f8c8d" id="lbl_pc">Kumanda</span></h2>
-  <div id="durum_bar" class="durum-bekliyor">⏳ Bağlanıyor...</div>
+  <!-- Kullanıcı Kartı -->
+  <div class="user-bar">
+    <div class="user-avatar-placeholder" id="user_avatar_wrap">👤</div>
+    <div class="user-info">
+      <div class="user-name" id="lbl_kullanici_ad">Yükleniyor...</div>
+      <div class="user-email" id="lbl_kullanici_email"></div>
+    </div>
+    <div id="durum_bar" class="durum-bekliyor" style="font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.2);color:white;border:none">⏳ Bağlanıyor...</div>
+  </div>
+
+  <!-- Ders / Teneffüs Durum Kartı -->
+  <div class="ders-bar" id="ders_durum_kart">
+    <div>
+      <div class="ders-durum-metin" id="ders_durum_metin">⏳ Program yükleniyor...</div>
+      <div class="ders-durum-alt" id="ders_durum_alt" id="lbl_pc"></div>
+    </div>
+    <div class="ders-badge badge-bekle" id="ders_durum_badge">...</div>
+  </div>
 
   <div class="card">
     <strong>🌤️ Hava Durumu</strong>
@@ -342,11 +377,14 @@ async function girisBasarili(user) {
   sessionStorage.setItem("ozil_giris", "1");
   sessionStorage.setItem("ozil_uid", user.uid);
   sessionStorage.setItem("ozil_email", user.email);
+  sessionStorage.setItem("ozil_displayname", user.displayName || "");
+  sessionStorage.setItem("ozil_photourl", user.photoURL || "");
   sessionStorage.setItem("ozil_yetkili", yetkiliMi ? "1" : "0");
   sessionStorage.setItem("ozil_yonetici", yoneticiMi ? "1" : "0");
+  kullaniciBilgisiGoster(user.displayName || user.email, user.email, user.photoURL);
   ekranGoster("kumanda");
   dinleyicileriBaslat();
-  toast(`Hoş geldiniz, ${user.email}${yetkiliMi ? " (Yetkili)" : " (Onay bekliyor)"}`);
+  toast(`Hoş geldiniz, ${user.displayName || user.email}${yetkiliMi ? " ✅" : " (Onay bekliyor)"}`);
 }
 
 async function yetkiKontrolEt(uid) {
@@ -528,6 +566,7 @@ async function kullaniciSil(uid, kaynak) {
 // Firebase veri dinleme
 function dinleyicileriBaslat() {
   if (!db) return;
+  dersDurumBaslat();
   db.ref(DB_YOLU.durum).on("value", snap => {
     const v = snap.val() || {};
     if (v.cevrimici) {
@@ -938,6 +977,134 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
+/* ===== KULLANICI BİLGİSİ ===== */
+function kullaniciBilgisiGoster(ad, email, photoUrl) {
+  const adEl    = document.getElementById("lbl_kullanici_ad");
+  const emailEl = document.getElementById("lbl_kullanici_email");
+  const avatarEl = document.getElementById("user_avatar_wrap");
+  if (adEl)    adEl.textContent  = ad || email || "Kullanıcı";
+  if (emailEl) emailEl.textContent = email || "";
+  if (avatarEl && photoUrl) {
+    avatarEl.innerHTML = `<img src="${photoUrl}" class="user-avatar" onerror="this.parentElement.textContent='👤'">`;
+  }
+}
+
+/* ===== DERS / TENEFFÜS DURUM ===== */
+let dersProgrami = null;
+let dersDurumTimer = null;
+
+function dersDurumBaslat() {
+  if (!db) return;
+  // Firebase'den ayarları çek (program verisi burada)
+  db.ref(DB_YOLU.ayarlar).once("value", snap => {
+    const v = snap.val();
+    if (v) dersProgrami = v;
+    dersDurumGuncelle();
+  });
+  // Her 30 saniyede güncelle
+  if (dersDurumTimer) clearInterval(dersDurumTimer);
+  dersDurumTimer = setInterval(dersDurumGuncelle, 30000);
+}
+
+function dersDurumGuncelle() {
+  const kart    = document.getElementById("ders_durum_kart");
+  const metin   = document.getElementById("ders_durum_metin");
+  const alt     = document.getElementById("ders_durum_alt");
+  const badge   = document.getElementById("ders_durum_badge");
+  if (!kart || !metin || !badge) return;
+
+  if (!dersProgrami) {
+    metin.textContent = "⏳ Program yükleniyor...";
+    alt.textContent   = "";
+    badge.textContent = "...";
+    return;
+  }
+
+  const GUNLER_TR = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+  const simdi = new Date();
+  const gun   = GUNLER_TR[simdi.getDay()];
+  const prg   = dersProgrami[gun];
+
+  if (!prg || !Array.isArray(prg) || prg.length === 0) {
+    metin.textContent = "📅 Bugün ders yok";
+    alt.textContent   = gun;
+    badge.textContent = "—";
+    kart.className    = "ders-bar bitti";
+    badge.className   = "ders-badge badge-bitti";
+    return;
+  }
+
+  function s2min(s) {
+    if (!s || s === "--:--") return null;
+    const [h, m] = s.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  const simdiMin = simdi.getHours() * 60 + simdi.getMinutes();
+
+  // Aktif dönem ara
+  for (let i = 0; i < prg.length; i++) {
+    const d = prg[i];
+    const toplanma = s2min(d.toplanma);
+    const ogrenci  = s2min(d.ogrenci);
+    const ogretmen = s2min(d.ogretmen);
+    const cikis    = s2min(d.cikis);
+    const refBasla = toplanma || ogrenci || ogretmen;
+
+    // Ders saati
+    if (ogretmen !== null && cikis !== null && simdiMin >= ogretmen && simdiMin < cikis) {
+      const kalan = cikis - simdiMin;
+      metin.textContent = `📖 ${d.ders}`;
+      alt.textContent   = `Çıkış: ${d.cikis} — ${kalan} dk kaldı`;
+      badge.textContent = "DERS";
+      kart.className    = "ders-bar ders-aktif";
+      badge.className   = "ders-badge badge-ders";
+      return;
+    }
+    // Toplanma aralığı
+    if (toplanma !== null && ogrenci !== null && simdiMin >= toplanma && simdiMin < ogrenci) {
+      const kalan = ogrenci - simdiMin;
+      metin.textContent = `🔔 ${d.ders} — Toplanma`;
+      alt.textContent   = `Öğrenci girişi: ${d.ogrenci} — ${kalan} dk kaldı`;
+      badge.textContent = "TOPLANMA";
+      kart.className    = "ders-bar teneffus-aktif";
+      badge.className   = "ders-badge badge-teneffus";
+      return;
+    }
+    // Teneffüs (öğrenci çıkışı → öğretmen girişi arası için bir sonraki ders)
+    const sonraki = prg[i + 1];
+    if (sonraki && ogrenci !== null) {
+      const sonrakiRef = s2min(sonraki.toplanma) || s2min(sonraki.ogrenci) || s2min(sonraki.ogretmen);
+      if (sonrakiRef !== null && simdiMin >= (cikis || ogrenci) && simdiMin < sonrakiRef) {
+        const kalan = sonrakiRef - simdiMin;
+        metin.textContent = `☕ Teneffüs`;
+        alt.textContent   = `Sonraki: ${sonraki.ders} — ${kalan} dk kaldı`;
+        badge.textContent = "TENEFFÜS";
+        kart.className    = "ders-bar teneffus-aktif";
+        badge.className   = "ders-badge badge-teneffus";
+        return;
+      }
+    }
+    // Dersler arası bekleme (toplanmadan önce)
+    if (refBasla !== null && simdiMin < refBasla) {
+      const kalan = refBasla - simdiMin;
+      metin.textContent = `⏳ ${d.ders} başlamak üzere`;
+      alt.textContent   = `${kalan} dakika sonra`;
+      badge.textContent = "BEKLE";
+      kart.className    = "ders-bar bekleme";
+      badge.className   = "ders-badge badge-bekle";
+      return;
+    }
+  }
+
+  // Dersler bitti
+  metin.textContent = "🏁 Dersler tamamlandı";
+  alt.textContent   = `Son ders: ${prg[prg.length-1].ders}`;
+  badge.textContent = "BİTTİ";
+  kart.className    = "ders-bar bitti";
+  badge.className   = "ders-badge badge-bitti";
+}
+
 window.onload = () => {
   const uid = sessionStorage.getItem("ozil_uid");
   const email = sessionStorage.getItem("ozil_email");
@@ -950,12 +1117,16 @@ window.onload = () => {
     mevcutKullaniciEmail = email;
     yetkiliMi = yetkili;
     yoneticiMi = yonetici;
-    
+
     // YÖNETİCİ BUTONUNU SAYFA YENİLENDİĞİNDE DE GÖSTER
     const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
     if (yoneticiMi && cihazBtn) {
       cihazBtn.style.display = "inline-block";
     }
+
+    const displayname = sessionStorage.getItem("ozil_displayname") || "";
+    const photourl    = sessionStorage.getItem("ozil_photourl") || "";
+    kullaniciBilgisiGoster(displayname || email, email, photourl);
 
     ekranGoster("kumanda");
     dinleyicileriBaslat();
