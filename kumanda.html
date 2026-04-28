@@ -89,12 +89,6 @@
   .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
-
-/* TABLO DURUM */
-.status-badge{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold}
-.status-active{background:#28a745;color:#fff}
-.status-waiting{background:#dc3545;color:#fff}
-
 </style>
 </head>
 <body>
@@ -219,20 +213,6 @@
     ⚠️ Sadece yöneticiler görebilir. Kendi bilgisayarınızda test yaparken zil bilgisayarının komut almasını engellemek için cihaz erişimini kapatabilirsiniz.
   </p>
   <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;">
-<div id="cihaz_tablo_container" style="margin-top:15px">
-<table style="width:100%;background:white;border-radius:8px">
-<thead>
-<tr>
-<th>Cihaz</th>
-<th>Son Açılış</th>
-<th>Durum</th>
-<th>İşlem</th>
-</tr>
-</thead>
-<tbody id="cihazListesi"></tbody>
-</table>
-</div>
-
     <div style="text-align:center;color:#7f8c8d">
       ⏳ Cihazlar yükleniyor...
     </div>
@@ -910,65 +890,20 @@ function cihazYonetiminiAc() {
   ekranGoster("cihaz_yonetimi");
 }
 
-
 function cihazlarDinle() {
   if (!db) return;
-
-  const ref = db.ref(DB_YOLU.cihazlar);
-  ref.off("value");
-
-  ref.on("value", snap => {
-    const container = document.getElementById("cihaz_listesi_container");
-    const listBody = document.getElementById("cihazListesi");
-
-    if (!container || !listBody) return;
-
-    container.innerHTML = "";
-    listBody.innerHTML = "";
-
+  
+  const cihazlarRef = db.ref(DB_YOLU.cihazlar);
+  
+  // ÖNCEKİ DİNLEYİCİYİ DOĞRU ŞEKİLDE TEMİZLE (Beyaz Ekran / Çökme Çözümü)
+  cihazlarRef.off("value");
+  
+  cihazlarRef.on("value", snap => {
     if (!snap.exists()) {
-      container.innerHTML = "<div style='text-align:center'>Cihaz yok</div>";
+      document.getElementById("cihaz_listesi_container").innerHTML = 
+        '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
       return;
     }
-
-    const cihazlar = snap.val();
-
-    Object.keys(cihazlar).forEach(id => {
-      const c = cihazlar[id];
-      const aktif = c.aktif !== false;
-
-      container.innerHTML += `
-        <div class="cihaz-kart">
-          <div class="cihaz-bilgi">
-            <div class="cihaz-adi">${c.pc_adi || id}</div>
-            <div class="cihaz-durum ${aktif ? 'aktif' : 'pasif'}">
-              ${aktif ? 'Çalışıyor' : 'Beklemede'}
-            </div>
-          </div>
-        </div>
-      `;
-
-      listBody.innerHTML += `
-        <tr>
-          <td>${c.pc_adi || id}</td>
-          <td>${c.son_acilis || '-'}</td>
-          <td>
-            <span class="status-badge ${aktif ? 'status-active' : 'status-waiting'}">
-              ${aktif ? 'ÇALIŞIYOR' : 'BEKLEMEDE'}
-            </span>
-          </td>
-          <td>
-            <button class="btn ${aktif ? 'red' : 'green'}"
-              onclick="cihazDurumGuncelle('${id}', ${!aktif})">
-              ${aktif ? 'Durdur' : 'Başlat'}
-            </button>
-          </td>
-        </tr>
-      `;
-    });
-  });
-}
-
     
     const cihazlar = snap.val();
     let html = '';
@@ -1006,27 +941,6 @@ function cihazlarDinle() {
     });
     
     document.getElementById("cihaz_listesi_container").innerHTML = html;
-
-// TABLO GÜNCELLE
-const listBody = document.getElementById("cihazListesi");
-if(listBody){
-  listBody.innerHTML="";
-  Object.keys(cihazlar).forEach(cihazId=>{
-    const cihaz=cihazlar[cihazId];
-    const aktif=cihaz.aktif!==false;
-    listBody.innerHTML+=`
-    <tr>
-      <td>${cihaz.pc_adi||cihazId}</td>
-      <td>${cihaz.zaman||'-'}</td>
-      <td><span class="status-badge ${aktif?'status-active':'status-waiting'}">
-      ${aktif?'ÇALIŞIYOR':'BEKLEMEDE'}</span></td>
-      <td><button class="btn ${aktif?'red':'green'}"
-      onclick="cihazDurumGuncelle('${cihazId}',${!aktif})">
-      ${aktif?'Durdur':'Başlat'}</button></td>
-    </tr>`;
-  });
-}
-
   });
 }
 
@@ -1228,20 +1142,6 @@ window.onload = () => {
     ekranGoster("giris");
   }
 };
-
-function cihazDurumGuncelle(id,durum){
- db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
-}
-
-</script>
-
-<script>
-function cihazDurumGuncelle(id, durum){
-  db.ref("kumanda/cihazlar/" + id).update({
-    aktif: durum
-  });
-}
 </script>
 </body>
-
 </html>
