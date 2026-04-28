@@ -56,7 +56,6 @@
   .onayla-btn,.sil-btn,.pasif-btn{background:#2ed573;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px}
   .sil-btn{background:#e74c3c}
   .pasif-btn{background:#f39c12}
-  /* Cihaz Yönetim Stilleri */
   .cihaz-kart{background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
   .cihaz-bilgi{flex:1;text-align:left}
   .cihaz-adi{font-weight:bold;color:#2c3e50;font-size:15px;margin-bottom:4px}
@@ -68,7 +67,6 @@
   .cihaz-erisim-btn:hover{background:#27ae60}
   .cihaz-erisim-btn.kapali{background:#e74c3c}
   .cihaz-erisim-btn.kapali:hover{background:#c0392b}
-  /* Kullanıcı & Ders Durum Kartları */
   .user-bar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-radius:12px;padding:10px 15px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
   .user-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);object-fit:cover;flex-shrink:0}
   .user-avatar-placeholder{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -89,16 +87,6 @@
   .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
-
-.status-badge{
-  padding:4px 10px;
-  border-radius:12px;
-  font-size:11px;
-  font-weight:bold;
-}
-.status-active{background:#28a745;color:#fff}
-.status-waiting{background:#dc3545;color:#fff}
-
 </style>
 </head>
 <body>
@@ -112,7 +100,6 @@
 </div>
 
 <div id="ekran_kumanda">
-  <!-- Kullanıcı Kartı -->
   <div class="user-bar">
     <div class="user-avatar-placeholder" id="user_avatar_wrap">👤</div>
     <div class="user-info">
@@ -122,7 +109,6 @@
     <div id="durum_bar" class="durum-bekliyor" style="font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.2);color:white;border:none">⏳ Bağlanıyor...</div>
   </div>
 
-  <!-- Ders / Teneffüs Durum Kartı -->
   <div class="ders-bar" id="ders_durum_kart">
     <div>
       <div class="ders-durum-metin" id="ders_durum_metin">⏳ Program yükleniyor...</div>
@@ -183,7 +169,7 @@
   </div>
   <div class="grid">
     <button class="btn red" onclick="komutGonder('istiklal','İstiklal Marşı')"><span class="icon">🇹🇷</span>İstiklal Marşı</button>
-    <button class="btn red" onclick="komutGonder('siren','Siren')"><span class="icon">🚨</span>Siren Sesi</button>
+    <button class="btn red" onclick="komutGonder('siren','Siren Sesi')"><span class="icon">🚨</span>Siren Sesi</button>
     <button class="btn red" onclick="komutGonder('saygi_1','1 Dk Saygı')"><span class="icon">⏱️</span>1 Dakika Saygı</button>
     <button class="btn red" onclick="komutGonder('saygi_1_ist','1 Dk+İstiklal')"><span class="icon">⏱️</span>1 Dk+İst</button>
     <button class="btn red full" onclick="komutGonder('saygi_2_ist','2 Dk+İstiklal')"><span class="icon">⏱️</span>2 Dakika Saygı + İstiklal</button>
@@ -220,16 +206,10 @@
 <div id="ekran_cihaz_yonetimi" style="display:none;max-width:500px;margin:0 auto">
   <h2>🖥️ Cihaz Yönetimi</h2>
   <p style="color:#7f8c8d;font-size:14px;margin-bottom:15px">
-    ⚠️ Sadece yöneticiler görebilir. Kendi bilgisayarınızda test yaparken zil bilgisayarının komut almasını engellemek için cihaz erişimini kapatabilirsiniz.
+    ⚠️ Sadece yöneticiler görebilir. <strong>Sadece bir cihaz aynı anda uzaktan komut alabilir.</strong><br>
+    Açık olan cihaz, Firebase’den gelen tüm komutları işler; diğerleri sadece kendi yerel programını çalıştırır.
   </p>
-  <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;"></div>
-<div style="margin-top:15px">
-<table style="width:100%;background:white;border-radius:8px">
-<thead><tr><th>Cihaz</th><th>Durum</th><th>Sistem</th><th>Erişim</th></tr></thead>
-<tbody id="cihazListesi"></tbody>
-</table>
-</div>
-<div id="cihaz_listesi_container" class="card" style="display:none;">
+  <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;">
     <div style="text-align:center;color:#7f8c8d">
       ⏳ Cihazlar yükleniyor...
     </div>
@@ -262,8 +242,7 @@
 
 <div id="ekran_yonetim">
   <h2>🔐 Yönetim Paneli</h2>
-  <div id="yonetim_panel_icerik">
-    </div>
+  <div id="yonetim_panel_icerik"></div>
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön </button></div>
 </div>
 
@@ -278,91 +257,11 @@
 </div>
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
-function toggleSistem(id,val){
-  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
-}
-
-function toggleErisim(id,val){
-  const ref=db.ref("kumanda/cihazlar");
-  ref.once("value").then(snap=>{
-    const all=snap.val()||{};
-    Object.keys(all).forEach(k=>{
-      ref.child(k).update({uzaktan_erisim:false});
-    });
-    ref.child(id).update({uzaktan_erisim:val});
-  });
-}
-</script>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-function toggleSistem(id,val){
-  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
-}
-
-function toggleErisim(id,val){
-  const ref=db.ref("kumanda/cihazlar");
-  ref.once("value").then(snap=>{
-    const all=snap.val()||{};
-    Object.keys(all).forEach(k=>{
-      ref.child(k).update({uzaktan_erisim:false});
-    });
-    ref.child(id).update({uzaktan_erisim:val});
-  });
-}
-</script>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
-function toggleSistem(id,val){
-  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
-}
-
-function toggleErisim(id,val){
-  const ref=db.ref("kumanda/cihazlar");
-  ref.once("value").then(snap=>{
-    const all=snap.val()||{};
-    Object.keys(all).forEach(k=>{
-      ref.child(k).update({uzaktan_erisim:false});
-    });
-    ref.child(id).update({uzaktan_erisim:val});
-  });
-}
-</script>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
-function toggleSistem(id,val){
-  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
-}
-
-function toggleErisim(id,val){
-  const ref=db.ref("kumanda/cihazlar");
-  ref.once("value").then(snap=>{
-    const all=snap.val()||{};
-    Object.keys(all).forEach(k=>{
-      ref.child(k).update({uzaktan_erisim:false});
-    });
-    ref.child(id).update({uzaktan_erisim:val});
-  });
-}
-</script>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js">
-function toggleSistem(id,val){
-  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
-}
-
-function toggleErisim(id,val){
-  const ref=db.ref("kumanda/cihazlar");
-  ref.once("value").then(snap=>{
-    const all=snap.val()||{};
-    Object.keys(all).forEach(k=>{
-      ref.child(k).update({uzaktan_erisim:false});
-    });
-    ref.child(id).update({uzaktan_erisim:val});
-  });
-}
-</script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
 const FIREBASE_CONFIG = {
@@ -409,6 +308,7 @@ let seciliZilAdi = "";
 let localDurumTimer = null;
 let sesZamanlayici = null;
 let genelAyarTimer = null;
+window.aktifCihazId = null;   // ← YENİ: global aktif cihaz ID’si
 
 if (typeof firebase !== "undefined") {
   try {
@@ -418,7 +318,6 @@ if (typeof firebase !== "undefined") {
   } catch (e) { console.error(e); }
 }
 
-// Yardımcı fonksiyonlar
 function toast(mesaj) {
   const el = document.getElementById("toast");
   el.innerHTML = mesaj; el.className = "show"; setTimeout(() => el.className = "", 3000);
@@ -452,22 +351,15 @@ async function girisBasarili(user) {
   mevcutKullaniciEmail = user.email;
   yoneticiMi = (user.email === "karadenizmehmet@gmail.com");
   
-  // YÖNETİCİ BUTONUNU GİRİŞ YAPAR YAPMAZ GÖSTER
   const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-  if (yoneticiMi && cihazBtn) {
-    cihazBtn.style.display = "inline-block";
-  }
+  if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
 
   await yetkiKontrolEt(user.uid);
   if (!yetkiliMi && !yoneticiMi) {
     const bekleyenRef = db.ref(DB_YOLU.bekleyen_kullanicilar + "/" + user.uid);
     const snap = await bekleyenRef.get();
     if (!snap.exists()) {
-      await bekleyenRef.set({
-        email: user.email,
-        uid: user.uid,
-        tarih: Date.now()
-      });
+      await bekleyenRef.set({ email: user.email, uid: user.uid, tarih: Date.now() });
       toast("Yönetici onayı bekleniyor. Onaylanınca kumandayı kullanabilirsiniz.");
     }
   }
@@ -518,16 +410,13 @@ async function cikisYap() {
   yetkiliMi = false;
   yoneticiMi = false;
   sessionStorage.clear();
-  
   const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
   if(cihazBtn) cihazBtn.style.display = "none";
-
   if (localDurumTimer) clearInterval(localDurumTimer);
   ekranGoster("giris");
   toast("Çıkış yapıldı");
 }
 
-// Yönetim paneli
 async function yonetimPaneliniGoster() {
   const container = document.getElementById("yonetim_panel_icerik");
   if (!girisYapildi) {
@@ -538,16 +427,9 @@ async function yonetimPaneliniGoster() {
     container.innerHTML = '<div class="card"><p style="color:red;">❌ Bu bölüme erişim yetkiniz yok. Sadece sistem yöneticisi erişebilir.</p></div>';
     return;
   }
-  
   container.innerHTML = `
-    <div class="card">
-      <h3>👥 Onay Bekleyen Kullanıcılar</h3>
-      <div id="bekleyen_liste" class="kullanici-listesi">Yükleniyor...</div>
-    </div>
-    <div class="card">
-      <h3>✅ Onaylı Kullanıcılar</h3>
-      <div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div>
-    </div>
+    <div class="card"><h3>👥 Onay Bekleyen Kullanıcılar</h3><div id="bekleyen_liste" class="kullanici-listesi">Yükleniyor...</div></div>
+    <div class="card"><h3>✅ Onaylı Kullanıcılar</h3><div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div></div>
   `;
   await listeleKullanicilar();
 }
@@ -557,18 +439,11 @@ async function listeleKullanicilar() {
     const bekleyenSnap = await db.ref(DB_YOLU.bekleyen_kullanicilar).get();
     const bekleyenler = bekleyenSnap.val() || {};
     const bekleyenDiv = document.getElementById("bekleyen_liste");
-    if (Object.keys(bekleyenler).length === 0) {
-      bekleyenDiv.innerHTML = "<p>Bekleyen kullanıcı yok.</p>";
-    } else {
+    if (Object.keys(bekleyenler).length === 0) bekleyenDiv.innerHTML = "<p>Bekleyen kullanıcı yok.</p>";
+    else {
       let html = "";
       for (const [uid, data] of Object.entries(bekleyenler)) {
-        html += `<div class="kullanici-item">
-          <span class="kullanici-email">${escapeHtml(data.email)}</span>
-          <div class="button-group">
-            <button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button>
-            <button class="sil-btn" onclick="kullaniciSil('${uid}', 'bekleyen')">Sil</button>
-          </div>
-        </div>`;
+        html += `<div class="kullanici-item"><span class="kullanici-email">${escapeHtml(data.email)}</span><div class="button-group"><button class="onayla-btn" onclick="kullaniciOnayla('${uid}')">Onayla</button><button class="sil-btn" onclick="kullaniciSil('${uid}', 'bekleyen')">Sil</button></div></div>`;
       }
       bekleyenDiv.innerHTML = html;
     }
@@ -578,19 +453,12 @@ async function listeleKullanicilar() {
     const onayliSnap = await db.ref(DB_YOLU.onayli_kullanicilar).get();
     const onaylilar = onayliSnap.val() || {};
     const onayliDiv = document.getElementById("onayli_liste");
-    if (Object.keys(onaylilar).length === 0) {
-      onayliDiv.innerHTML = "<p>Henüz onaylı kullanıcı yok.</p>";
-    } else {
+    if (Object.keys(onaylilar).length === 0) onayliDiv.innerHTML = "<p>Henüz onaylı kullanıcı yok.</p>";
+    else {
       let html = "";
       for (const [uid, data] of Object.entries(onaylilar)) {
         if (data.email === "karadenizmehmet@gmail.com") continue;
-        html += `<div class="kullanici-item">
-          <span class="kullanici-email">${escapeHtml(data.email)}</span>
-          <div class="button-group">
-            <button class="pasif-btn" onclick="kullaniciPasifYap('${uid}')">Pasif Yap</button>
-            <button class="sil-btn" onclick="kullaniciSil('${uid}', 'onayli')">Sil</button>
-          </div>
-        </div>`;
+        html += `<div class="kullanici-item"><span class="kullanici-email">${escapeHtml(data.email)}</span><div class="button-group"><button class="pasif-btn" onclick="kullaniciPasifYap('${uid}')">Pasif Yap</button><button class="sil-btn" onclick="kullaniciSil('${uid}', 'onayli')">Sil</button></div></div>`;
       }
       onayliDiv.innerHTML = html;
     }
@@ -603,11 +471,7 @@ async function kullaniciOnayla(uid) {
     const snap = await bekleyenRef.get();
     if (!snap.exists()) { toast("Kullanıcı bulunamadı!"); return; }
     const userData = snap.val();
-    await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).set({
-      email: userData.email,
-      uid: uid,
-      onay_tarihi: Date.now()
-    });
+    await db.ref(DB_YOLU.onayli_kullanicilar + "/" + uid).set({ email: userData.email, uid: uid, onay_tarihi: Date.now() });
     await bekleyenRef.remove();
     toast(`${userData.email} onaylandı.`);
     await listeleKullanicilar();
@@ -660,10 +524,19 @@ async function kullaniciSil(uid, kaynak) {
   } catch(e) { toast("Silme hatası: " + e.message); }
 }
 
-// Firebase veri dinleme
 function dinleyicileriBaslat() {
   if (!db) return;
   dersDurumBaslat();
+  
+  // GLOBAL AKTİF CİHAZ DİNLEYİCİSİ (YENİ)
+  db.ref("kumanda/aktif_cihaz").on("value", snap => {
+    window.aktifCihazId = snap.val();
+    // Cihaz yönetim ekranı açıksa yenile
+    if (document.getElementById("ekran_cihaz_yonetimi").style.display === "block") {
+      cihazlarDinle();
+    }
+  });
+
   db.ref(DB_YOLU.durum).on("value", snap => {
     const v = snap.val() || {};
     if (v.cevrimici) {
@@ -698,21 +571,18 @@ function dinleyicileriBaslat() {
       else el.textContent = "Veri yok";
     }
   });
-}
-  // 🔊 SES SENKRON (EKLE)
   db.ref(DB_YOLU.ses).on("value", snap => {
     const v = snap.val();
     if (v !== null) {
-    const yeni = parseInt(v);
+      const yeni = parseInt(v);
+      mevcutSes = yeni;
+      document.getElementById("ses_slider").value = yeni;
+      document.getElementById("vol_val").textContent = "%" + yeni;
+      document.getElementById("vol_val2").textContent = "%" + yeni;
+    }
+  });
+}
 
-    mevcutSes = yeni;
-
-    document.getElementById("ses_slider").value = yeni;
-    document.getElementById("vol_val").textContent = "%" + yeni;
-    document.getElementById("vol_val2").textContent = "%" + yeni;
-  }
-});
- 
 async function komutGonder(kod, isim) {
   if (!islemIcinYetkiKontrol()) return;
   try {
@@ -977,8 +847,7 @@ async function anonsuFirebaseGonder() {
   } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
 }
 
-/* ===== CİHAZ YÖNETİMİ FONKSİYONLARI ===== */
-
+// ========== CİHAZ YÖNETİMİ (GÜNCELLENMİŞ) ==========
 function cihazYonetiminiAc() {
   if (!yoneticiMi) {
     toast("❌ Bu işlem sadece yöneticiler tarafından yapılabilir!");
@@ -989,112 +858,75 @@ function cihazYonetiminiAc() {
 
 function cihazlarDinle() {
   if (!db) return;
-  
   const cihazlarRef = db.ref(DB_YOLU.cihazlar);
-  
-  // ÖNCEKİ DİNLEYİCİYİ DOĞRU ŞEKİLDE TEMİZLE (Beyaz Ekran / Çökme Çözümü)
   cihazlarRef.off("value");
-  
   cihazlarRef.on("value", snap => {
     if (!snap.exists()) {
       document.getElementById("cihaz_listesi_container").innerHTML = 
         '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
       return;
     }
-    
     const cihazlar = snap.val();
     let html = '';
-    
     Object.keys(cihazlar).forEach(cihazId => {
       const cihaz = cihazlar[cihazId];
-      
-      const uzaktanAcik = cihaz.uzaktan_erisim_acik !== false;
       const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
-      // Cihazın durumunu çevrimiçi/çevrimdışı verisine göre al:
       const cihazAktif = cihaz.cevrimici === true;
       const zaman = cihaz.guncelleme || cihaz.zaman || "—";
+      const buCihazAktifMi = (window.aktifCihazId === cihazId);
       
-      // Buton tasarımını düzenledim (Açıksa kapat seçeneği Kırmızı, Kapalıysa Aç seçeneği Yeşil olsun)
-      const butonYazi = uzaktanAcik ? "Erişimi Kapat" : "Erişimi Aç";
-      const butonSinif = uzaktanAcik ? "cihaz-erisim-btn kapali" : "cihaz-erisim-btn";
-      const durumYazi = cihazAktif ? "Çevrimiçi" : "Çevrimdışı";
+      let butonYazi, butonSinif;
+      if (buCihazAktifMi) {
+        butonYazi = "⛔ Uzaktan Erişimi Kapat";
+        butonSinif = "cihaz-erisim-btn kapali";
+      } else {
+        butonYazi = "✅ Uzaktan Erişimi Aç";
+        butonSinif = "cihaz-erisim-btn";
+      }
       
       html += `
         <div class="cihaz-kart">
           <div class="cihaz-bilgi">
             <div class="cihaz-adi">🖥️ ${escapeHtml(pcAdi)}</div>
             <div class="cihaz-durum ${cihazAktif ? 'aktif' : 'pasif'}">
-              ${durumYazi} • ${escapeHtml(zaman)}
+              ${cihazAktif ? 'Çevrimiçi' : 'Çevrimdışı'} • ${escapeHtml(zaman)}
             </div>
             <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
           </div>
           <button class="${butonSinif}" 
-                  onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${uzaktanAcik})"
-                  title="${uzaktanAcik ? 'Bu cihazın uzaktan komut almasını engelle' : 'Bu cihazın uzaktan komut almasına izin ver'}">
+                  onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${buCihazAktifMi})">
             ${butonYazi}
           </button>
         </div>
       `;
     });
-    
     document.getElementById("cihaz_listesi_container").innerHTML = html;
-
-// TABLO DOLDUR
-const body = document.getElementById("cihazListesi");
-if(body){
-  body.innerHTML = "";
-  Object.keys(cihazlar).forEach(id=>{
-    const c = cihazlar[id];
-    const aktif = c.aktif !== false;
-    const erisim = c.uzaktan_erisim === true;
-
-    body.innerHTML += `
-      <tr>
-        <td>${c.pc_adi || id}</td>
-        <td><span class="status-badge ${aktif ? 'status-active':'status-waiting'}">${aktif ? 'AÇIK':'BEKLEMEDE'}</span></td>
-        <td><button onclick="toggleSistem('${id}', ${!aktif})">${aktif ? 'Durdur':'Başlat'}</button></td>
-        <td><button onclick="toggleErisim('${id}', ${!erisim})">${erisim ? 'Açık':'Kapalı'}</button></td>
-      </tr>`;
   });
 }
 
-  });
-}
-
-function cihazErisimToggle(cihazId, suanAcik) {
+function cihazErisimToggle(cihazId, suanAktif) {
   if (!yoneticiMi) {
     toast("❌ Yetkiniz yok!");
     return;
   }
-  
-  const yeniDurum = !suanAcik;
-  const cihazRef = db.ref(DB_YOLU.cihazlar + "/" + cihazId);
-  
-  cihazRef.update({
-    uzaktan_erisim_acik: yeniDurum,
-    zaman: new Date().toLocaleString("tr-TR")
-  }).then(() => {
-    const mesaj = yeniDurum ? 
-      "✓ Uzaktan erişim AÇILDI" : 
-      "✗ Uzaktan erişim KAPATILDI";
-    toast(mesaj);
-  }).catch(err => {
-    toast("❌ Hata: " + err.message);
-  });
+  if (suanAktif) {
+    // Aktif cihazı kapat => global aktif cihaz'ı null yap
+    db.ref("kumanda/aktif_cihaz").set(null)
+      .then(() => toast("✅ Uzaktan erişim kapatıldı (tüm cihazlar pasif)"))
+      .catch(err => toast("❌ Hata: " + err.message));
+  } else {
+    // Bu cihazı aktif yap
+    db.ref("kumanda/aktif_cihaz").set(cihazId)
+      .then(() => toast(`✅ ${cihazId} artık uzaktan erişime açık`))
+      .catch(err => toast("❌ Hata: " + err.message));
+  }
 }
 
 function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
   return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
-/* ===== KULLANICI BİLGİSİ ===== */
 function kullaniciBilgisiGoster(ad, email, photoUrl) {
   const adEl    = document.getElementById("lbl_kullanici_ad");
   const emailEl = document.getElementById("lbl_kullanici_email");
@@ -1106,19 +938,16 @@ function kullaniciBilgisiGoster(ad, email, photoUrl) {
   }
 }
 
-/* ===== DERS / TENEFFÜS DURUM ===== */
 let dersProgrami = null;
 let dersDurumTimer = null;
 
 function dersDurumBaslat() {
   if (!db) return;
-  // Firebase'den ayarları çek (program verisi burada)
   db.ref(DB_YOLU.ayarlar).once("value", snap => {
     const v = snap.val();
     if (v) dersProgrami = v;
     dersDurumGuncelle();
   });
-  // Her 30 saniyede güncelle
   if (dersDurumTimer) clearInterval(dersDurumTimer);
   dersDurumTimer = setInterval(dersDurumGuncelle, 30000);
 }
@@ -1129,19 +958,16 @@ function dersDurumGuncelle() {
   const alt     = document.getElementById("ders_durum_alt");
   const badge   = document.getElementById("ders_durum_badge");
   if (!kart || !metin || !badge) return;
-
   if (!dersProgrami) {
     metin.textContent = "⏳ Program yükleniyor...";
     alt.textContent   = "";
     badge.textContent = "...";
     return;
   }
-
   const GUNLER_TR = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
   const simdi = new Date();
   const gun   = GUNLER_TR[simdi.getDay()];
   const prg   = dersProgrami[gun];
-
   if (!prg || !Array.isArray(prg) || prg.length === 0) {
     metin.textContent = "📅 Bugün ders yok";
     alt.textContent   = gun;
@@ -1150,16 +976,12 @@ function dersDurumGuncelle() {
     badge.className   = "ders-badge badge-bitti";
     return;
   }
-
   function s2min(s) {
     if (!s || s === "--:--") return null;
     const [h, m] = s.split(":").map(Number);
     return h * 60 + m;
   }
-
   const simdiMin = simdi.getHours() * 60 + simdi.getMinutes();
-
-  // Aktif dönem ara
   for (let i = 0; i < prg.length; i++) {
     const d = prg[i];
     const toplanma = s2min(d.toplanma);
@@ -1167,8 +989,6 @@ function dersDurumGuncelle() {
     const ogretmen = s2min(d.ogretmen);
     const cikis    = s2min(d.cikis);
     const refBasla = toplanma || ogrenci || ogretmen;
-
-    // Ders saati
     if (ogretmen !== null && cikis !== null && simdiMin >= ogretmen && simdiMin < cikis) {
       const kalan = cikis - simdiMin;
       metin.textContent = `📖 ${d.ders}`;
@@ -1178,7 +998,6 @@ function dersDurumGuncelle() {
       badge.className   = "ders-badge badge-ders";
       return;
     }
-    // Toplanma aralığı
     if (toplanma !== null && ogrenci !== null && simdiMin >= toplanma && simdiMin < ogrenci) {
       const kalan = ogrenci - simdiMin;
       metin.textContent = `🔔 ${d.ders} — Toplanma`;
@@ -1188,7 +1007,6 @@ function dersDurumGuncelle() {
       badge.className   = "ders-badge badge-teneffus";
       return;
     }
-    // Teneffüs (öğrenci çıkışı → öğretmen girişi arası için bir sonraki ders)
     const sonraki = prg[i + 1];
     if (sonraki && ogrenci !== null) {
       const sonrakiRef = s2min(sonraki.toplanma) || s2min(sonraki.ogrenci) || s2min(sonraki.ogretmen);
@@ -1202,7 +1020,6 @@ function dersDurumGuncelle() {
         return;
       }
     }
-    // Dersler arası bekleme (toplanmadan önce)
     if (refBasla !== null && simdiMin < refBasla) {
       const kalan = refBasla - simdiMin;
       metin.textContent = `⏳ ${d.ders} başlamak üzere`;
@@ -1213,8 +1030,6 @@ function dersDurumGuncelle() {
       return;
     }
   }
-
-  // Dersler bitti
   metin.textContent = "🏁 Dersler tamamlandı";
   alt.textContent   = `Son ders: ${prg[prg.length-1].ders}`;
   badge.textContent = "BİTTİ";
@@ -1227,24 +1042,17 @@ window.onload = () => {
   const email = sessionStorage.getItem("ozil_email");
   const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
   const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
-  
   if (uid && email) {
     girisYapildi = true;
     mevcutKullaniciUid = uid;
     mevcutKullaniciEmail = email;
     yetkiliMi = yetkili;
     yoneticiMi = yonetici;
-
-    // YÖNETİCİ BUTONUNU SAYFA YENİLENDİĞİNDE DE GÖSTER
     const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-    if (yoneticiMi && cihazBtn) {
-      cihazBtn.style.display = "inline-block";
-    }
-
+    if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
     const displayname = sessionStorage.getItem("ozil_displayname") || "";
     const photourl    = sessionStorage.getItem("ozil_photourl") || "";
     kullaniciBilgisiGoster(displayname || email, email, photourl);
-
     ekranGoster("kumanda");
     dinleyicileriBaslat();
     yetkiKontrolEt(uid).then(y => {
@@ -1259,22 +1067,6 @@ window.onload = () => {
     ekranGoster("giris");
   }
 };
-
-function toggleSistem(id,val){
-  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
-}
-
-function toggleErisim(id,val){
-  const ref=db.ref("kumanda/cihazlar");
-  ref.once("value").then(snap=>{
-    const all=snap.val()||{};
-    Object.keys(all).forEach(k=>{
-      ref.child(k).update({uzaktan_erisim:false});
-    });
-    ref.child(id).update({uzaktan_erisim:val});
-  });
-}
 </script>
-
 </body>
 </html>
