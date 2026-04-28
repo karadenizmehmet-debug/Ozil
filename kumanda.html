@@ -1028,20 +1028,23 @@ function dersDurumBaslat() {
   // Önce kumanda/ayarlar yolunu dene
   db.ref(DB_YOLU.ayarlar).once("value", snap => {
     let v = snap.val();
-    if (!v) {
-      // Eğer boşsa, kumanda/altında doğrudan gün isimlerini dene (geçici çözüm)
+    console.log("[Ders Programı] kumanda/ayarlar verisi:", v);
+    if (v && (v.Pazartesi || v.Salı || v.Çarşamba || v.Perşembe || v.Cuma || v.Cumartesi || v.Pazar)) {
+      dersProgrami = v;
+      dersDurumGuncelle();
+    } else {
+      // Eğer yoksa, doğrudan kumanda/ altında gün isimlerini dene
       db.ref("kumanda").once("value", snap2 => {
         const all = snap2.val();
+        console.log("[Ders Programı] kumanda/ altındaki tüm veri:", all);
         if (all && (all.Pazartesi || all.Salı || all.Çarşamba || all.Perşembe || all.Cuma || all.Cumartesi || all.Pazar)) {
           dersProgrami = all;
         } else {
           dersProgrami = null;
+          console.warn("[Ders Programı] Hiçbir yerde ders programı bulunamadı!");
         }
         dersDurumGuncelle();
       });
-    } else {
-      dersProgrami = v;
-      dersDurumGuncelle();
     }
   });
   if (dersDurumTimer) clearInterval(dersDurumTimer);
@@ -1058,18 +1061,21 @@ function dersDurumGuncelle() {
     metin.textContent = "⏳ Program yükleniyor...";
     alt.textContent   = "";
     badge.textContent = "...";
+    console.warn("[Ders Durumu] dersProgrami null, bekleniyor...");
     return;
   }
   const GUNLER_TR = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
   const simdi = new Date();
   const gun   = GUNLER_TR[simdi.getDay()];
   const prg   = dersProgrami[gun];
+  console.log(`[Ders Durumu] Bugün: ${gun}, Program:`, prg);
   if (!prg || !Array.isArray(prg) || prg.length === 0) {
     metin.textContent = "📅 Bugün ders yok";
     alt.textContent   = gun;
     badge.textContent = "—";
     kart.className    = "ders-bar bitti";
     badge.className   = "ders-badge badge-bitti";
+    console.log("[Ders Durumu] Bugün için ders yok veya program boş");
     return;
   }
   function s2min(s) {
