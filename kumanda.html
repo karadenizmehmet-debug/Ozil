@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📱 Zil Kumanda</title>
+<title>📱 oZil Kumanda</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{font-family:'Segoe UI',sans-serif;background-color:#f1f2f6;text-align:center;padding:10px;margin:0}
@@ -281,36 +281,11 @@
 </div>
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
-function cihazDurumGuncelle(id,durum){
- db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-function cihazDurumGuncelle(id,durum){
- db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
-function cihazDurumGuncelle(id,durum){
- db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
-function cihazDurumGuncelle(id,durum){
- db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js">
-function cihazDurumGuncelle(id,durum){
- db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
-}
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
 const FIREBASE_CONFIG = {
@@ -935,20 +910,65 @@ function cihazYonetiminiAc() {
   ekranGoster("cihaz_yonetimi");
 }
 
+
 function cihazlarDinle() {
   if (!db) return;
-  
-  const cihazlarRef = db.ref(DB_YOLU.cihazlar);
-  
-  // ÖNCEKİ DİNLEYİCİYİ DOĞRU ŞEKİLDE TEMİZLE (Beyaz Ekran / Çökme Çözümü)
-  cihazlarRef.off("value");
-  
-  cihazlarRef.on("value", snap => {
+
+  const ref = db.ref(DB_YOLU.cihazlar);
+  ref.off("value");
+
+  ref.on("value", snap => {
+    const container = document.getElementById("cihaz_listesi_container");
+    const listBody = document.getElementById("cihazListesi");
+
+    if (!container || !listBody) return;
+
+    container.innerHTML = "";
+    listBody.innerHTML = "";
+
     if (!snap.exists()) {
-      document.getElementById("cihaz_listesi_container").innerHTML = 
-        '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
+      container.innerHTML = "<div style='text-align:center'>Cihaz yok</div>";
       return;
     }
+
+    const cihazlar = snap.val();
+
+    Object.keys(cihazlar).forEach(id => {
+      const c = cihazlar[id];
+      const aktif = c.aktif !== false;
+
+      container.innerHTML += `
+        <div class="cihaz-kart">
+          <div class="cihaz-bilgi">
+            <div class="cihaz-adi">${c.pc_adi || id}</div>
+            <div class="cihaz-durum ${aktif ? 'aktif' : 'pasif'}">
+              ${aktif ? 'Çalışıyor' : 'Beklemede'}
+            </div>
+          </div>
+        </div>
+      `;
+
+      listBody.innerHTML += `
+        <tr>
+          <td>${c.pc_adi || id}</td>
+          <td>${c.son_acilis || '-'}</td>
+          <td>
+            <span class="status-badge ${aktif ? 'status-active' : 'status-waiting'}">
+              ${aktif ? 'ÇALIŞIYOR' : 'BEKLEMEDE'}
+            </span>
+          </td>
+          <td>
+            <button class="btn ${aktif ? 'red' : 'green'}"
+              onclick="cihazDurumGuncelle('${id}', ${!aktif})">
+              ${aktif ? 'Durdur' : 'Başlat'}
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+  });
+}
+
     
     const cihazlar = snap.val();
     let html = '';
@@ -1214,5 +1234,14 @@ function cihazDurumGuncelle(id,durum){
 }
 
 </script>
+
+<script>
+function cihazDurumGuncelle(id, durum){
+  db.ref("kumanda/cihazlar/" + id).update({
+    aktif: durum
+  });
+}
+</script>
 </body>
+
 </html>
