@@ -613,7 +613,24 @@ function dinleyicileriBaslat() {
     }
   });
 }
-
+// BAŞLANGIÇTA MEVCUT SES SEVİYESİNİ BİR KERE OKU (YENİ)
+db.ref(DB_YOLU.ses).once("value").then(snap => {
+    const v = snap.val();
+    if (v !== null) {
+        const yeni = parseInt(v);
+        mevcutSes = yeni;
+        document.getElementById("ses_slider").value = yeni;
+        document.getElementById("vol_val").textContent = "%" + yeni;
+        document.getElementById("vol_val2").textContent = "%" + yeni;
+    } else {
+        // Firebase'de ses değeri yoksa varsayılan 80'i ayarla (ve yaz)
+        mevcutSes = 80;
+        document.getElementById("ses_slider").value = 80;
+        document.getElementById("vol_val").textContent = "%80";
+        document.getElementById("vol_val2").textContent = "%80";
+        db.ref(DB_YOLU.ses).set(80); // Firebase'e de yaz
+    }
+});
 async function komutGonder(kod, isim) {
   if (!islemIcinYetkiKontrol()) return;
   try {
