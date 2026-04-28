@@ -590,7 +590,6 @@ function dinleyicileriBaslat() {
       else el.textContent = "Veri yok";
     }
   });
-  // 🔥 İLK AÇILIŞTA SESİ ÇEK
   db.ref(DB_YOLU.ses).get().then(snap => {
     const v = snap.val();
     if (v !== null) {
@@ -1023,12 +1022,27 @@ function kullaniciBilgisiGoster(ad, email, photoUrl) {
 let dersProgrami = null;
 let dersDurumTimer = null;
 
+// DÜZELTİLMİŞ FONKSİYON: Önce kumanda/ayarlar'ı dene, yoksa kumanda/ altında gün bazlı ara
 function dersDurumBaslat() {
   if (!db) return;
+  // Önce kumanda/ayarlar yolunu dene
   db.ref(DB_YOLU.ayarlar).once("value", snap => {
-    const v = snap.val();
-    if (v) dersProgrami = v;
-    dersDurumGuncelle();
+    let v = snap.val();
+    if (!v) {
+      // Eğer boşsa, kumanda/altında doğrudan gün isimlerini dene (geçici çözüm)
+      db.ref("kumanda").once("value", snap2 => {
+        const all = snap2.val();
+        if (all && (all.Pazartesi || all.Salı || all.Çarşamba || all.Perşembe || all.Cuma || all.Cumartesi || all.Pazar)) {
+          dersProgrami = all;
+        } else {
+          dersProgrami = null;
+        }
+        dersDurumGuncelle();
+      });
+    } else {
+      dersProgrami = v;
+      dersDurumGuncelle();
+    }
   });
   if (dersDurumTimer) clearInterval(dersDurumTimer);
   dersDurumTimer = setInterval(dersDurumGuncelle, 30000);
