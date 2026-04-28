@@ -56,17 +56,20 @@
   .onayla-btn,.sil-btn,.pasif-btn{background:#2ed573;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px}
   .sil-btn{background:#e74c3c}
   .pasif-btn{background:#f39c12}
-  .cihaz-kart{background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-  .cihaz-bilgi{flex:1;text-align:left}
+  .cihaz-kart{background:white;border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .cihaz-bilgi{flex:2;text-align:left}
   .cihaz-adi{font-weight:bold;color:#2c3e50;font-size:15px;margin-bottom:4px}
   .cihaz-durum{font-size:13px;color:#7f8c8d;margin-bottom:4px}
   .cihaz-durum.aktif::before{content:"● ";color:#2ecc71}
   .cihaz-durum.pasif::before{content:"● ";color:#e74c3c}
   .cihaz-id{font-size:12px;color:#0984e3}
+  .cihaz-butonlar{display:flex;gap:8px;flex-wrap:wrap}
   .cihaz-erisim-btn{background:#2ecc71;color:white;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:bold;transition:all 0.2s;min-width:100px}
-  .cihaz-erisim-btn:hover{background:#27ae60}
   .cihaz-erisim-btn.kapali{background:#e74c3c}
   .cihaz-erisim-btn.kapali:hover{background:#c0392b}
+  .cihaz-program-btn{background:#0984e3;color:white;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:bold;transition:all 0.2s;min-width:100px}
+  .cihaz-program-btn.kapali{background:#f39c12}
+  .cihaz-program-btn.kapali:hover{background:#e67e22}
   .user-bar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-radius:12px;padding:10px 15px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
   .user-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);object-fit:cover;flex-shrink:0}
   .user-avatar-placeholder{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -112,7 +115,7 @@
   <div class="ders-bar" id="ders_durum_kart">
     <div>
       <div class="ders-durum-metin" id="ders_durum_metin">⏳ Program yükleniyor...</div>
-      <div class="ders-durum-alt" id="ders_durum_alt" id="lbl_pc"></div>
+      <div class="ders-durum-alt" id="ders_durum_alt"></div>
     </div>
     <div class="ders-badge badge-bekle" id="ders_durum_badge">...</div>
   </div>
@@ -180,7 +183,8 @@
     <button class="btn purple full" onclick="komutGonder('muzik_toggle','Müzik Yayını')"><span class="icon">📻</span>Müzik (Aç/Kapat)</button>
     <button class="btn gray full" onclick="komutGonder('sustur','Sustur')"><span class="icon">⏹️</span>SİSTEMİ SUSTUR</button>
     <button id="btn_sistem" class="btn full" onclick="sistemToggle()" style="background-color:#2ed573;box-shadow:0 4px #27ae60;grid-column:span 2">
-      <span id="lbl_sistem">🟢 SİSTEM: AÇIK</span></button>
+      <span id="lbl_sistem">🟢 SİSTEM: AÇIK</span>
+    </button>
   </div>
 
   <div class="card" id="genel_ayar_card" style="display:none">
@@ -206,13 +210,12 @@
 <div id="ekran_cihaz_yonetimi" style="display:none;max-width:500px;margin:0 auto">
   <h2>🖥️ Cihaz Yönetimi</h2>
   <p style="color:#7f8c8d;font-size:14px;margin-bottom:15px">
-    ⚠️ Sadece yöneticiler görebilir. <strong>Sadece bir cihaz aynı anda uzaktan komut alabilir.</strong><br>
-    Açık olan cihaz, Firebase’den gelen tüm komutları işler; diğerleri sadece kendi yerel programını çalıştırır.
+    ⚠️ Sadece yöneticiler görebilir.<br>
+    <strong>🔌 Uzaktan Erişim:</strong> Sadece bir cihaz aynı anda aktif olabilir. Aktif cihaz, web panelinden gelen komutları alır.<br>
+    <strong>⚙️ Program Durumu:</strong> Her cihazın kendi programını (otomatik zil, yerel ses) çalıştırıp çalıştırmayacağını ayrı ayrı kontrol eder. Pasif olan cihaz hiçbir ses çalmaz.
   </p>
   <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;">
-    <div style="text-align:center;color:#7f8c8d">
-      ⏳ Cihazlar yükleniyor...
-    </div>
+    <div style="text-align:center;color:#7f8c8d">⏳ Cihazlar yükleniyor...</div>
   </div>
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%">← Geri Dön</button></div>
 </div>
@@ -308,7 +311,7 @@ let seciliZilAdi = "";
 let localDurumTimer = null;
 let sesZamanlayici = null;
 let genelAyarTimer = null;
-window.aktifCihazId = null;   // ← YENİ: global aktif cihaz ID’si
+window.aktifCihazId = null;
 
 if (typeof firebase !== "undefined") {
   try {
@@ -528,10 +531,9 @@ function dinleyicileriBaslat() {
   if (!db) return;
   dersDurumBaslat();
   
-  // GLOBAL AKTİF CİHAZ DİNLEYİCİSİ (YENİ)
+  // Global aktif cihaz dinleyicisi
   db.ref("kumanda/aktif_cihaz").on("value", snap => {
     window.aktifCihazId = snap.val();
-    // Cihaz yönetim ekranı açıksa yenile
     if (document.getElementById("ekran_cihaz_yonetimi").style.display === "block") {
       cihazlarDinle();
     }
@@ -541,7 +543,7 @@ function dinleyicileriBaslat() {
     const v = snap.val() || {};
     if (v.cevrimici) {
       durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
-      if (v.pc_adi) document.getElementById("lbl_pc").textContent = v.pc_adi + " - Kumanda";
+      if (v.pc_adi) document.getElementById("ders_durum_alt").textContent = v.pc_adi + " - Kumanda";
     } else {
       durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
     }
@@ -609,8 +611,11 @@ function sesGuncelle(val, ikincislider) {
   mevcutSes = parseInt(val, 10);
   document.getElementById("vol_val").textContent = "%" + mevcutSes;
   document.getElementById("vol_val2").textContent = "%" + mevcutSes;
-  if (!ikincislider) document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
-  else document.getElementById("ses_slider").value = mevcutSes;
+  if (!ikincislider && document.querySelector("#ekran_sarki input[type=range]")) {
+    document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
+  } else if (ikincislider) {
+    document.getElementById("ses_slider").value = mevcutSes;
+  }
   clearTimeout(sesZamanlayici);
   sesZamanlayici = setTimeout(async () => {
     try { await db.ref(DB_YOLU.ses).set(mevcutSes); }
@@ -873,15 +878,31 @@ function cihazlarDinle() {
       const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
       const cihazAktif = cihaz.cevrimici === true;
       const zaman = cihaz.guncelleme || cihaz.zaman || "—";
-      const buCihazAktifMi = (window.aktifCihazId === cihazId);
+      const uzaktanAktif = (window.aktifCihazId === cihazId);
+      const programAktif = (cihaz.program_aktif !== false); // varsayılan true
       
-      let butonYazi, butonSinif;
-      if (buCihazAktifMi) {
-        butonYazi = "⛔ Uzaktan Erişimi Kapat";
-        butonSinif = "cihaz-erisim-btn kapali";
+      // Uzaktan Erişim Butonu
+      let uzaktanYazi, uzaktanSinif;
+      if (uzaktanAktif) {
+        uzaktanYazi = "🔌 Uzaktan Erişimi Kapat";
+        uzaktanSinif = "cihaz-erisim-btn kapali";
       } else {
-        butonYazi = "✅ Uzaktan Erişimi Aç";
-        butonSinif = "cihaz-erisim-btn";
+        uzaktanYazi = "🔌 Uzaktan Erişimi Aç";
+        uzaktanSinif = "cihaz-erisim-btn";
+      }
+      
+      // Program Aktif/Deaktif Butonu (sadece yönetici görecek)
+      let programHtml = "";
+      if (yoneticiMi) {
+        let programYazi, programSinif;
+        if (programAktif) {
+          programYazi = "⚙️ Programı Deaktif Et";
+          programSinif = "cihaz-program-btn";
+        } else {
+          programYazi = "⚙️ Programı Aktif Et";
+          programSinif = "cihaz-program-btn kapali";
+        }
+        programHtml = `<button class="${programSinif}" onclick="cihazProgramToggle('${escapeHtml(cihazId)}', ${programAktif})">${programYazi}</button>`;
       }
       
       html += `
@@ -890,13 +911,14 @@ function cihazlarDinle() {
             <div class="cihaz-adi">🖥️ ${escapeHtml(pcAdi)}</div>
             <div class="cihaz-durum ${cihazAktif ? 'aktif' : 'pasif'}">
               ${cihazAktif ? 'Çevrimiçi' : 'Çevrimdışı'} • ${escapeHtml(zaman)}
+              ${!programAktif ? ' • ⛔ Program Pasif' : ''}
             </div>
             <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
           </div>
-          <button class="${butonSinif}" 
-                  onclick="cihazErisimToggle('${escapeHtml(cihazId)}', ${buCihazAktifMi})">
-            ${butonYazi}
-          </button>
+          <div class="cihaz-butonlar">
+            <button class="${uzaktanSinif}" onclick="cihazUzaktanToggle('${escapeHtml(cihazId)}', ${uzaktanAktif})">${uzaktanYazi}</button>
+            ${programHtml}
+          </div>
         </div>
       `;
     });
@@ -904,7 +926,7 @@ function cihazlarDinle() {
   });
 }
 
-function cihazErisimToggle(cihazId, suanAktif) {
+function cihazUzaktanToggle(cihazId, suanAktif) {
   if (!yoneticiMi) {
     toast("❌ Yetkiniz yok!");
     return;
@@ -920,6 +942,20 @@ function cihazErisimToggle(cihazId, suanAktif) {
       .then(() => toast(`✅ ${cihazId} artık uzaktan erişime açık`))
       .catch(err => toast("❌ Hata: " + err.message));
   }
+}
+
+function cihazProgramToggle(cihazId, suanAktif) {
+  if (!yoneticiMi) {
+    toast("❌ Yetkiniz yok!");
+    return;
+  }
+  const yeniDurum = !suanAktif;
+  db.ref(DB_YOLU.cihazlar + "/" + cihazId).update({
+    program_aktif: yeniDurum,
+    program_son_guncelleme: Date.now()
+  }).then(() => {
+    toast(yeniDurum ? `✅ ${cihazId} programı AKTİF edildi` : `⛔ ${cihazId} programı DEAKTİF edildi`);
+  }).catch(err => toast("❌ Hata: " + err.message));
 }
 
 function escapeHtml(text) {
