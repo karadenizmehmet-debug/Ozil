@@ -89,6 +89,16 @@
   .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
+
+.status-badge{
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:11px;
+  font-weight:bold;
+}
+.status-active{background:#28a745;color:#fff}
+.status-waiting{background:#dc3545;color:#fff}
+
 </style>
 </head>
 <body>
@@ -212,7 +222,14 @@
   <p style="color:#7f8c8d;font-size:14px;margin-bottom:15px">
     ⚠️ Sadece yöneticiler görebilir. Kendi bilgisayarınızda test yaparken zil bilgisayarının komut almasını engellemek için cihaz erişimini kapatabilirsiniz.
   </p>
-  <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;">
+  <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;"></div>
+<div style="margin-top:15px">
+<table style="width:100%;background:white;border-radius:8px">
+<thead><tr><th>Cihaz</th><th>Durum</th><th>Sistem</th><th>Erişim</th></tr></thead>
+<tbody id="cihazListesi"></tbody>
+</table>
+</div>
+<div id="cihaz_listesi_container" class="card" style="display:none;">
     <div style="text-align:center;color:#7f8c8d">
       ⏳ Cihazlar yükleniyor...
     </div>
@@ -261,11 +278,91 @@
 </div>
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+function toggleSistem(id,val){
+  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
+}
+
+function toggleErisim(id,val){
+  const ref=db.ref("kumanda/cihazlar");
+  ref.once("value").then(snap=>{
+    const all=snap.val()||{};
+    Object.keys(all).forEach(k=>{
+      ref.child(k).update({uzaktan_erisim:false});
+    });
+    ref.child(id).update({uzaktan_erisim:val});
+  });
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+function toggleSistem(id,val){
+  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
+}
+
+function toggleErisim(id,val){
+  const ref=db.ref("kumanda/cihazlar");
+  ref.once("value").then(snap=>{
+    const all=snap.val()||{};
+    Object.keys(all).forEach(k=>{
+      ref.child(k).update({uzaktan_erisim:false});
+    });
+    ref.child(id).update({uzaktan_erisim:val});
+  });
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
+function toggleSistem(id,val){
+  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
+}
+
+function toggleErisim(id,val){
+  const ref=db.ref("kumanda/cihazlar");
+  ref.once("value").then(snap=>{
+    const all=snap.val()||{};
+    Object.keys(all).forEach(k=>{
+      ref.child(k).update({uzaktan_erisim:false});
+    });
+    ref.child(id).update({uzaktan_erisim:val});
+  });
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
+function toggleSistem(id,val){
+  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
+}
+
+function toggleErisim(id,val){
+  const ref=db.ref("kumanda/cihazlar");
+  ref.once("value").then(snap=>{
+    const all=snap.val()||{};
+    Object.keys(all).forEach(k=>{
+      ref.child(k).update({uzaktan_erisim:false});
+    });
+    ref.child(id).update({uzaktan_erisim:val});
+  });
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js">
+function toggleSistem(id,val){
+  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
+}
+
+function toggleErisim(id,val){
+  const ref=db.ref("kumanda/cihazlar");
+  ref.once("value").then(snap=>{
+    const all=snap.val()||{};
+    Object.keys(all).forEach(k=>{
+      ref.child(k).update({uzaktan_erisim:false});
+    });
+    ref.child(id).update({uzaktan_erisim:val});
+  });
+}
+</script>
+
 
 <script>
 const FIREBASE_CONFIG = {
@@ -941,6 +1038,26 @@ function cihazlarDinle() {
     });
     
     document.getElementById("cihaz_listesi_container").innerHTML = html;
+
+// TABLO DOLDUR
+const body = document.getElementById("cihazListesi");
+if(body){
+  body.innerHTML = "";
+  Object.keys(cihazlar).forEach(id=>{
+    const c = cihazlar[id];
+    const aktif = c.aktif !== false;
+    const erisim = c.uzaktan_erisim === true;
+
+    body.innerHTML += `
+      <tr>
+        <td>${c.pc_adi || id}</td>
+        <td><span class="status-badge ${aktif ? 'status-active':'status-waiting'}">${aktif ? 'AÇIK':'BEKLEMEDE'}</span></td>
+        <td><button onclick="toggleSistem('${id}', ${!aktif})">${aktif ? 'Durdur':'Başlat'}</button></td>
+        <td><button onclick="toggleErisim('${id}', ${!erisim})">${erisim ? 'Açık':'Kapalı'}</button></td>
+      </tr>`;
+  });
+}
+
   });
 }
 
@@ -1142,6 +1259,22 @@ window.onload = () => {
     ekranGoster("giris");
   }
 };
+
+function toggleSistem(id,val){
+  db.ref("kumanda/cihazlar/"+id).update({aktif:val});
+}
+
+function toggleErisim(id,val){
+  const ref=db.ref("kumanda/cihazlar");
+  ref.once("value").then(snap=>{
+    const all=snap.val()||{};
+    Object.keys(all).forEach(k=>{
+      ref.child(k).update({uzaktan_erisim:false});
+    });
+    ref.child(id).update({uzaktan_erisim:val});
+  });
+}
 </script>
+
 </body>
 </html>
