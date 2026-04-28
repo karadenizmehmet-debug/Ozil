@@ -560,7 +560,7 @@ function dinleyicileriBaslat() {
     const v = snap.val() || {};
     if (v.cevrimici) {
       durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
-      if (v.pc_adi) document.getElementById("ders_durum_alt").textContent = v.pc_adi + " - Kumanda";
+      // Alt satırdaki "BTR-PC - Kumanda" yazısı kaldırıldı
     } else {
       durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
     }
@@ -571,7 +571,7 @@ function dinleyicileriBaslat() {
       document.getElementById("vol_val").innerHTML = "%" + mevcutSes;
       document.getElementById("vol_val2").innerHTML = "%" + mevcutSes;
     }
-  });
+});
   db.ref(DB_YOLU.genel_ayar).on("value", snap => {
     const v = snap.val();
     if (v && typeof v === "object") {
