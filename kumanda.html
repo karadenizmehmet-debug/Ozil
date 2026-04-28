@@ -89,6 +89,12 @@
   .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
+
+/* TABLO DURUM */
+.status-badge{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold}
+.status-active{background:#28a745;color:#fff}
+.status-waiting{background:#dc3545;color:#fff}
+
 </style>
 </head>
 <body>
@@ -213,6 +219,20 @@
     ⚠️ Sadece yöneticiler görebilir. Kendi bilgisayarınızda test yaparken zil bilgisayarının komut almasını engellemek için cihaz erişimini kapatabilirsiniz.
   </p>
   <div id="cihaz_listesi_container" class="card" style="padding:10px; background:transparent; box-shadow:none;">
+<div id="cihaz_tablo_container" style="margin-top:15px">
+<table style="width:100%;background:white;border-radius:8px">
+<thead>
+<tr>
+<th>Cihaz</th>
+<th>Son Açılış</th>
+<th>Durum</th>
+<th>İşlem</th>
+</tr>
+</thead>
+<tbody id="cihazListesi"></tbody>
+</table>
+</div>
+
     <div style="text-align:center;color:#7f8c8d">
       ⏳ Cihazlar yükleniyor...
     </div>
@@ -261,11 +281,36 @@
 </div>
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+function cihazDurumGuncelle(id,durum){
+ db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+function cihazDurumGuncelle(id,durum){
+ db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
+function cihazDurumGuncelle(id,durum){
+ db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
+function cihazDurumGuncelle(id,durum){
+ db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js">
+function cihazDurumGuncelle(id,durum){
+ db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
+}
+
+</script>
 
 <script>
 const FIREBASE_CONFIG = {
@@ -941,6 +986,27 @@ function cihazlarDinle() {
     });
     
     document.getElementById("cihaz_listesi_container").innerHTML = html;
+
+// TABLO GÜNCELLE
+const listBody = document.getElementById("cihazListesi");
+if(listBody){
+  listBody.innerHTML="";
+  Object.keys(cihazlar).forEach(cihazId=>{
+    const cihaz=cihazlar[cihazId];
+    const aktif=cihaz.aktif!==false;
+    listBody.innerHTML+=`
+    <tr>
+      <td>${cihaz.pc_adi||cihazId}</td>
+      <td>${cihaz.zaman||'-'}</td>
+      <td><span class="status-badge ${aktif?'status-active':'status-waiting'}">
+      ${aktif?'ÇALIŞIYOR':'BEKLEMEDE'}</span></td>
+      <td><button class="btn ${aktif?'red':'green'}"
+      onclick="cihazDurumGuncelle('${cihazId}',${!aktif})">
+      ${aktif?'Durdur':'Başlat'}</button></td>
+    </tr>`;
+  });
+}
+
   });
 }
 
@@ -1142,6 +1208,11 @@ window.onload = () => {
     ekranGoster("giris");
   }
 };
+
+function cihazDurumGuncelle(id,durum){
+ db.ref("kumanda/cihazlar/"+id).update({aktif:durum});
+}
+
 </script>
 </body>
 </html>
