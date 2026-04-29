@@ -1149,34 +1149,34 @@ function dersDurumGuncelle() {
 }
 
 window.onload = () => {
-  const uid = sessionStorage.getItem("ozil_uid");
-  const email = sessionStorage.getItem("ozil_email");
-  const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
-  const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
-  if (uid && email) {
-    girisYapildi = true;
-    mevcutKullaniciUid = uid;
-    mevcutKullaniciEmail = email;
-    yetkiliMi = yetkili;
-    yoneticiMi = yonetici;
-    const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-    if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
-    const displayname = sessionStorage.getItem("ozil_displayname") || "";
-    const photourl    = sessionStorage.getItem("ozil_photourl") || "";
-    kullaniciBilgisiGoster(displayname || email, email, photourl);
-    ekranGoster("kumanda");
-    dinleyicileriBaslat();
-    yetkiKontrolEt(uid).then(y => {
-      if (y !== yetkiliMi) {
+  if (!auth) { ekranGoster("giris"); return; }
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      // Firebase Auth token geçerli → normal giriş akışı
+      girisYapildi = true;
+      mevcutKullaniciUid = user.uid;
+      mevcutKullaniciEmail = user.email;
+      yoneticiMi = (user.email === "karadenizmehmet@gmail.com");
+
+      const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
+      if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
+
+      kullaniciBilgisiGoster(user.displayName || user.email, user.email, user.photoURL);
+      ekranGoster("kumanda");
+      dinleyicileriBaslat();
+
+      // Yetki kontrolü Firebase'den taze oku
+      yetkiKontrolEt(user.uid).then(y => {
         yetkiliMi = y;
-        sessionStorage.setItem("ozil_yetkili", y ? "1" : "0");
-        if (!y) toast("Yetkiniz iptal edildi!");
-        else toast("Yetkiniz yeniden onaylandı!");
-      }
-    });
-  } else {
-    ekranGoster("giris");
-  }
+        if (!y && !yoneticiMi) toast("⚠️ Yetkiniz yok, onay bekleniyor.");
+      });
+
+    } else {
+      // Firebase Auth oturumu yok → giriş ekranı
+      ekranGoster("giris");
+    }
+  });
 };
 </script>
 </body>
