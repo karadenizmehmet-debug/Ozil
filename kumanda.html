@@ -361,10 +361,7 @@ function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar
 
 function islemIcinYetkiKontrol() {
   if (!girisYapildi) { toast("Lütfen önce giriş yapın!"); return false; }
-  if (!yetkiliMi && !yoneticiMi) { 
-    toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); 
-    return false; 
-  }
+  if (!yetkiliMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
   return true;
 }
 
@@ -597,7 +594,7 @@ function dinleyicileriBaslat() {
   db.ref(DB_YOLU.ses).get().then(snap => {
     const v = snap.val();
     if (v !== null) {
-      const yeni = typeof v === "object" ? parseInt(v.deger) : parseInt(v);
+      const yeni = parseInt(v);
       mevcutSes = yeni;
       document.getElementById("ses_slider").value = yeni;
       document.getElementById("vol_val").textContent = "%" + yeni;
@@ -667,9 +664,7 @@ function sesGuncelle(val, ikincislider) {
   }
   clearTimeout(sesZamanlayici);
   sesZamanlayici = setTimeout(async () => {
-    try { await db.ref(DB_YOLU.ses).set({
-  deger: mevcutSes
-}); }
+    try { await db.ref(DB_YOLU.ses).set(mevcutSes); }
     catch(e) { toast("❌ Hata: " + e.message); }
   }, 300);
 }
