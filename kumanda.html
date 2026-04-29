@@ -361,7 +361,7 @@ function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar
 
 function islemIcinYetkiKontrol() {
   if (!girisYapildi) { toast("Lütfen önce giriş yapın!"); return false; }
-  if (!yetkiliMi && !yoneticiMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
+  if (!yetkiliMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
   return true;
 }
 
@@ -560,7 +560,7 @@ function dinleyicileriBaslat() {
     const v = snap.val() || {};
     if (v.cevrimici) {
       durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
-      // Alt satırdaki "BTR-PC - Kumanda" yazısı kaldırıldı
+      if (v.pc_adi) document.getElementById("ders_durum_alt").textContent = v.pc_adi + " - Kumanda";
     } else {
       durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
     }
@@ -571,7 +571,7 @@ function dinleyicileriBaslat() {
       document.getElementById("vol_val").innerHTML = "%" + mevcutSes;
       document.getElementById("vol_val2").innerHTML = "%" + mevcutSes;
     }
-});
+  });
   db.ref(DB_YOLU.genel_ayar).on("value", snap => {
     const v = snap.val();
     if (v && typeof v === "object") {
@@ -590,6 +590,7 @@ function dinleyicileriBaslat() {
       else el.textContent = "Veri yok";
     }
   });
+  // 🔥 İLK AÇILIŞTA SESİ ÇEK
   db.ref(DB_YOLU.ses).get().then(snap => {
     const v = snap.val();
     if (v !== null) {
@@ -670,23 +671,14 @@ function sesGuncelle(val, ikincislider) {
 
 async function sistemToggle() {
   if (!islemIcinYetkiKontrol()) return;
-
   const yeniDurum = !sistemAcik;
-
   try {
-    await db.ref("kumanda/sistem_durum").set({
-      aktif: yeniDurum,
-      zaman: Date.now()
-    });
-
+    await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() });
     _sistemDurumGuncelle(yeniDurum);
-
     toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
-
-  } catch (e) {
-    toast("❌ Hata: " + e.message);
-  }
+  } catch (e) { toast("❌ Hata: " + e.message); }
 }
+
 function _sistemDurumGuncelle(aktif) {
   sistemAcik = aktif;
   const btn = document.getElementById("btn_sistem");
@@ -1031,30 +1023,12 @@ function kullaniciBilgisiGoster(ad, email, photoUrl) {
 let dersProgrami = null;
 let dersDurumTimer = null;
 
-// DÜZELTİLMİŞ FONKSİYON: Önce kumanda/ayarlar'ı dene, yoksa kumanda/ altında gün bazlı ara
 function dersDurumBaslat() {
   if (!db) return;
-  // Önce kumanda/ayarlar yolunu dene
   db.ref(DB_YOLU.ayarlar).once("value", snap => {
-    let v = snap.val();
-    console.log("[Ders Programı] kumanda/ayarlar verisi:", v);
-    if (v && (v.Pazartesi || v.Salı || v.Çarşamba || v.Perşembe || v.Cuma || v.Cumartesi || v.Pazar)) {
-      dersProgrami = v;
-      dersDurumGuncelle();
-    } else {
-      // Eğer yoksa, doğrudan kumanda/ altında gün isimlerini dene
-      db.ref("kumanda").once("value", snap2 => {
-        const all = snap2.val();
-        console.log("[Ders Programı] kumanda/ altındaki tüm veri:", all);
-        if (all && (all.Pazartesi || all.Salı || all.Çarşamba || all.Perşembe || all.Cuma || all.Cumartesi || all.Pazar)) {
-          dersProgrami = all;
-        } else {
-          dersProgrami = null;
-          console.warn("[Ders Programı] Hiçbir yerde ders programı bulunamadı!");
-        }
-        dersDurumGuncelle();
-      });
-    }
+    const v = snap.val();
+    if (v) dersProgrami = v;
+    dersDurumGuncelle();
   });
   if (dersDurumTimer) clearInterval(dersDurumTimer);
   dersDurumTimer = setInterval(dersDurumGuncelle, 30000);
@@ -1070,21 +1044,18 @@ function dersDurumGuncelle() {
     metin.textContent = "⏳ Program yükleniyor...";
     alt.textContent   = "";
     badge.textContent = "...";
-    console.warn("[Ders Durumu] dersProgrami null, bekleniyor...");
     return;
   }
   const GUNLER_TR = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
   const simdi = new Date();
   const gun   = GUNLER_TR[simdi.getDay()];
   const prg   = dersProgrami[gun];
-  console.log(`[Ders Durumu] Bugün: ${gun}, Program:`, prg);
   if (!prg || !Array.isArray(prg) || prg.length === 0) {
     metin.textContent = "📅 Bugün ders yok";
     alt.textContent   = gun;
     badge.textContent = "—";
     kart.className    = "ders-bar bitti";
     badge.className   = "ders-badge badge-bitti";
-    console.log("[Ders Durumu] Bugün için ders yok veya program boş");
     return;
   }
   function s2min(s) {
@@ -1149,34 +1120,34 @@ function dersDurumGuncelle() {
 }
 
 window.onload = () => {
-  if (!auth) { ekranGoster("giris"); return; }
-
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      // Firebase Auth token geçerli → normal giriş akışı
-      girisYapildi = true;
-      mevcutKullaniciUid = user.uid;
-      mevcutKullaniciEmail = user.email;
-      yoneticiMi = (user.email === "karadenizmehmet@gmail.com");
-
-      const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-      if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
-
-      kullaniciBilgisiGoster(user.displayName || user.email, user.email, user.photoURL);
-      ekranGoster("kumanda");
-      dinleyicileriBaslat();
-
-      // Yetki kontrolü Firebase'den taze oku
-      yetkiKontrolEt(user.uid).then(y => {
+  const uid = sessionStorage.getItem("ozil_uid");
+  const email = sessionStorage.getItem("ozil_email");
+  const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
+  const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
+  if (uid && email) {
+    girisYapildi = true;
+    mevcutKullaniciUid = uid;
+    mevcutKullaniciEmail = email;
+    yetkiliMi = yetkili;
+    yoneticiMi = yonetici;
+    const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
+    if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
+    const displayname = sessionStorage.getItem("ozil_displayname") || "";
+    const photourl    = sessionStorage.getItem("ozil_photourl") || "";
+    kullaniciBilgisiGoster(displayname || email, email, photourl);
+    ekranGoster("kumanda");
+    dinleyicileriBaslat();
+    yetkiKontrolEt(uid).then(y => {
+      if (y !== yetkiliMi) {
         yetkiliMi = y;
-        if (!y && !yoneticiMi) toast("⚠️ Yetkiniz yok, onay bekleniyor.");
-      });
-
-    } else {
-      // Firebase Auth oturumu yok → giriş ekranı
-      ekranGoster("giris");
-    }
-  });
+        sessionStorage.setItem("ozil_yetkili", y ? "1" : "0");
+        if (!y) toast("Yetkiniz iptal edildi!");
+        else toast("Yetkiniz yeniden onaylandı!");
+      }
+    });
+  } else {
+    ekranGoster("giris");
+  }
 };
 </script>
 </body>
