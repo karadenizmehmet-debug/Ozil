@@ -667,7 +667,9 @@ function sesGuncelle(val, ikincislider) {
   }
   clearTimeout(sesZamanlayici);
   sesZamanlayici = setTimeout(async () => {
-    try { await db.ref(DB_YOLU.ses).set(mevcutSes); }
+    try { await db.ref(DB_YOLU.ses).set({
+  deger: mevcutSes
+}); }
     catch(e) { toast("❌ Hata: " + e.message); }
   }, 300);
 }
