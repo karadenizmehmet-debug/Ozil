@@ -597,7 +597,7 @@ function dinleyicileriBaslat() {
   db.ref(DB_YOLU.ses).get().then(snap => {
     const v = snap.val();
     if (v !== null) {
-      const yeni = parseInt(v);
+      const yeni = typeof v === "object" ? parseInt(v.deger) : parseInt(v);
       mevcutSes = yeni;
       document.getElementById("ses_slider").value = yeni;
       document.getElementById("vol_val").textContent = "%" + yeni;
