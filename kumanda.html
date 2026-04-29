@@ -361,7 +361,7 @@ function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar
 
 function islemIcinYetkiKontrol() {
   if (!girisYapildi) { toast("Lütfen önce giriş yapın!"); return false; }
-  if (!yetkiliMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
+  if (!yetkiliMi && !yoneticiMi) { toast("Yetkiniz yok! Yöneticiden onay bekleniyor."); return false; }
   return true;
 }
 
