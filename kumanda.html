@@ -674,8 +674,8 @@ async function sistemToggle() {
   const yeniDurum = !sistemAcik;
 
   try {
-    await db.ref(DB_YOLU.durum).update({
-      zil_aktif: yeniDurum,
+    await db.ref("kumanda/sistem_durum").set({
+      aktif: yeniDurum,
       zaman: Date.now()
     });
 
