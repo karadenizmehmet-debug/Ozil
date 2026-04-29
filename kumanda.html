@@ -670,14 +670,23 @@ function sesGuncelle(val, ikincislider) {
 
 async function sistemToggle() {
   if (!islemIcinYetkiKontrol()) return;
-  const yeniDurum = !sistemAcik;
-  try {
-    await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() });
-    _sistemDurumGuncelle(yeniDurum);
-    toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
-  } catch (e) { toast("❌ Hata: " + e.message); }
-}
 
+  const yeniDurum = !sistemAcik;
+
+  try {
+    await db.ref(DB_YOLU.durum).update({
+      zil_aktif: yeniDurum,
+      zaman: Date.now()
+    });
+
+    _sistemDurumGuncelle(yeniDurum);
+
+    toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
+
+  } catch (e) {
+    toast("❌ Hata: " + e.message);
+  }
+}
 function _sistemDurumGuncelle(aktif) {
   sistemAcik = aktif;
   const btn = document.getElementById("btn_sistem");
