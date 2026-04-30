@@ -735,7 +735,7 @@ function zilTipSec(tip, ad) {
   liste.forEach(melodi => {
     const div = document.createElement("div");
     div.className = "sarki-item";
-    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">▶️</span>`;
+    div.innerHTML = `<span class="sarki-name">${escapeHtml(melodi)}</span><span class="play-btn">▶️</span>`;
     div.onclick = () => { zilSecGonder(tip, melodi, ad); };
     kap.appendChild(div);
   });
@@ -759,7 +759,7 @@ async function sarkiListesiYukle() {
     liste.forEach(sarki => {
       const div = document.createElement("div");
       div.className = "sarki-item";
-      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`;
+      div.innerHTML = `<span class="sarki-name">${escapeHtml(sarki)}</span><span class="play-btn">▶️</span>`;
       div.onclick = async () => {
         if (!islemIcinYetkiKontrol()) return;
         try {
