@@ -471,13 +471,13 @@ async function yonetimPaneliniGoster() {
 
       <div style="margin-top:10px;text-align:left">
         <strong>📅 Aktif Günler</strong><br>
-        <label><input type="checkbox" class="gun_cb" value="1"> Pazartesi</label><br>
-        <label><input type="checkbox" class="gun_cb" value="2"> Salı</label><br>
-        <label><input type="checkbox" class="gun_cb" value="3"> Çarşamba</label><br>
-        <label><input type="checkbox" class="gun_cb" value="4"> Perşembe</label><br>
-        <label><input type="checkbox" class="gun_cb" value="5"> Cuma</label><br>
-        <label><input type="checkbox" class="gun_cb" value="6"> Cumartesi</label><br>
-        <label><input type="checkbox" class="gun_cb" value="0"> Pazar</label>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="1" onchange="firebaseModGuncelle()"> Pazartesi</label><br>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="2" onchange="firebaseModGuncelle()"> Salı</label><br>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="3" onchange="firebaseModGuncelle()"> Çarşamba</label><br>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="4" onchange="firebaseModGuncelle()"> Perşembe</label><br>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="5" onchange="firebaseModGuncelle()"> Cuma</label><br>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="6" onchange="firebaseModGuncelle()"> Cumartesi</label><br>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="0" onchange="firebaseModGuncelle()"> Pazar</label>
       </div>
     </div>
   </div>
