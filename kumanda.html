@@ -572,7 +572,7 @@ function dinleyicileriBaslat() {
     const v = snap.val() || {};
     if (v.cevrimici) {
       durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
-    
+      if (v.pc_adi) document.getElementById("ders_durum_alt").textContent = v.pc_adi + " - Kumanda";
     } else {
       durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
     }
@@ -602,47 +602,27 @@ function dinleyicileriBaslat() {
       else el.textContent = "Veri yok";
     }
   });
-  // 🔥 İLK AÇILIŞTA SESİ ÇEK
-  db.ref(DB_YOLU.ses).get().then(snap => {
-    const v = snap.val();
-    if (v !== null) {
-      const yeni = parseInt(v);
-      mevcutSes = yeni;
-      document.getElementById("ses_slider").value = yeni;
-      document.getElementById("vol_val").textContent = "%" + yeni;
-      document.getElementById("vol_val2").textContent = "%" + yeni;
-    }
-  });
-
+  
   db.ref(DB_YOLU.ses).on("value", snap => {
     const v = snap.val();
-    if (v !== null) {
-      const yeni = parseInt(v);
-      mevcutSes = yeni;
-      document.getElementById("ses_slider").value = yeni;
-      document.getElementById("vol_val").textContent = "%" + yeni;
-      document.getElementById("vol_val2").textContent = "%" + yeni;
+
+    if (v === null) {
+        db.ref(DB_YOLU.ses).set(80);
+        return;
     }
-  });
-}
-// BAŞLANGIÇTA MEVCUT SES SEVİYESİNİ BİR KERE OKU (YENİ)
-db.ref(DB_YOLU.ses).once("value").then(snap => {
-    const v = snap.val();
-    if (v !== null) {
-        const yeni = parseInt(v);
-        mevcutSes = yeni;
-        document.getElementById("ses_slider").value = yeni;
-        document.getElementById("vol_val").textContent = "%" + yeni;
-        document.getElementById("vol_val2").textContent = "%" + yeni;
-    } else {
-        // Firebase'de ses değeri yoksa varsayılan 80'i ayarla (ve yaz)
-        mevcutSes = 80;
-        document.getElementById("ses_slider").value = 80;
-        document.getElementById("vol_val").textContent = "%80";
-        document.getElementById("vol_val2").textContent = "%80";
-        db.ref(DB_YOLU.ses).set(80); // Firebase'e de yaz
-    }
+
+    const yeni = parseInt(v);
+    mevcutSes = yeni;
+
+    const s1 = document.getElementById("ses_slider");
+    const v1 = document.getElementById("vol_val");
+    const v2 = document.getElementById("vol_val2");
+
+    if (s1) s1.value = yeni;
+    if (v1) v1.textContent = "%" + yeni;
+    if (v2) v2.textContent = "%" + yeni;
 });
+}
 async function komutGonder(kod, isim) {
   if (!islemIcinYetkiKontrol()) return;
   try {
