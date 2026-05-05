@@ -468,6 +468,17 @@ async function yonetimPaneliniGoster() {
         <option value="otomatik">⏰ Otomatik (08-17)</option>
         <option value="acik">🟢 Her Zaman Açık</option>
       </select>
+
+      <div style="margin-top:10px;text-align:left">
+        <strong>📅 Aktif Günler</strong><br>
+        <label><input type="checkbox" class="gun_cb" value="1"> Pazartesi</label><br>
+        <label><input type="checkbox" class="gun_cb" value="2"> Salı</label><br>
+        <label><input type="checkbox" class="gun_cb" value="3"> Çarşamba</label><br>
+        <label><input type="checkbox" class="gun_cb" value="4"> Perşembe</label><br>
+        <label><input type="checkbox" class="gun_cb" value="5"> Cuma</label><br>
+        <label><input type="checkbox" class="gun_cb" value="6"> Cumartesi</label><br>
+        <label><input type="checkbox" class="gun_cb" value="0"> Pazar</label>
+      </div>
     </div>
   </div>
   `;
@@ -615,6 +626,12 @@ function dinleyicileriBaslat() {
     const v = snap.val() || {};
     const el = document.getElementById("firebase_mod");
     if (el) el.value = v.mod || "otomatik";
+
+    if (v.gunler) {
+      document.querySelectorAll(".gun_cb").forEach(cb => {
+        cb.checked = !!v.gunler[cb.value];
+      });
+    }
   });
 
   db.ref(DB_YOLU.ses).on("value", snap => {
@@ -1012,11 +1029,19 @@ function cihazProgramToggle(cihazId, suanAktif) {
 
 function firebaseModGuncelle() {
   const mod = document.getElementById("firebase_mod").value;
+
+  const gunler = {};
+  document.querySelectorAll(".gun_cb").forEach(cb => {
+    gunler[cb.value] = cb.checked;
+  });
+
   db.ref(DB_YOLU.firebase_kontrol).set({
     mod: mod,
+    gunler: gunler,
     zaman: Date.now()
   });
-  toast("Firebase modu güncellendi");
+
+  toast("Firebase ayarları güncellendi");
 }
 
 function escapeHtml(text) {
