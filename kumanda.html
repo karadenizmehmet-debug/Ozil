@@ -334,23 +334,20 @@ if (typeof firebase !== "undefined") {
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
-    auth = firebase.auth();
-   // YENİ EKLENECEK KISIM
-auth.onAuthStateChanged(async (user) => {
-  if (user) {
-    // Firebase oturumun açık olduğunu onayladı
-    console.log("Oturum doğrulandı:", user.email);
-    await girisBasarili(user);
-  } else {
-    // Oturum kapalı veya kullanıcı çıkış yapmış
-    console.log("Oturum yok.");
-    girisYapildi = false;
-    yetkiliMi = false;
-    yoneticiMi = false;
-    sessionStorage.clear();
-    ekranGoster("giris");
-  }
-});
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log("Oturum doğrulandı:", user.email);
+        await girisBasarili(user);
+      } else {
+        console.log("Oturum yok.");
+        girisYapildi = false;
+        yetkiliMi = false;
+        yoneticiMi = false;
+        sessionStorage.clear();
+        ekranGoster("giris");
+      }
+    });
+    
   } catch (e) { console.error(e); }
 }
 
