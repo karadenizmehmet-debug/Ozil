@@ -311,7 +311,8 @@ const DB_YOLU = {
   mikrofon_url: "kumanda/mikrofon_url",
   bekleyen_kullanicilar: "kumanda/bekleyen_kullanicilar",
   onayli_kullanicilar: "kumanda/onayli_kullanicilar",
-  cihazlar: "kumanda/cihazlar"
+  cihazlar: "kumanda/cihazlar",
+  firebase_kontrol: "kumanda/firebase_kontrol"
 };
 
 let db = null;
@@ -461,7 +462,14 @@ async function yonetimPaneliniGoster() {
   }
   container.innerHTML = `
     <div class="card"><h3>👥 Onay Bekleyen Kullanıcılar</h3><div id="bekleyen_liste" class="kullanici-listesi">Yükleniyor...</div></div>
-    <div class="card"><h3>✅ Onaylı Kullanıcılar</h3><div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div></div>
+    <div class="card"><h3>✅ Onaylı Kullanıcılar</h3><div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div>    <div class="card">
+      <h3>🌐 Firebase Modu</h3>
+      <select id="firebase_mod" onchange="firebaseModGuncelle()">
+        <option value="otomatik">⏰ Otomatik (08-17)</option>
+        <option value="acik">🟢 Her Zaman Açık</option>
+      </select>
+    </div>
+  </div>
   `;
   await listeleKullanicilar();
 }
@@ -603,6 +611,12 @@ function dinleyicileriBaslat() {
     }
   });
   
+  db.ref(DB_YOLU.firebase_kontrol).on("value", snap => {
+    const v = snap.val() || {};
+    const el = document.getElementById("firebase_mod");
+    if (el) el.value = v.mod || "otomatik";
+  });
+
   db.ref(DB_YOLU.ses).on("value", snap => {
     const v = snap.val();
 
@@ -994,6 +1008,15 @@ function cihazProgramToggle(cihazId, suanAktif) {
   }).then(() => {
     toast(yeniDurum ? `✅ ${cihazId} programı AKTİF edildi` : `⛔ ${cihazId} programı DEAKTİF edildi`);
   }).catch(err => toast("❌ Hata: " + err.message));
+}
+
+function firebaseModGuncelle() {
+  const mod = document.getElementById("firebase_mod").value;
+  db.ref(DB_YOLU.firebase_kontrol).set({
+    mod: mod,
+    zaman: Date.now()
+  });
+  toast("Firebase modu güncellendi");
 }
 
 function escapeHtml(text) {
