@@ -178,6 +178,13 @@
       </button>
       <div id="mik_onizleme_kapsayici" style="display:none; margin-top:15px;">
         <audio id="ses_onizleme" controls style="width:100%; border-radius:8px;"></audio>
+
+        <select id="mik_tekrar" style="margin-top:10px;padding:10px;border:1px solid #ced6e0;border-radius:5px;font-size:14px;font-weight:bold;background:#fff;outline:none;width:100%">
+          <option value="1">🔁 1x Tekrar</option>
+          <option value="2">🔁 2x Tekrar</option>
+          <option value="3">🔁 3x Tekrar</option>
+        </select>
+
         <button class="btn blue" style="width:100%; margin-top:10px; background-color:#9b59b6; box-shadow:0 4px #8e44ad;" onclick="anonsuFirebaseGonder()">
           🚀 Firebase ile Gönder ve Çal
         </button>
@@ -675,9 +682,12 @@ async function anonsGonder() {
   const metin = document.getElementById("txt_anons").value.trim();
   if (!metin) return;
   const tekrar = parseInt(document.getElementById("anons_tekrar").value, 10) || 1;
-  const veri = tekrar > 1 ? `${metin}||${tekrar}` : metin;
   try {
-    await db.ref(DB_YOLU.anons).set({ metin: veri, zaman: Date.now() });
+    await db.ref(DB_YOLU.anons).set({
+      metin: metin,
+      tekrar: tekrar,
+      zaman: Date.now()
+    });
     toast(`Anons İletildi! 🔊 (${tekrar}x)`);
     document.getElementById("txt_anons").value = "";
   } catch (e) { toast("❌ Hata: " + e.message); }
@@ -921,7 +931,14 @@ async function anonsuFirebaseGonder() {
     const ref = depolama.ref(dosyaAdi);
     await ref.put(seciliWavBlob);
     const indirmeUrl = await ref.getDownloadURL();
-    await db.ref(DB_YOLU.mikrofon_url).set({ url: indirmeUrl, path: dosyaAdi, zaman: Date.now() });
+    const tekrar = parseInt(document.getElementById("mik_tekrar").value, 10) || 1;
+
+    await db.ref(DB_YOLU.mikrofon_url).set({
+      url: indirmeUrl,
+      path: dosyaAdi,
+      tekrar: tekrar,
+      zaman: Date.now()
+    });
     mikDurum('✅ Anons başarıyla gönderildi!', 'hazir');
     toast('🚀 Anons Gönderildi!');
     document.getElementById("mik_onizleme_kapsayici").style.display = "none";
