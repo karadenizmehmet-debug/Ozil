@@ -600,7 +600,6 @@ function dinleyicileriBaslat() {
     const v = snap.val() || {};
     if (v.cevrimici) {
       durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
-      if (v.pc_adi) document.getElementById("ders_durum_alt").textContent = v.pc_adi + " - Kumanda";
     } else {
       durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
     }
@@ -1195,7 +1194,7 @@ function dersDurumBaslat() {
     dersDurumGuncelle();
   });
   if (dersDurumTimer) clearInterval(dersDurumTimer);
-  dersDurumTimer = setInterval(dersDurumGuncelle, 30000);
+  dersDurumTimer = setInterval(dersDurumGuncelle, 15000);
 }
 
 function dersDurumGuncelle() {
