@@ -90,6 +90,17 @@
   .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
+  .fb-gun-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .fb-gun-kart{border-radius:10px;padding:10px 8px;text-align:center;border:2px solid #e0e0e0;background:#f8f9fa;transition:all .2s}
+  .fb-gun-kart.kapali{background:#fff0f0;border-color:#e74c3c}
+  .fb-gun-kart.bugun{border-color:#0984e3;background:#f0f7ff}
+  .fb-gun-kart.bugun.kapali{border-color:#e74c3c;background:#fff0f0}
+  .fb-gun-adi{font-weight:700;font-size:13px;color:#2c3e50;margin-bottom:2px}
+  .fb-gun-tarih{font-size:11px;color:#7f8c8d;margin-bottom:8px}
+  .fb-gun-toggle{width:100%;padding:6px 4px;font-size:11px;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:all .2s}
+  .fb-gun-toggle.otomatik{background:#2ecc71;color:white}
+  .fb-gun-toggle.kapali{background:#e74c3c;color:white}
+  .fb-mod-select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;margin-bottom:10px;outline:none}
 </style>
 </head>
 <body>
@@ -462,27 +473,25 @@ async function yonetimPaneliniGoster() {
   }
   container.innerHTML = `
     <div class="card"><h3>👥 Onay Bekleyen Kullanıcılar</h3><div id="bekleyen_liste" class="kullanici-listesi">Yükleniyor...</div></div>
-    <div class="card"><h3>✅ Onaylı Kullanıcılar</h3><div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div>    <div class="card">
-      <h3>🌐 Firebase Modu</h3>
-      <select id="firebase_mod" onchange="firebaseModGuncelle()">
-        <option value="otomatik">⏰ Otomatik (08-17)</option>
+    <div class="card"><h3>✅ Onaylı Kullanıcılar</h3><div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div></div>
+    <div class="card">
+      <h3>🌐 Firebase Bağlantı Kontrolü</h3>
+      <select class="fb-mod-select" id="firebase_mod" onchange="firebaseGenelModGuncelle()">
+        <option value="otomatik">⏰ Otomatik Mod (Her gün 08:00–17:00)</option>
         <option value="acik">🟢 Her Zaman Açık</option>
       </select>
-
-      <div style="margin-top:10px;text-align:left">
-        <strong>📅 Aktif Günler</strong><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="1" onchange="firebaseModGuncelle()"> Pazartesi</label><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="2" onchange="firebaseModGuncelle()"> Salı</label><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="3" onchange="firebaseModGuncelle()"> Çarşamba</label><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="4" onchange="firebaseModGuncelle()"> Perşembe</label><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="5" onchange="firebaseModGuncelle()"> Cuma</label><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="6" onchange="firebaseModGuncelle()"> Cumartesi</label><br>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="gun_cb" value="0" onchange="firebaseModGuncelle()"> Pazar</label>
+      <div id="fb_otomatik_aciklama" style="font-size:12px;color:#7f8c8d;margin-bottom:10px;display:none">
+        ℹ️ Otomatik modda aşağıdan belirli bir günü <strong>tüm gün kapatabilirsiniz</strong> (tatil, özel gün). Ertesi gün otomatik olarak otomatik moda döner.
+      </div>
+      <div id="fb_gun_panel" style="display:none">
+        <div class="fb-gun-grid" id="fb_gun_grid">
+          <div style="text-align:center;color:#7f8c8d;grid-column:span 2">⏳ Yükleniyor...</div>
+        </div>
       </div>
     </div>
-  </div>
   `;
   await listeleKullanicilar();
+  await firebaseKontrolYukle();
 }
 
 async function listeleKullanicilar() {
@@ -1027,22 +1036,137 @@ function cihazProgramToggle(cihazId, suanAktif) {
   }).catch(err => toast("❌ Hata: " + err.message));
 }
 
-function firebaseModGuncelle() {
-  const mod = document.getElementById("firebase_mod").value;
+// ── Firebase Kontrol (Gün Bazlı) ─────────────────────────────────────────────
+const FB_GUNLER = [
+  { js: 0, ad: "Pazar",     kisa: "Paz" },
+  { js: 1, ad: "Pazartesi", kisa: "Pzt" },
+  { js: 2, ad: "Salı",      kisa: "Sal" },
+  { js: 3, ad: "Çarşamba",  kisa: "Çar" },
+  { js: 4, ad: "Perşembe",  kisa: "Per" },
+  { js: 5, ad: "Cuma",      kisa: "Cum" },
+  { js: 6, ad: "Cumartesi", kisa: "Cmt" },
+];
 
-  const gunler = {};
-  document.querySelectorAll(".gun_cb").forEach(cb => {
-    gunler[cb.value] = cb.checked;
-  });
-
-  db.ref(DB_YOLU.firebase_kontrol).set({
-    mod: mod,
-    gunler: gunler,
-    zaman: Date.now()
-  });
-
-  toast("Firebase ayarları güncellendi");
+// Tarihi "YYYY-MM-DD" formatına çevirir
+function tarihStr(d) {
+  return d.getFullYear() + "-" +
+    String(d.getMonth() + 1).padStart(2, "0") + "-" +
+    String(d.getDate()).padStart(2, "0");
 }
+
+// O JS gün numarası için bu haftaki tarihi döndürür
+function haftaninGunuTarihi(jsGun) {
+  const bugun = new Date();
+  const bugunGun = bugun.getDay(); // 0=Paz...6=Cmt
+  const fark = jsGun - bugunGun;
+  const d = new Date(bugun);
+  d.setDate(bugun.getDate() + fark);
+  return tarihStr(d);
+}
+
+let _fbGunAyarlari = {}; // { "1": { kapali_tarih: "2026-05-19" }, ... }
+
+async function firebaseKontrolYukle() {
+  const modEl  = document.getElementById("firebase_mod");
+  const panel  = document.getElementById("fb_gun_panel");
+  const acikl  = document.getElementById("fb_otomatik_aciklama");
+  if (!modEl || !panel) return;
+  try {
+    const snap = await db.ref(DB_YOLU.firebase_kontrol).get();
+    const veri = snap.val() || {};
+    const mod  = veri.mod || "otomatik";
+    _fbGunAyarlari = veri.gun_ayarlari || {};
+    modEl.value = mod;
+    if (mod === "otomatik") {
+      panel.style.display  = "block";
+      acikl.style.display  = "block";
+    } else {
+      panel.style.display  = "none";
+      acikl.style.display  = "none";
+    }
+    _fbGunGridRender();
+  } catch (e) {
+    toast("Firebase ayarları yüklenemedi: " + e.message);
+  }
+}
+
+function _fbGunGridRender() {
+  const grid  = document.getElementById("fb_gun_grid");
+  if (!grid) return;
+  const bugun     = new Date();
+  const bugunGun  = bugun.getDay();
+  const bugunTarih = tarihStr(bugun);
+  let html = "";
+  // Pazartesi'den başlayarak sırala (1,2,3,4,5,6,0)
+  const sira = [1, 2, 3, 4, 5, 6, 0];
+  sira.forEach(jsGun => {
+    const bilgi     = FB_GUNLER.find(g => g.js === jsGun);
+    const gunTarih  = haftaninGunuTarihi(jsGun);
+    const ayar      = _fbGunAyarlari[String(jsGun)] || {};
+    const kapalimi  = ayar.kapali_tarih === gunTarih;
+    const bugunku   = jsGun === bugunGun;
+    // Tarih gösterimi: "19 May"
+    const d = new Date(gunTarih + "T00:00:00");
+    const tarihGorunum = d.getDate() + " " +
+      ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"][d.getMonth()];
+    const kartCls = "fb-gun-kart" + (bugunku ? " bugun" : "") + (kapalimi ? " kapali" : "");
+    const btnCls  = "fb-gun-toggle " + (kapalimi ? "kapali" : "otomatik");
+    const btnYazi = kapalimi ? "⛔ Kapalı" : "✅ Otomatik";
+    html += `
+      <div class="${kartCls}" id="fb_gun_${jsGun}">
+        <div class="fb-gun-adi">${bilgi.ad}${bugunku ? " 📍" : ""}</div>
+        <div class="fb-gun-tarih">${tarihGorunum}</div>
+        <button class="${btnCls}" onclick="fbGunToggle(${jsGun})">${btnYazi}</button>
+      </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+async function fbGunToggle(jsGun) {
+  const gunTarih = haftaninGunuTarihi(jsGun);
+  const ayar     = _fbGunAyarlari[String(jsGun)] || {};
+  const kapalimi = ayar.kapali_tarih === gunTarih;
+  // Toggle: kapalıysa aç (tarih sil), açıksa kapat (tarih yaz)
+  if (kapalimi) {
+    _fbGunAyarlari[String(jsGun)] = { kapali_tarih: null };
+  } else {
+    _fbGunAyarlari[String(jsGun)] = { kapali_tarih: gunTarih };
+  }
+  try {
+    await db.ref(DB_YOLU.firebase_kontrol).update({
+      gun_ayarlari: _fbGunAyarlari,
+      zaman: Date.now()
+    });
+    const bilgi = FB_GUNLER.find(g => g.js === jsGun);
+    toast(kapalimi
+      ? `✅ ${bilgi.ad} otomatik moda döndü`
+      : `⛔ ${bilgi.ad} (${gunTarih}) tüm gün kapalı`);
+    _fbGunGridRender();
+  } catch (e) {
+    toast("Hata: " + e.message);
+  }
+}
+
+async function firebaseGenelModGuncelle() {
+  const mod   = document.getElementById("firebase_mod").value;
+  const panel = document.getElementById("fb_gun_panel");
+  const acikl = document.getElementById("fb_otomatik_aciklama");
+  try {
+    await db.ref(DB_YOLU.firebase_kontrol).update({ mod: mod, zaman: Date.now() });
+    if (mod === "otomatik") {
+      panel.style.display = "block";
+      acikl.style.display = "block";
+    } else {
+      panel.style.display = "none";
+      acikl.style.display = "none";
+    }
+    toast("Firebase modu: " + (mod === "acik" ? "Her zaman açık" : "Otomatik"));
+  } catch (e) {
+    toast("Hata: " + e.message);
+  }
+}
+
+function firebaseModGuncelle() { firebaseGenelModGuncelle(); }
 
 function escapeHtml(text) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
