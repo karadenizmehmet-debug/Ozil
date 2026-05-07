@@ -1301,6 +1301,24 @@ function dersDurumGuncelle() {
 }
 
 
+
+// Sistem online durumu
+firebase.database().ref("kumanda/sistem_online").on("value", (snap) => {
+  const data = snap.val();
+  const bar = document.getElementById("durum_bar");
+
+  if (!bar) return;
+
+  if (data && data.online === true) {
+    bar.textContent = "🟢 Sistem Açık";
+    bar.className = "durum-bagli";
+  } else {
+    bar.textContent = "🔴 Sistem Kapalı";
+    bar.className = "durum-cevrimdisi";
+  }
+});
+
+
 </script>
 </body>
 </html>
