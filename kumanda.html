@@ -353,6 +353,7 @@ if (typeof firebase !== "undefined") {
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
+    firebase.database().ref("kumanda/uyandir").set(Date.now());
     auth = firebase.auth();
    // YENİ EKLENECEK KISIM
 auth.onAuthStateChanged(async (user) => {
