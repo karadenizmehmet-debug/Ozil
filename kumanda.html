@@ -146,6 +146,18 @@
     <button class="btn gray full" onclick="komutGonder('sustur','Sustur')"><span class="icon">⏹️</span>SİSTEMİ SUSTUR</button>
     <button id="btn_sistem" class="btn full green" onclick="sistemToggle()" style="grid-column:span 2"><span id="lbl_sistem">🟢 SİSTEM: AÇIK</span></button>
   </div>
+  
+  <div class="card" id="genel_ayar_card" style="display:none">
+    <strong>⚙️ Genel Ayarlar</strong>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span>🔔 Teneffüs Müziği:</span><input type="checkbox" id="chk_teneffus" onchange="genelAyarGonder()">
+    </div>
+    <div style="margin-top:12px">
+      <span>🎵 Müzik Sesi: <span id="lbl_muzik_sesi">%30</span></span>
+      <input type="range" id="rng_muzik_sesi" min="1" max="100" value="30" oninput="document.getElementById('lbl_muzik_sesi').textContent='%'+this.value" onchange="genelAyarGonder()" style="width:100%;margin-top:6px">
+    </div>
+  </div>
+
   <div class="footer">
     <a onclick="genelAyarGoster()">⚙️ Genel</a>
     <a onclick="ekranGoster('yonetim')">🔐 Yönetim</a>
@@ -222,10 +234,11 @@ const DB_YOLU = {
   durum: "kumanda/durum", sistem_durum: "kumanda/sistem_durum", ayarlar: "kumanda/ayarlar",
   hava: "kumanda/hava", mikrofon_url: "kumanda/mikrofon_url", bekleyen_kullanicilar: "kumanda/bekleyen_kullanicilar",
   onayli_kullanicilar: "kumanda/onayli_kullanicilar", cihazlar: "kumanda/cihazlar", firebase_kontrol: "kumanda/firebase_kontrol",
-  ping: "kumanda/ping", pong: "kumanda/pong", sistem_online: "kumanda/sistem_online"
+  ping: "kumanda/ping", pong: "kumanda/pong", sistem_online: "kumanda/sistem_online", genel_ayar: "kumanda/genel_ayar"
 };
 
 let db, auth, girisYapildi = false, yetkiliMi = false, yoneticiMi = false, mevcutKullaniciUid = null, mevcutKullaniciEmail = null, dersProgrami = null;
+let sistemAcik = true, seciliZilTip = "", seciliZilAdi = "";
 
 if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
 db = firebase.database();
@@ -287,13 +300,36 @@ function dinleyicileriBaslat() {
     if (d && d.online) { bar.textContent = "🟢 Sistem Açık"; bar.className = "durum-bagli"; }
     else { bar.textContent = "🔴 Sistem Kapalı"; bar.className = "durum-cevrimdisi"; }
   });
+
+  // Sistem aç/kapa senkronizasyonu
+  db.ref(DB_YOLU.sistem_durum).on("value", snap => {
+    const val = snap.val();
+    if (val !== null) {
+      sistemDurumuGuncelle(!!val);
+    }
+  });
+
+  // Genel ayarlar senkronizasyonu
+  db.ref(DB_YOLU.genel_ayar).on("value", snap => {
+    const val = snap.val();
+    if (val) {
+      const chk = document.getElementById("chk_teneffus");
+      const rng = document.getElementById("rng_muzik_sesi");
+      const lbl = document.getElementById("lbl_muzik_sesi");
+      if (chk) chk.checked = !!val.teneffus_aktif;
+      if (rng) rng.value = val.muzik_sesi || 30;
+      if (lbl) lbl.textContent = "%" + (val.muzik_sesi || 30);
+    }
+  });
+
   db.ref(DB_YOLU.ayarlar).on("value", snap => { dersProgrami = snap.val(); dersDurumGuncelle(); });
   setInterval(dersDurumGuncelle, 30000);
 }
 
+// Komut gönderimi backend ile uyumlu hale getirildi (kod anahtarı kullanılıyor)
 async function komutGonder(komut, ad) {
   if (!islemIcinYetkiKontrol()) return;
-  await db.ref(DB_YOLU.komut).set({ tip: komut, zaman: Date.now() });
+  await db.ref(DB_YOLU.komut).set({ kod: komut, zaman: Date.now() });
   toast("✅ " + ad);
 }
 
@@ -312,6 +348,88 @@ function sesGuncelle(v, sessiz = false) {
   db.ref(DB_YOLU.ses).set(parseInt(v));
   document.getElementById("vol_val").textContent = "%" + v;
   document.getElementById("vol_val2").textContent = "%" + v;
+}
+
+// Sistem aç/kapa buton mantığı
+async function sistemToggle() {
+  if (!islemIcinYetkiKontrol()) return;
+  sistemAcik = !sistemAcik;
+  await db.ref(DB_YOLU.sistem_durum).set(sistemAcik);
+  sistemDurumuGuncelle(sistemAcik);
+}
+
+function sistemDurumuGuncelle(acik) {
+  sistemAcik = acik;
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
+  if (btn && lbl) {
+    if (acik) {
+      btn.className = "btn full green";
+      lbl.textContent = "🟢 SİSTEM: AÇIK";
+    } else {
+      btn.className = "btn full red";
+      lbl.textContent = "🔴 SİSTEM: KAPALI";
+    }
+  }
+}
+
+// Genel ayarlar fonksiyonları
+function genelAyarGoster() {
+  const card = document.getElementById("genel_ayar_card");
+  if (card) {
+    card.style.display = card.style.display === "none" ? "block" : "none";
+  }
+}
+
+async function genelAyarGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+  const teneffus = document.getElementById("chk_teneffus").checked;
+  const muzik_sesi = parseInt(document.getElementById("rng_muzik_sesi").value);
+  await db.ref(DB_YOLU.genel_ayar).set({
+    teneffus_aktif: teneffus,
+    muzik_sesi: muzik_sesi,
+    zaman: Date.now()
+  });
+}
+
+// Melodi/Zil seçimi için eksik fonksiyonlar eklendi
+function zilTipSec(tip, ad) {
+  seciliZilTip = tip;
+  seciliZilAdi = ad;
+  document.getElementById("zil_secili_tip").textContent = ad + " İçin Melodi Seçin";
+  zilListesiYukle();
+}
+
+async function zilListesiYukle() {
+  const kap = document.getElementById("zil_melodi_liste");
+  if (!kap) return;
+  kap.innerHTML = "Yükleniyor...";
+  try {
+    const snap = await db.ref(DB_YOLU.zil_listesi).get();
+    const liste = snap.val() || [];
+    kap.innerHTML = "";
+    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Zil melodisi bulunamadı.</div>'; return; }
+    liste.forEach(m => {
+      const d = document.createElement("div");
+      d.className = "sarki-item";
+      d.innerHTML = `<span class="sarki-name">${m}</span><span class="play-btn">🎵</span>`;
+      d.onclick = () => {
+        if (!seciliZilTip) { toast("Lütfen önce yukarıdan bir zil türü seçin!"); return; }
+        zilSecGonder(seciliZilTip, m, seciliZilAdi);
+      };
+      kap.appendChild(d);
+    });
+  } catch(e) {
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Hata: ' + e.message + '</div>';
+  }
+}
+
+async function zilSecGonder(tip, melodi, ad) {
+  if (!islemIcinYetkiKontrol()) return;
+  try {
+    await db.ref(DB_YOLU.zil_sec).set({ tip: tip, melodi: melodi, zaman: Date.now() });
+    toast("✅ " + ad + ": " + melodi);
+  } catch (e) { toast("❌ Hata: " + e.message); }
 }
 
 async function sarkiListesiYukle() {
@@ -360,7 +478,6 @@ function kullaniciBilgisiGoster(a, e, p) {
   if(p) document.getElementById("user_avatar_wrap").innerHTML = `<img src="${p}" class="user-avatar">`;
 }
 
-// Mikrofon işlemleri için eksik fonksiyonlar eklendi
 let kayitYapiliyor = false, seciliWavBlob = null;
 async function mikToggle() {
   if(!islemIcinYetkiKontrol()) return;
