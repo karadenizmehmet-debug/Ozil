@@ -1155,6 +1155,232 @@ firebase.database().ref("kumanda/sistem_online").on("value", (snap) => {
 });
 
 
+
+// ===== EKLENEN EKSİK FONKSİYONLAR =====
+
+function dinleyicileriBaslat() {
+  if (!db) return;
+
+  dersDurumBaslat();
+
+  db.ref("kumanda/aktif_cihaz").on("value", snap => {
+    window.aktifCihazId = snap.val();
+    if (document.getElementById("ekran_cihaz_yonetimi").style.display === "block") {
+      cihazlarDinle();
+    }
+  });
+
+  db.ref(DB_YOLU.zil_listesi).on("value", () => {
+    if (document.getElementById("ekran_zil").style.display === "block") {
+      zilListesiYukle();
+    }
+  });
+
+  db.ref(DB_YOLU.sarki_liste).on("value", () => {
+    if (document.getElementById("ekran_sarki").style.display === "block") {
+      sarkiListesiYukle();
+    }
+  });
+
+  db.ref(DB_YOLU.sistem_durum).on("value", snap => {
+    _sistemDurumGuncelle(snap.val());
+  });
+}
+
+async function zilListesiYukle() {
+  const listeEl = document.getElementById("zil_melodi_liste");
+  if (!listeEl) return;
+
+  if (!seciliZilTip) {
+    listeEl.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Önce zil türü seçin.</div>';
+    return;
+  }
+
+  listeEl.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">⏳ Melodiler yükleniyor...</div>';
+
+  try {
+    const snap = await db.ref(DB_YOLU.zil_listesi).get();
+    const tumListe = snap.val() || {};
+    let liste = [];
+
+    if (Array.isArray(tumListe)) {
+      liste = tumListe;
+    } else if (tumListe[seciliZilTip]) {
+      liste = tumListe[seciliZilTip];
+    } else {
+      liste = Object.values(tumListe).flat();
+    }
+
+    if (!liste || !liste.length) {
+      listeEl.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Melodi bulunamadı.</div>';
+      return;
+    }
+
+    listeEl.innerHTML = "";
+
+    liste.forEach(melodi => {
+      const div = document.createElement("div");
+      div.className = "sarki-item";
+      div.innerHTML = `<span class="sarki-name">${escapeHtml(melodi)}</span><span class="play-btn">🎵</span>`;
+      div.onclick = () => zilSecGonder(seciliZilTip, melodi, seciliZilAdi);
+      listeEl.appendChild(div);
+    });
+
+  } catch (e) {
+    listeEl.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>';
+  }
+}
+
+function zilTipSec(tip, ad) {
+  seciliZilTip = tip;
+  seciliZilAdi = ad;
+
+  const seciliEl = document.getElementById("zil_secili_tip");
+  if (seciliEl) {
+    seciliEl.textContent = `🎼 ${ad} Zili Melodisi`;
+  }
+
+  zilListesiYukle();
+}
+
+async function komutGonder(komut, ad) {
+  if (!islemIcinYetkiKontrol()) return;
+
+  try {
+    await db.ref(DB_YOLU.komut).set({
+      komut: komut,
+      ad: ad,
+      gonderen: mevcutKullaniciEmail || "bilinmeyen",
+      zaman: Date.now()
+    });
+
+    toast("✅ " + ad + " gönderildi");
+  } catch (e) {
+    toast("❌ Komut gönderilemedi: " + e.message);
+  }
+}
+
+async function anonsGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+
+  const txt = document.getElementById("txt_anons");
+  const tekrar = parseInt(document.getElementById("anons_tekrar").value || "1", 10);
+
+  if (!txt || !txt.value.trim()) {
+    toast("⚠️ Anons metni boş");
+    return;
+  }
+
+  try {
+    await db.ref(DB_YOLU.anons).set({
+      metin: txt.value.trim(),
+      tekrar: tekrar,
+      gonderen: mevcutKullaniciEmail || "bilinmeyen",
+      zaman: Date.now()
+    });
+
+    toast("📢 Anons gönderildi");
+    txt.value = "";
+  } catch (e) {
+    toast("❌ Anons gönderilemedi: " + e.message);
+  }
+}
+
+function sesGuncelle(deger, ikinciSlider = false) {
+  mevcutSes = parseInt(deger, 10) || 0;
+
+  document.getElementById("vol_val").textContent = "%" + mevcutSes;
+  const v2 = document.getElementById("vol_val2");
+  if (v2) v2.textContent = "%" + mevcutSes;
+
+  if (ikinciSlider) {
+    const s1 = document.getElementById("ses_slider");
+    if (s1) s1.value = mevcutSes;
+  }
+
+  clearTimeout(sesZamanlayici);
+
+  sesZamanlayici = setTimeout(async () => {
+    try {
+      await db.ref(DB_YOLU.ses).set({
+        seviye: mevcutSes,
+        zaman: Date.now()
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }, 150);
+}
+
+async function sistemToggle() {
+  if (!islemIcinYetkiKontrol()) return;
+
+  sistemAcik = !sistemAcik;
+
+  try {
+    await db.ref(DB_YOLU.sistem_durum).set({
+      acik: sistemAcik,
+      zaman: Date.now(),
+      gonderen: mevcutKullaniciEmail || "bilinmeyen"
+    });
+
+    _sistemDurumGuncelle({ acik: sistemAcik });
+
+  } catch (e) {
+    toast("❌ Sistem durumu değiştirilemedi");
+  }
+}
+
+function _sistemDurumGuncelle(veri) {
+  if (!veri) return;
+
+  sistemAcik = veri.acik !== false;
+
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
+
+  if (!btn || !lbl) return;
+
+  if (sistemAcik) {
+    btn.style.backgroundColor = "#2ed573";
+    btn.style.boxShadow = "0 4px #27ae60";
+    lbl.textContent = "🟢 SİSTEM: AÇIK";
+  } else {
+    btn.style.backgroundColor = "#e74c3c";
+    btn.style.boxShadow = "0 4px #c0392b";
+    lbl.textContent = "🔴 SİSTEM: KAPALI";
+  }
+}
+
+function genelAyarGoster() {
+  const card = document.getElementById("genel_ayar_card");
+  if (!card) return;
+
+  card.style.display = card.style.display === "none" ? "block" : "none";
+}
+
+function genelAyarGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+
+  clearTimeout(genelAyarTimer);
+
+  genelAyarTimer = setTimeout(async () => {
+    try {
+      const veri = {
+        teneffus_muzik: document.getElementById("chk_teneffus").checked,
+        muzik_ses: parseInt(document.getElementById("rng_muzik_sesi").value || "30", 10),
+        zaman: Date.now()
+      };
+
+      await db.ref(DB_YOLU.genel_ayar).set(veri);
+
+      toast("⚙️ Genel ayarlar güncellendi");
+    } catch (e) {
+      toast("❌ Ayarlar kaydedilemedi");
+    }
+  }, 300);
+}
+
 </script>
 </body>
 </html>
