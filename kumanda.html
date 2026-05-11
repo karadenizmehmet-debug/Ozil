@@ -330,7 +330,9 @@ const DB_YOLU = {
   bekleyen_kullanicilar: "kumanda/bekleyen_kullanicilar",
   onayli_kullanicilar: "kumanda/onayli_kullanicilar",
   cihazlar: "kumanda/cihazlar",
-  firebase_kontrol: "kumanda/firebase_kontrol"
+  firebase_kontrol: "kumanda/firebase_kontrol",
+  ping: "kumanda/ping",
+  pong: "kumanda/pong"
 };
 
 let db = null;
@@ -428,6 +430,7 @@ async function girisBasarili(user) {
   kullaniciBilgisiGoster(user.displayName || user.email, user.email, user.photoURL);
   ekranGoster("kumanda");
   dinleyicileriBaslat();
+  canliDurumKontrolBaslat();
   toast(`Hoş geldiniz, ${user.displayName || user.email}${yetkiliMi ? " ✅" : " (Onay bekliyor)"}`);
 }
 
@@ -1158,3 +1161,73 @@ firebase.database().ref("kumanda/sistem_online").on("value", (snap) => {
 </script>
 </body>
 </html>
+
+
+function canliDurumKontrolBaslat() {
+
+  const pingId = Date.now();
+
+  db.ref(DB_YOLU.ping).set({
+    id: pingId,
+    ts: Date.now()
+  });
+
+  db.ref(DB_YOLU.pong).off();
+
+  db.ref(DB_YOLU.pong).on("value", snap => {
+
+    const veri = snap.val();
+
+    if (!veri) {
+      sistemDurumYaz(false);
+      return;
+    }
+
+    const fark = Date.now() - veri.ts;
+
+    if (fark < 10000) {
+      sistemDurumYaz(true);
+    } else {
+      sistemDurumYaz(false);
+    }
+
+  });
+
+  setTimeout(() => {
+    sistemDurumYaz(false);
+  }, 12000);
+}
+
+function sistemDurumYaz(acik) {
+
+  const bar = document.getElementById("durum_bar");
+
+  if (!bar) return;
+
+  if (acik) {
+    bar.textContent = "🟢 PC Çevrimiçi";
+    bar.className = "durum-bagli";
+  } else {
+    bar.textContent = "🔴 PC Çevrimdışı";
+    bar.className = "durum-cevrimdisi";
+  }
+}
+
+db.ref(DB_YOLU.ses).on("value", snap => {
+
+  const val = parseInt(snap.val());
+
+  if (isNaN(val)) return;
+
+  mevcutSes = val;
+
+  const s1 = document.getElementById("ses_slider");
+  if (s1) s1.value = val;
+
+  const v1 = document.getElementById("vol_val");
+  if (v1) v1.textContent = "%" + val;
+
+  const v2 = document.getElementById("vol_val2");
+  if (v2) v2.textContent = "%" + val;
+});
+
