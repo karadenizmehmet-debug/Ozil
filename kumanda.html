@@ -377,35 +377,29 @@ function kullaniciBilgisiGoster(ad, email, photoUrl) {
   }
 }
 
-function canliDurumKontrolBaslat() {
-  const pingId = Date.now();
-  db.ref(DB_YOLU.ping).set({
-    id: pingId,
-    ts: Date.now()
-  });
-  db.ref(DB_YOLU.pong).off();
-  db.ref(DB_YOLU.pong).on("value", snap => {
-    const veri = snap.val();
-    if (!veri) {
+async function durumKontrolEt() {
+  try {
+    const snap = await db.ref(DB_YOLU.sistem_online).get();
+    const data = snap.val();
+
+    if (data && data.online === true) {
+      sistemDurumYaz(true, data.pc || "Sistem");
+    } else {
       sistemDurumYaz(false);
-      return;
     }
-    const fark = Date.now() - veri.ts;
-    sistemDurumYaz(fark < 10000);
-  });
-  setTimeout(() => {
+  } catch (e) {
     sistemDurumYaz(false);
-  }, 12000);
+  }
 }
 
-function sistemDurumYaz(acik) {
+function sistemDurumYaz(acik, pcAdi = "Sistem") {
   const bar = document.getElementById("durum_bar");
   if (!bar) return;
   if (acik) {
-    bar.textContent = "🟢 PC Çevrimiçi";
+    bar.textContent = `🟢 ${pcAdi} - Sistem Açık`;
     bar.className = "durum-bagli";
   } else {
-    bar.textContent = "🔴 PC Çevrimdışı";
+    bar.textContent = "🔴 Sistem Kapalı";
     bar.className = "durum-cevrimdisi";
   }
 }
@@ -458,7 +452,7 @@ async function girisBasarili(user) {
   kullaniciBilgisiGoster(user.displayName || user.email, user.email, user.photoURL);
   ekranGoster("kumanda");
   dinleyicileriBaslat();
-  canliDurumKontrolBaslat();
+  durumKontrolEt();
   toast(`Hoş geldiniz, ${user.displayName || user.email}${yetkiliMi ? " ✅" : " (Onay bekliyor)"}`);
 }
 
@@ -508,18 +502,6 @@ function dinleyicileriBaslat() {
     }
   });
 
-  db.ref(DB_YOLU.sistem_online).on("value", (snap) => {
-    const data = snap.val();
-    const bar = document.getElementById("durum_bar");
-    if (!bar) return;
-    if (data && data.online === true) {
-      bar.textContent = `🟢 ${data.pc || 'Sistem'} Bağlı`;
-      bar.className = "durum-bagli";
-    } else {
-      bar.textContent = "🔴 Sistem Kapalı";
-      bar.className = "durum-cevrimdisi";
-    }
-  });
 
   db.ref(DB_YOLU.ses).on("value", snap => {
     const val = parseInt(snap.val());
