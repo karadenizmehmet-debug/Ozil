@@ -97,6 +97,7 @@
   .fb-gun-toggle{width:100%;padding:6px 4px;font-size:11px;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:all .2s}
   .fb-gun-toggle.otomatik{background:#2ecc71;color:white}
   .fb-gun-toggle.kapali{background:#e74c3c;color:white}
+  .fb-gun-toggle.kalici{background:#8e44ad;color:white}
   .fb-mod-select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;margin-bottom:10px;outline:none}
 </style>
 </head>
@@ -381,10 +382,8 @@ async function durumKontrolEt() {
   try {
     const snap = await db.ref(DB_YOLU.sistem_online).get();
     const data = snap.val();
-    const simdi = Math.floor(Date.now() / 1000);
 
-    // online=true ama ts 10 dakikadan eskiyse kapalı say
-    if (data && data.online === true && (simdi - (data.ts || 0)) < 600) {
+    if (data && data.online === true) {
       sistemDurumYaz(true, data.pc || "Sistem");
     } else {
       sistemDurumYaz(false);
@@ -411,10 +410,6 @@ function ekranGoster(ekran) {
     const el = document.getElementById("ekran_" + e);
     if(el) el.style.display = "none";
   });
-  // Cihaz yönetimi ekranından çıkılıyorsa listener'ı temizle
-  if (ekran !== "cihaz_yonetimi" && db) {
-    db.ref(DB_YOLU.cihazlar).off("value");
-  }
   const gosterilecek = document.getElementById("ekran_" + ekran);
   if(gosterilecek) gosterilecek.style.display = "block";
   
@@ -579,12 +574,11 @@ async function sesGuncelle(v, sessiz = false) {
 
 async function sistemToggle() {
   if (!islemIcinYetkiKontrol()) return;
-  const yeniDurum = !sistemAcik;
+  sistemAcik = !sistemAcik;
   try {
-    await db.ref(DB_YOLU.sistem_durum).set(yeniDurum);
-    sistemAcik = yeniDurum;
-    sistemDurumuGuncelle(yeniDurum);
-    toast(yeniDurum ? "🟢 Sistem Açıldı" : "🔴 Sistem Kapatıldı");
+    await db.ref(DB_YOLU.sistem_durum).set(sistemAcik);
+    sistemDurumuGuncelle(sistemAcik);
+    toast(sistemAcik ? "🟢 Sistem Açıldı" : "🔴 Sistem Kapatıldı");
   } catch (e) { toast("❌ Hata: " + e.message); }
 }
 
@@ -956,6 +950,7 @@ function haftaninGunuTarihi(jsGun) {
 }
 
 let _fbGunAyarlari = {};
+let _fbKaliciKapali = {};
 
 async function firebaseKontrolYukle() {
   const modEl  = document.getElementById("firebase_mod");
@@ -967,6 +962,7 @@ async function firebaseKontrolYukle() {
     const veri = snap.val() || {};
     const mod  = veri.mod || "otomatik";
     _fbGunAyarlari = veri.gun_ayarlari || {};
+    _fbKaliciKapali = veri.kalici_kapali || {};
     modEl.value = mod;
     if (mod === "otomatik") {
       panel.style.display  = "block";
@@ -1001,14 +997,37 @@ function _fbGunGridRender() {
     const kartCls = "fb-gun-kart" + (bugunku ? " bugun" : "") + (kapalimi ? " kapali" : "");
     const btnCls  = "fb-gun-toggle " + (kapalimi ? "kapali" : "otomatik");
     const btnYazi = kapalimi ? "⛔ Kapalı" : "✅ Otomatik";
+    const kaliciMi = !!_fbKaliciKapali[String(jsGun)];
+    const kaliciCls  = "fb-gun-toggle " + (kaliciMi ? "kalici" : "otomatik");
+    const kaliciYazi = kaliciMi ? "🔓 Kalıcıyı Aç" : "🔒 Kalıcı Kapat";
     html += `
       <div class="${kartCls}" id="fb_gun_${jsGun}">
         <div class="fb-gun-adi">${escapeHtml(bilgi.ad)}${bugunku ? " 📍" : ""}</div>
         <div class="fb-gun-tarih">${tarihGorunum}</div>
         <button class="${btnCls}" onclick="fbGunToggle(${jsGun})">${btnYazi}</button>
+        <button class="${kaliciCls}" onclick="fbKaliciToggle(${jsGun})" style="margin-top:4px">${kaliciYazi}</button>
       </div>`;
   });
   grid.innerHTML = html;
+}
+
+async function fbKaliciToggle(jsGun) {
+  const bilgi = FB_GUNLER.find(g => g.js === jsGun);
+  const kaliciMi = !!_fbKaliciKapali[String(jsGun)];
+  _fbKaliciKapali[String(jsGun)] = !kaliciMi;
+  try {
+    await db.ref(DB_YOLU.firebase_kontrol).update({
+      kalici_kapali: _fbKaliciKapali,
+      zaman: Date.now()
+    });
+    toast(kaliciMi
+      ? `🔓 ${bilgi.ad} kalıcı kapatma kaldırıldı`
+      : `🔒 ${bilgi.ad} her hafta kapalı olarak ayarlandı`);
+    _fbGunGridRender();
+  } catch (e) {
+    _fbKaliciKapali[String(jsGun)] = kaliciMi; // geri al
+    toast("Hata: " + e.message);
+  }
 }
 
 async function fbGunToggle(jsGun) {
