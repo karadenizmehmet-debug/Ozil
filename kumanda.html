@@ -393,6 +393,7 @@ async function durumKontrolEt() {
     sistemDurumYaz(false);
   }
 }
+
 function sistemDurumYaz(acik, pcAdi = "Sistem") {
   const bar = document.getElementById("durum_bar");
   if (!bar) return;
@@ -410,6 +411,10 @@ function ekranGoster(ekran) {
     const el = document.getElementById("ekran_" + e);
     if(el) el.style.display = "none";
   });
+  // Cihaz yönetimi ekranından çıkılıyorsa listener'ı temizle
+  if (ekran !== "cihaz_yonetimi" && db) {
+    db.ref(DB_YOLU.cihazlar).off("value");
+  }
   const gosterilecek = document.getElementById("ekran_" + ekran);
   if(gosterilecek) gosterilecek.style.display = "block";
   
@@ -574,11 +579,12 @@ async function sesGuncelle(v, sessiz = false) {
 
 async function sistemToggle() {
   if (!islemIcinYetkiKontrol()) return;
-  sistemAcik = !sistemAcik;
+  const yeniDurum = !sistemAcik;
   try {
-    await db.ref(DB_YOLU.sistem_durum).set(sistemAcik);
-    sistemDurumuGuncelle(sistemAcik);
-    toast(sistemAcik ? "🟢 Sistem Açıldı" : "🔴 Sistem Kapatıldı");
+    await db.ref(DB_YOLU.sistem_durum).set(yeniDurum);
+    sistemAcik = yeniDurum;
+    sistemDurumuGuncelle(yeniDurum);
+    toast(yeniDurum ? "🟢 Sistem Açıldı" : "🔴 Sistem Kapatıldı");
   } catch (e) { toast("❌ Hata: " + e.message); }
 }
 
