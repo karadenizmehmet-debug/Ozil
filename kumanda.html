@@ -381,8 +381,10 @@ async function durumKontrolEt() {
   try {
     const snap = await db.ref(DB_YOLU.sistem_online).get();
     const data = snap.val();
+    const simdi = Math.floor(Date.now() / 1000);
 
-    if (data && data.online === true) {
+    // online=true ama ts 10 dakikadan eskiyse kapalı say
+    if (data && data.online === true && (simdi - (data.ts || 0)) < 600) {
       sistemDurumYaz(true, data.pc || "Sistem");
     } else {
       sistemDurumYaz(false);
@@ -391,7 +393,6 @@ async function durumKontrolEt() {
     sistemDurumYaz(false);
   }
 }
-
 function sistemDurumYaz(acik, pcAdi = "Sistem") {
   const bar = document.getElementById("durum_bar");
   if (!bar) return;
