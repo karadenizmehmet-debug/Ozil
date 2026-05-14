@@ -177,7 +177,7 @@
 
   <div class="card">
     <strong>🔊 Sistem Ses Seviyesi</strong>
-    <div class="slider-cont"><input type="range" id="ses_slider" min="0" max="100" value="80" oninput="sesGuncelle(this.value)"></div>
+    <div class="slider-cont"><input type="range" id="ses_slider" min="0" max="100" value="80" oninput="sesLabel(this.value)" onchange="sesGuncelle(this.value)"></div>
     <div id="vol_val">%80</div>
   </div>
 
@@ -254,7 +254,7 @@
 
 <div id="ekran_sarki" style="display:none;max-width:500px;margin:0 auto">
   <div style="position:sticky;top:0;background:white;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
-    <strong>🔊 Ses: <span id="vol_val2">%80</span></strong><br><input type="range" min="0" max="100" value="80" oninput="sesGuncelle(this.value,true)" style="margin-top:8px">
+    <strong>🔊 Ses: <span id="vol_val2">%80</span></strong><br><input type="range" id="ses_slider2" min="0" max="100" value="80" oninput="sesLabel(this.value, true)" onchange="sesGuncelle(this.value, true)" style="margin-top:8px">
   </div>
   <div id="sarki_liste" class="card" style="text-align:left;padding:0"><div class="sarki-item" style="color:#7f8c8d">Şarkılar yükleniyor...</div></div>
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön </button></div>
@@ -510,6 +510,8 @@ function dinleyicileriBaslat() {
     mevcutSes = val;
     const s1 = document.getElementById("ses_slider");
     if (s1) s1.value = val;
+    const s2 = document.getElementById("ses_slider2");
+    if (s2) s2.value = val;
     const v1 = document.getElementById("vol_val");
     if (v1) v1.textContent = "%" + val;
     const v2 = document.getElementById("vol_val2");
@@ -563,6 +565,16 @@ async function anonsGonder() {
     toast("📣 Anons gönderildi");
     document.getElementById("txt_anons").value = "";
   } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+function sesLabel(v, sessiz = false) {
+  if (!sessiz) {
+    const v1 = document.getElementById("vol_val");
+    if (v1) v1.textContent = "%" + v;
+  } else {
+    const v2 = document.getElementById("vol_val2");
+    if (v2) v2.textContent = "%" + v;
+  }
 }
 
 async function sesGuncelle(v, sessiz = false) {
