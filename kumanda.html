@@ -282,7 +282,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<!-- firebase-storage kaldırıldı: ses_data base64 ile Realtime DB üzerinden gönderilir -->
 
 <script>
 const FIREBASE_CONFIG = {
@@ -811,18 +811,21 @@ async function mikToggle() {
 async function anonsuFirebaseGonder() {
   if (!islemIcinYetkiKontrol()) return;
   if (!seciliWavBlob) return;
-  mikDurum('⏳ Yükleniyor...', 'isleniyor');
+  mikDurum('⏳ Gönderiliyor...', 'isleniyor');
   try {
-    const depolama = firebase.storage();
-    const dosyaAdi = 'anonslar/anons_' + Date.now() + '.wav';
-    const ref = depolama.ref(dosyaAdi);
-    await ref.put(seciliWavBlob);
-    const indirmeUrl = await ref.getDownloadURL();
     const tekrar = parseInt(document.getElementById("mik_tekrar").value, 10) || 1;
 
+    // WAV blob'u base64'e çevir (Storage kullanılmıyor)
+    const arrayBuffer = await seciliWavBlob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8Array.byteLength; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    const base64 = btoa(binary);
+
     await db.ref(DB_YOLU.mikrofon_url).set({
-      url: indirmeUrl,
-      path: dosyaAdi,
+      ses_data: base64,
       tekrar: tekrar,
       zaman: Date.now()
     });
