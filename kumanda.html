@@ -47,7 +47,7 @@
   .durum-bagli{background:#d4edda;color:#155724}
   .durum-bekliyor{background:#fff3cd;color:#856404}
   .durum-cevrimdisi{background:#f8d7da;color:#721c24}
-  .google-btn{background-color:#fff;color:#757575;border:1px solid #ddd;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:15px}
+  .google-btn{background-color:#fff;color:#757575;border:1px solid #ddd;box-shadow:0 1px 2px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:15px;padding:10px;width:100%;border-radius:8px;cursor:pointer}
   .google-btn img{width:20px;height:20px}
   .kullanici-listesi{max-height:200px;overflow-y:auto;text-align:left;margin-top:10px}
   .kullanici-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #eee}
@@ -66,10 +66,8 @@
   .cihaz-butonlar{display:flex;gap:8px;flex-wrap:wrap}
   .cihaz-erisim-btn{background:#2ecc71;color:white;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:bold;transition:all 0.2s;min-width:100px}
   .cihaz-erisim-btn.kapali{background:#e74c3c}
-  .cihaz-erisim-btn.kapali:hover{background:#c0392b}
   .cihaz-program-btn{background:#0984e3;color:white;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:bold;transition:all 0.2s;min-width:100px}
   .cihaz-program-btn.kapali{background:#f39c12}
-  .cihaz-program-btn.kapali:hover{background:#e67e22}
   .user-bar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-radius:12px;padding:10px 15px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
   .user-avatar{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);object-fit:cover;flex-shrink:0}
   .user-avatar-placeholder{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -90,32 +88,28 @@
   .badge-bitti{background:#94a3b8}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   @keyframes fadeout{from{opacity:1}to{opacity:0}}
+  .fb-gun-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .fb-gun-kart{border-radius:10px;padding:10px 8px;text-align:center;border:2px solid #e0e0e0;background:#f8f9fa;transition:all .2s}
+  .fb-gun-kart.kapali{background:#fff0f0;border-color:#e74c3c}
+  .fb-gun-kart.bugun{border-color:#0984e3;background:#f0f7ff}
+  .fb-gun-adi{font-weight:700;font-size:13px;color:#2c3e50;margin-bottom:2px}
+  .fb-gun-tarih{font-size:11px;color:#7f8c8d;margin-bottom:8px}
+  .fb-gun-toggle{width:100%;padding:6px 4px;font-size:11px;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:all .2s}
+  .fb-gun-toggle.otomatik{background:#2ecc71;color:white}
+  .fb-gun-toggle.kapali{background:#e74c3c;color:white}
+  .fb-mod-select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;margin-bottom:10px;outline:none}
 </style>
 </head>
 <body>
 <div id="ekran_giris">
   <h2 style="line-height:1.4">
     Nimetullah Nahçivani<br>
-    <span style="font-size:16px;color:#2f3542;font-weight:600;">
-      İmam Hatip Ortaokulu
-    </span><br>
-    <span style="font-size:14px;color:#7f8c8d;">
-      Okul Zil Uygulaması Kumanda Girişi
-    </span>
+    <span style="font-size:16px;color:#2f3542;font-weight:600;">İmam Hatip Ortaokulu</span><br>
+    <span style="font-size:14px;color:#7f8c8d;">Okul Zil Uygulaması Kumanda Girişi</span>
   </h2>
-
   <div class="info" id="giris_mod_bilgi">Google hesabı ile giriş yapın</div>
-
-  <button id="googleGirisBtn" class="google-btn" onclick="googleGirisYap()">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-    Google ile Giriş Yap
-  </button>
-
-  <div style="margin-top:12px;font-size:12px;color:#95a5a6;">
-    © 2026 M.KARADENİZ<br>
-    TÜM HAKLARI SAKLIDIR
-  </div>
-
+  <button id="googleGirisBtn" class="google-btn" onclick="googleGirisYap()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Google ile Giriş Yap</button>
+  <div style="margin-top:12px;font-size:12px;color:#95a5a6;">© 2026 M.KARADENİZ<br>TÜM HAKLARI SAKLIDIR</div>
   <div class="hata" id="hata_google">Giriş başarısız!</div>
 </div>
 
@@ -146,7 +140,7 @@
     <strong>🎤 Canlı Sesli Anons</strong>
     <div style="margin-top:10px">
       <div style="display:flex;gap:8px;align-items:stretch">
-        <input type="text" id="txt_anons" placeholder="Duyuru metnini yazın..." style="flex:1;padding:10px;border:1px solid #ced6e0;border-radius:5px;outline:none;font-size:15px" onkeydown="if(event.key==='Enter')anonsGonder()">
+        <input type="text" id="txt_anons" placeholder="Duyuru metnini yazın..." style="flex:1;padding:10px;border:1px solid #ced6e0;border-radius:5px;outline:none;font-size:15px">
         <select id="anons_tekrar" style="padding:10px;border:1px solid #ced6e0;border-radius:5px;font-size:14px;font-weight:bold;background:#fff;outline:none;width:70px">
           <option value="1">1x</option>
           <option value="2">2x</option>
@@ -167,6 +161,11 @@
       </button>
       <div id="mik_onizleme_kapsayici" style="display:none; margin-top:15px;">
         <audio id="ses_onizleme" controls style="width:100%; border-radius:8px;"></audio>
+        <select id="mik_tekrar" style="margin-top:10px;padding:10px;border:1px solid #ced6e0;border-radius:5px;font-size:14px;font-weight:bold;background:#fff;outline:none;width:100%">
+          <option value="1">🔁 1x Tekrar</option>
+          <option value="2">🔁 2x Tekrar</option>
+          <option value="3">🔁 3x Tekrar</option>
+        </select>
         <button class="btn blue" style="width:100%; margin-top:10px; background-color:#9b59b6; box-shadow:0 4px #8e44ad;" onclick="anonsuFirebaseGonder()">
           🚀 Firebase ile Gönder ve Çal
         </button>
@@ -239,7 +238,7 @@
 
 <div id="ekran_zil" style="display:none;max-width:500px;margin:0 auto">
   <div style="position:sticky;top:0;background:white;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
-    <strong>🎵 Zil Melodisi Se</strong><br><small style="color:#7f8c8d">Hangi zil için melodi seçmek istiyorsunuz?</small><br><br>
+    <strong>🎵 Zil Melodisi Seç</strong><br><small style="color:#7f8c8d">Hangi zil için melodi seçmek istiyorsunuz?</small><br><br>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn dark" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('toplanma_zil','Toplanma')">🔔 Toplanma</button>
       <button class="btn blue" style="flex:1;padding:10px;font-size:13px" onclick="zilTipSec('ogr_zil','Öğrenci')">🧑‍🎓 Öğrenci</button>
@@ -252,7 +251,7 @@
   <div style="margin:15px"><button class="btn blue full" onclick="ekranGoster('kumanda')" style="width:100%"> Geri Dön</button></div>
 </div>
 
-<div id="ekran_sarki">
+<div id="ekran_sarki" style="display:none;max-width:500px;margin:0 auto">
   <div style="position:sticky;top:0;background:white;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:10;margin-bottom:10px">
     <strong>🔊 Ses: <span id="vol_val2">%80</span></strong><br><input type="range" min="0" max="100" value="80" oninput="sesGuncelle(this.value,true)" style="margin-top:8px">
   </div>
@@ -278,6 +277,7 @@
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -311,7 +311,11 @@ const DB_YOLU = {
   mikrofon_url: "kumanda/mikrofon_url",
   bekleyen_kullanicilar: "kumanda/bekleyen_kullanicilar",
   onayli_kullanicilar: "kumanda/onayli_kullanicilar",
-  cihazlar: "kumanda/cihazlar"
+  cihazlar: "kumanda/cihazlar",
+  firebase_kontrol: "kumanda/firebase_kontrol",
+  ping: "kumanda/ping",
+  pong: "kumanda/pong",
+  sistem_online: "kumanda/sistem_online"
 };
 
 let db = null;
@@ -335,12 +339,69 @@ if (typeof firebase !== "undefined") {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
     auth = firebase.auth();
+    
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log("Oturum doğrulandı:", user.email);
+        await girisBasarili(user);
+      } else {
+        console.log("Oturum yok.");
+        girisYapildi = false;
+        yetkiliMi = false;
+        yoneticiMi = false;
+        sessionStorage.clear();
+        ekranGoster("giris");
+      }
+    });
   } catch (e) { console.error(e); }
 }
 
 function toast(mesaj) {
   const el = document.getElementById("toast");
   el.innerHTML = mesaj; el.className = "show"; setTimeout(() => el.className = "", 3000);
+}
+
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+function kullaniciBilgisiGoster(ad, email, photoUrl) {
+  const adEl    = document.getElementById("lbl_kullanici_ad");
+  const emailEl = document.getElementById("lbl_kullanici_email");
+  const avatarEl = document.getElementById("user_avatar_wrap");
+  if (adEl)    adEl.textContent  = ad || email || "Kullanıcı";
+  if (emailEl) emailEl.textContent = email || "";
+  if (avatarEl && photoUrl) {
+    avatarEl.innerHTML = `<img src="${photoUrl}" class="user-avatar" onerror="this.parentElement.textContent='👤'">`;
+  }
+}
+
+async function durumKontrolEt() {
+  try {
+    const snap = await db.ref(DB_YOLU.sistem_online).get();
+    const data = snap.val();
+
+    if (data && data.online === true) {
+      sistemDurumYaz(true, data.pc || "Sistem");
+    } else {
+      sistemDurumYaz(false);
+    }
+  } catch (e) {
+    sistemDurumYaz(false);
+  }
+}
+
+function sistemDurumYaz(acik, pcAdi = "Sistem") {
+  const bar = document.getElementById("durum_bar");
+  if (!bar) return;
+  if (acik) {
+    bar.textContent = `🟢 ${pcAdi} - Sistem Açık`;
+    bar.className = "durum-bagli";
+  } else {
+    bar.textContent = "🔴 Sistem Kapalı";
+    bar.className = "durum-cevrimdisi";
+  }
 }
 
 function ekranGoster(ekran) {
@@ -356,8 +417,6 @@ function ekranGoster(ekran) {
   if (ekran === "yonetim") yonetimPaneliniGoster();
   if (ekran === "cihaz_yonetimi") cihazlarDinle();
 }
-
-function durumBarYaz(text, cls) { const bar = document.getElementById("durum_bar"); bar.textContent = text; bar.className = cls; }
 
 function islemIcinYetkiKontrol() {
   if (!girisYapildi) { toast("Lütfen önce giriş yapın!"); return false; }
@@ -393,6 +452,7 @@ async function girisBasarili(user) {
   kullaniciBilgisiGoster(user.displayName || user.email, user.email, user.photoURL);
   ekranGoster("kumanda");
   dinleyicileriBaslat();
+  durumKontrolEt();
   toast(`Hoş geldiniz, ${user.displayName || user.email}${yetkiliMi ? " ✅" : " (Onay bekliyor)"}`);
 }
 
@@ -408,19 +468,13 @@ async function yetkiKontrolEt(uid) {
 }
 
 async function googleGirisYap() {
-  if (!auth) { toast("Firebase Auth yüklenemedi"); return; }
+  if (!auth) { toast("Firebase yüklenemedi"); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope('email');
   try {
-    const result = await auth.signInWithPopup(provider);
-    const user = result.user;
-    document.getElementById("hata_google").style.display = "none";
-    await girisBasarili(user);
+    await auth.signInWithPopup(provider);
   } catch (error) {
-    console.error(error);
-    document.getElementById("hata_google").style.display = "block";
-    document.getElementById("hata_google").innerText = "Giriş başarısız: " + error.message;
-    toast("Giriş hatası: " + error.message);
+    console.error("Giriş hatası:", error);
+    toast("Giriş başarısız!");
   }
 }
 
@@ -437,8 +491,568 @@ async function cikisYap() {
   toast("Çıkış yapıldı");
 }
 
+function dinleyicileriBaslat() {
+  if (!db) return;
+  dersDurumBaslat();
+  
+  db.ref("kumanda/aktif_cihaz").on("value", snap => {
+    window.aktifCihazId = snap.val();
+    if (document.getElementById("ekran_cihaz_yonetimi").style.display === "block") {
+      cihazlarDinle();
+    }
+  });
+
+
+  db.ref(DB_YOLU.ses).on("value", snap => {
+    const val = parseInt(snap.val());
+    if (isNaN(val)) return;
+    mevcutSes = val;
+    const s1 = document.getElementById("ses_slider");
+    if (s1) s1.value = val;
+    const v1 = document.getElementById("vol_val");
+    if (v1) v1.textContent = "%" + val;
+    const v2 = document.getElementById("vol_val2");
+    if (v2) v2.textContent = "%" + val;
+  });
+
+  db.ref(DB_YOLU.sistem_durum).on("value", snap => {
+    const val = snap.val();
+    if (val !== null) {
+      sistemDurumuGuncelle(!!val);
+    }
+  });
+
+  db.ref(DB_YOLU.genel_ayar).on("value", snap => {
+    const val = snap.val();
+    if (val) {
+      const chk = document.getElementById("chk_teneffus");
+      const rng = document.getElementById("rng_muzik_sesi");
+      const lbl = document.getElementById("lbl_muzik_sesi");
+      if (chk) chk.checked = !!val.teneffus_aktif;
+      if (rng) rng.value = val.muzik_sesi || 30;
+      if (lbl) lbl.textContent = "%" + (val.muzik_sesi || 30);
+    }
+  });
+
+  db.ref(DB_YOLU.hava).on("value", snap => {
+    const val = snap.val();
+    const havaEl = document.getElementById("hava_bilgi");
+    if (havaEl && val) {
+      havaEl.textContent = `${val.sehir || 'Akşehir'}: ${val.durum || '—'} (${val.sicaklik || '0'}°C)`;
+    }
+  });
+}
+
+// ARKA PLAN SERVİSİ İLE UYUMLU "kod" ANAHTARI BURADA DÜZELTİLDİ
+async function komutGonder(komut, ad) {
+  if (!islemIcinYetkiKontrol()) return;
+  try {
+    await db.ref(DB_YOLU.komut).set({ kod: komut, zaman: Date.now() });
+    toast("✅ " + ad);
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+async function anonsGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+  const txt = document.getElementById("txt_anons").value;
+  const tkr = parseInt(document.getElementById("anons_tekrar").value, 10) || 1;
+  if (!txt) return;
+  try {
+    await db.ref(DB_YOLU.anons).set({ metin: txt, tekrar: tkr, zaman: Date.now() });
+    toast("📣 Anons gönderildi");
+    document.getElementById("txt_anons").value = "";
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+async function sesGuncelle(v, sessiz = false) {
+  if (!islemIcinYetkiKontrol()) return;
+  try {
+    await db.ref(DB_YOLU.ses).set(parseInt(v));
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+async function sistemToggle() {
+  if (!islemIcinYetkiKontrol()) return;
+  sistemAcik = !sistemAcik;
+  try {
+    await db.ref(DB_YOLU.sistem_durum).set(sistemAcik);
+    sistemDurumuGuncelle(sistemAcik);
+    toast(sistemAcik ? "🟢 Sistem Açıldı" : "🔴 Sistem Kapatıldı");
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+function sistemDurumuGuncelle(acik) {
+  sistemAcik = acik;
+  const btn = document.getElementById("btn_sistem");
+  const lbl = document.getElementById("lbl_sistem");
+  if (btn && lbl) {
+    if (acik) {
+      btn.style.backgroundColor = "#2ed573";
+      btn.style.boxShadow = "0 4px #27ae60";
+      lbl.textContent = "🟢 SİSTEM: AÇIK";
+    } else {
+      btn.style.backgroundColor = "#e74c3c";
+      btn.style.boxShadow = "0 4px #c0392b";
+      lbl.textContent = "🔴 SİSTEM: KAPALI";
+    }
+  }
+}
+
+function genelAyarGoster() {
+  const card = document.getElementById("genel_ayar_card");
+  if (card) {
+    card.style.display = card.style.display === "none" ? "block" : "none";
+  }
+}
+
+async function genelAyarGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+  const teneffus = document.getElementById("chk_teneffus").checked;
+  const muzik_sesi = parseInt(document.getElementById("rng_muzik_sesi").value);
+  try {
+    await db.ref(DB_YOLU.genel_ayar).set({
+      teneffus_aktif: teneffus,
+      muzik_sesi: muzik_sesi,
+      zaman: Date.now()
+    });
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+function zilTipSec(tip, ad) {
+  seciliZilTip = tip;
+  seciliZilAdi = ad;
+  document.getElementById("zil_secili_tip").textContent = ad + " İçin Melodi Seçin";
+  zilListesiYukle();
+}
+
+async function zilListesiYukle() {
+  const kap = document.getElementById("zil_melodi_liste");
+  if (!kap) return;
+  kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yükleniyor...</div>';
+  try {
+    const snap = await db.ref(DB_YOLU.zil_listesi).get();
+    const liste = snap.val() || [];
+    kap.innerHTML = "";
+    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Zil melodisi bulunamadı.</div>'; return; }
+    liste.forEach(m => {
+      const d = document.createElement("div");
+      d.className = "sarki-item";
+      d.innerHTML = `<span class="sarki-name">${escapeHtml(m)}</span><span class="play-btn">🎵</span>`;
+      d.onclick = () => {
+        if (!seciliZilTip) { toast("Lütfen önce yukarıdan bir zil türü seçin!"); return; }
+        zilSecGonder(seciliZilTip, m, seciliZilAdi);
+      };
+      kap.appendChild(d);
+    });
+  } catch(e) {
+    kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Hata: ' + e.message + '</div>';
+  }
+}
+
+async function zilSecGonder(tip, melodi, ad) {
+  if (!islemIcinYetkiKontrol()) return;
+  try {
+    await db.ref(DB_YOLU.zil_sec).set({ tip, melodi, zaman: Date.now() });
+    toast("✅ " + ad + ": " + melodi);
+  } catch (e) { toast("❌ Hata: " + e.message); }
+}
+
+async function sarkiListesiYukle() {
+  const kap = document.getElementById("sarki_liste");
+  if (!kap) return;
+  kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkılar yükleniyor...</div>';
+  try {
+    const snap = await db.ref(DB_YOLU.sarki_liste).get();
+    let liste = snap.exists() ? (snap.val() || []) : [];
+    kap.innerHTML = "";
+    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkı bulunamadı.</div>'; return; }
+    liste.forEach(sarki => {
+      const div = document.createElement("div");
+      div.className = "sarki-item";
+      div.innerHTML = `<span class="sarki-name">${escapeHtml(sarki)}</span><span class="play-btn">▶️</span>`;
+      div.onclick = async () => {
+        if (!islemIcinYetkiKontrol()) return;
+        try {
+          await db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
+          toast("🎵 " + sarki);
+        } catch (e) { toast("❌ Hata: " + e.message); }
+      };
+      kap.appendChild(div);
+    });
+  } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
+}
+
+function qrGoster() {
+  const modal = document.getElementById("qr_modal");
+  const container = document.getElementById("qr_container");
+  const urlEl = document.getElementById("qr_url");
+  const url = window.location.href;
+  if (urlEl) urlEl.textContent = url;
+  container.innerHTML = "";
+  new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#2c3e50", colorLight: "#ffffff" });
+  modal.style.display = "flex";
+}
+function qrKapat() { document.getElementById("qr_modal").style.display = "none"; }
+
+// ─── MİKROFON İLE CANLI SES KAYDI ──────────────────────────────────────────
+let kayitYapiliyor=false, mikStream=null, mikAudioCtx=null, mikProcessor=null, mikKayitParc=[];
+let seciliWavBlob = null;
+
+function mikDurum(txt, renk) {
+  const d = document.getElementById("mik_durum");
+  const b = document.getElementById("btn_mik");
+  if (d) d.textContent = txt;
+  if (!b) return;
+  if (renk === "kayit") { b.style.backgroundColor = "#e74c3c"; b.style.boxShadow = "0 4px #c0392b"; }
+  else if (renk === "isleniyor") { b.style.backgroundColor = "#f39c12"; b.style.boxShadow = "0 4px #e67e22"; }
+  else { b.style.backgroundColor = "#2ed573"; b.style.boxShadow = "0 4px #27ae60"; }
+}
+
+function pcmToWavBlob(float32Chunks, sampleRate) {
+  let totalLength = 0;
+  for (const arr of float32Chunks) totalLength += arr.length;
+  const pcm16 = new Int16Array(totalLength);
+  let offset = 0;
+  for (const arr of float32Chunks) {
+    for (let i = 0; i < arr.length; i++) {
+      let s = Math.max(-1, Math.min(1, arr[i]));
+      pcm16[offset++] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    }
+  }
+  const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+  const view = new DataView(buffer);
+  const writeString = (o, str) => { for (let i = 0; i < str.length; i++) view.setUint8(o + i, str.charCodeAt(i)); };
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + pcm16.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, pcm16.length * 2, true);
+  let pos = 44;
+  for (let i = 0; i < pcm16.length; i++, pos += 2) view.setInt16(pos, pcm16[i], true);
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+async function mikBaslat() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) throw new Error('Tarayıcı desteklemiyor');
+  const constraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } };
+  mikStream = await navigator.mediaDevices.getUserMedia(constraints);
+  mikAudioCtx = new AudioCtx();
+  const source = mikAudioCtx.createMediaStreamSource(mikStream);
+  const lowpassFilter = mikAudioCtx.createBiquadFilter();
+  lowpassFilter.type = "lowpass"; lowpassFilter.frequency.value = 3400;
+  const highpassFilter = mikAudioCtx.createBiquadFilter();
+  highpassFilter.type = "highpass"; highpassFilter.frequency.value = 300;
+  mikProcessor = mikAudioCtx.createScriptProcessor(4096, 1, 1);
+  mikKayitParc = [];
+  source.connect(highpassFilter);
+  highpassFilter.connect(lowpassFilter);
+  lowpassFilter.connect(mikProcessor);
+  mikProcessor.connect(mikAudioCtx.destination);
+  mikProcessor.onaudioprocess = (e) => {
+    if (kayitYapiliyor) mikKayitParc.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  };
+}
+
+async function mikToggle() {
+  if (!islemIcinYetkiKontrol()) return;
+  if (!kayitYapiliyor) {
+    try {
+      await mikBaslat();
+      kayitYapiliyor = true;
+      mikDurum('🔴 Kayıt yapılıyor... Konuşun, bitince tekrar basın.', 'kayit');
+      document.getElementById("mik_icon").textContent = "⏹️";
+      document.getElementById("mik_yazi").textContent = "Kaydı Bitir";
+      document.getElementById("mik_onizleme_kapsayici").style.display = "none";
+    } catch (e) {
+      kayitYapiliyor = false;
+      mikDurum('❌ Mikrofon izni verilmedi', 'hazir');
+      toast('Mikrofon izni gerekli');
+    }
+  } else {
+    kayitYapiliyor = false;
+    mikDurum('⏳ Ses hazırlanıyor...', 'isleniyor');
+    try { if (mikProcessor) { mikProcessor.disconnect(); mikProcessor.onaudioprocess = null; } } catch(e) {}
+    try { if (mikAudioCtx) await mikAudioCtx.close(); } catch(e) {}
+    try { if (mikStream) mikStream.getTracks().forEach(tr => tr.stop()); } catch(e) {}
+    mikProcessor = null; mikAudioCtx = null; mikStream = null;
+    seciliWavBlob = pcmToWavBlob(mikKayitParc, 44100);
+    mikKayitParc = [];
+    const url = URL.createObjectURL(seciliWavBlob);
+    document.getElementById("ses_onizleme").src = url;
+    document.getElementById("mik_onizleme_kapsayici").style.display = "block";
+    document.getElementById("mik_icon").textContent = "🎙️";
+    document.getElementById("mik_yazi").textContent = "Yeniden Kaydet";
+    mikDurum('✅ Kayıt hazır! Dinleyebilir veya gönderebilirsiniz.', 'hazir');
+  }
+}
+
+async function anonsuFirebaseGonder() {
+  if (!islemIcinYetkiKontrol()) return;
+  if (!seciliWavBlob) return;
+  mikDurum('⏳ Yükleniyor...', 'isleniyor');
+  try {
+    const depolama = firebase.storage();
+    const dosyaAdi = 'anonslar/anons_' + Date.now() + '.wav';
+    const ref = depolama.ref(dosyaAdi);
+    await ref.put(seciliWavBlob);
+    const indirmeUrl = await ref.getDownloadURL();
+    const tekrar = parseInt(document.getElementById("mik_tekrar").value, 10) || 1;
+
+    await db.ref(DB_YOLU.mikrofon_url).set({
+      url: indirmeUrl,
+      path: dosyaAdi,
+      tekrar: tekrar,
+      zaman: Date.now()
+    });
+    mikDurum('✅ Anons başarıyla gönderildi!', 'hazir');
+    toast('🚀 Anons Gönderildi!');
+    document.getElementById("mik_onizleme_kapsayici").style.display = "none";
+    seciliWavBlob = null;
+  } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
+}
+
+// ─── CİHAZ YÖNETİMİ ────────────────────────────────────────────────────────
+function cihazYonetiminiAc() {
+  if (!yoneticiMi) {
+    toast("❌ Bu işlem sadece yöneticiler tarafından yapılabilir!");
+    return;
+  }
+  ekranGoster("cihaz_yonetimi");
+}
+
+function cihazlarDinle() {
+  if (!db) return;
+  const cihazlarRef = db.ref(DB_YOLU.cihazlar);
+  cihazlarRef.off("value");
+  cihazlarRef.on("value", snap => {
+    if (!snap.exists()) {
+      document.getElementById("cihaz_listesi_container").innerHTML = 
+        '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
+      return;
+    }
+    const cihazlar = snap.val();
+    let html = '';
+    Object.keys(cihazlar).forEach(cihazId => {
+      const cihaz = cihazlar[cihazId];
+      const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
+      const cihazAktif = cihaz.cevrimici === true;
+      const zaman = cihaz.guncelleme || cihaz.zaman || "—";
+      const uzaktanAktif = (window.aktifCihazId === cihazId);
+      const programAktif = (cihaz.program_aktif !== false);
+      
+      let uzaktanYazi, uzaktanSinif;
+      if (uzaktanAktif) {
+        uzaktanYazi = "🔌 Uzaktan Erişimi Kapat";
+        uzaktanSinif = "cihaz-erisim-btn kapali";
+      } else {
+        uzaktanYazi = "🔌 Uzaktan Erişimi Aç";
+        uzaktanSinif = "cihaz-erisim-btn";
+      }
+      
+      let programHtml = "";
+      if (yoneticiMi) {
+        let programYazi, programSinif;
+        if (programAktif) {
+          programYazi = "⚙️ Programı Deaktif Et";
+          programSinif = "cihaz-program-btn";
+        } else {
+          programYazi = "⚙️ Programı Aktif Et";
+          programSinif = "cihaz-program-btn kapali";
+        }
+        programHtml = `<button class="${programSinif}" onclick="cihazProgramToggle('${escapeHtml(cihazId)}', ${programAktif})">${programYazi}</button>`;
+      }
+      
+      html += `
+        <div class="cihaz-kart">
+          <div class="cihaz-bilgi">
+            <div class="cihaz-adi">🖥️ ${escapeHtml(pcAdi)}</div>
+            <div class="cihaz-durum ${cihazAktif ? 'aktif' : 'pasif'}">
+              ${cihazAktif ? 'Çevrimiçi' : 'Çevrimdışı'} • ${escapeHtml(zaman)}
+              ${!programAktif ? ' • ⛔ Program Pasif' : ''}
+            </div>
+            <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
+          </div>
+          <div class="cihaz-butonlar">
+            <button class="${uzaktanSinif}" onclick="cihazUzaktanToggle('${escapeHtml(cihazId)}', ${uzaktanAktif})">${uzaktanYazi}</button>
+            ${programHtml}
+          </div>
+        </div>
+      `;
+    });
+    document.getElementById("cihaz_listesi_container").innerHTML = html;
+  });
+}
+
+function cihazUzaktanToggle(cihazId, suanAktif) {
+  if (!yoneticiMi) {
+    toast("❌ Yetkiniz yok!");
+    return;
+  }
+  if (suanAktif) {
+    db.ref("kumanda/aktif_cihaz").set(null)
+      .then(() => toast("✅ Uzaktan erişim kapatıldı (tüm cihazlar pasif)"))
+      .catch(err => toast("❌ Hata: " + err.message));
+  } else {
+    db.ref("kumanda/aktif_cihaz").set(cihazId)
+      .then(() => toast(`✅ ${cihazId} artık uzaktan erişime açık`))
+      .catch(err => toast("❌ Hata: " + err.message));
+  }
+}
+
+function cihazProgramToggle(cihazId, suanAktif) {
+  if (!yoneticiMi) {
+    toast("❌ Yetkiniz yok!");
+    return;
+  }
+  const yeniDurum = !suanAktif;
+  db.ref(DB_YOLU.cihazlar + "/" + cihazId).update({
+    program_aktif: yeniDurum,
+    program_son_guncelleme: Date.now()
+  }).then(() => {
+    toast(yeniDurum ? `✅ ${cihazId} programı AKTİF edildi` : `⛔ ${cihazId} programı DEAKTİF edildi`);
+  }).catch(err => toast("❌ Hata: " + err.message));
+}
+
+// ─── GÜN BAZLI FİREBASE KONTROLÜ ───────────────────────────────────────────
+const FB_GUNLER = [
+  { js: 0, ad: "Pazar",     kisa: "Paz" },
+  { js: 1, ad: "Pazartesi", kisa: "Pzt" },
+  { js: 2, ad: "Salı",      kisa: "Sal" },
+  { js: 3, ad: "Çarşamba",  kisa: "Çar" },
+  { js: 4, ad: "Perşembe",  kisa: "Per" },
+  { js: 5, ad: "Cuma",      kisa: "Cum" },
+  { js: 6, ad: "Cumartesi", kisa: "Cmt" },
+];
+
+function tarihStr(d) {
+  return d.getFullYear() + "-" +
+    String(d.getMonth() + 1).padStart(2, "0") + "-" +
+    String(d.getDate()).padStart(2, "0");
+}
+
+function haftaninGunuTarihi(jsGun) {
+  const bugun = new Date();
+  const bugunGun = bugun.getDay();
+  const fark = jsGun - bugunGun;
+  const d = new Date(bugun);
+  d.setDate(bugun.getDate() + fark);
+  return tarihStr(d);
+}
+
+let _fbGunAyarlari = {};
+
+async function firebaseKontrolYukle() {
+  const modEl  = document.getElementById("firebase_mod");
+  const panel  = document.getElementById("fb_gun_panel");
+  const acikl  = document.getElementById("fb_otomatik_aciklama");
+  if (!modEl || !panel) return;
+  try {
+    const snap = await db.ref(DB_YOLU.firebase_kontrol).get();
+    const veri = snap.val() || {};
+    const mod  = veri.mod || "otomatik";
+    _fbGunAyarlari = veri.gun_ayarlari || {};
+    modEl.value = mod;
+    if (mod === "otomatik") {
+      panel.style.display  = "block";
+      acikl.style.display  = "block";
+    } else {
+      panel.style.display  = "none";
+      acikl.style.display  = "none";
+    }
+    _fbGunGridRender();
+  } catch (e) {
+    toast("Firebase ayarları yüklenemedi: " + e.message);
+  }
+}
+
+function _fbGunGridRender() {
+  const grid  = document.getElementById("fb_gun_grid");
+  if (!grid) return;
+  const bugun     = new Date();
+  const bugunGun  = bugun.getDay();
+  const bugunTarih = tarihStr(bugun);
+  let html = "";
+  const sira = [1, 2, 3, 4, 5, 6, 0];
+  sira.forEach(jsGun => {
+    const bilgi     = FB_GUNLER.find(g => g.js === jsGun);
+    const gunTarih  = haftaninGunuTarihi(jsGun);
+    const ayar      = _fbGunAyarlari[String(jsGun)] || {};
+    const kapalimi  = ayar.kapali_tarih === gunTarih;
+    const bugunku   = jsGun === bugunGun;
+    const d = new Date(gunTarih + "T00:00:00");
+    const tarihGorunum = d.getDate() + " " +
+      ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"][d.getMonth()];
+    const kartCls = "fb-gun-kart" + (bugunku ? " bugun" : "") + (kapalimi ? " kapali" : "");
+    const btnCls  = "fb-gun-toggle " + (kapalimi ? "kapali" : "otomatik");
+    const btnYazi = kapalimi ? "⛔ Kapalı" : "✅ Otomatik";
+    html += `
+      <div class="${kartCls}" id="fb_gun_${jsGun}">
+        <div class="fb-gun-adi">${escapeHtml(bilgi.ad)}${bugunku ? " 📍" : ""}</div>
+        <div class="fb-gun-tarih">${tarihGorunum}</div>
+        <button class="${btnCls}" onclick="fbGunToggle(${jsGun})">${btnYazi}</button>
+      </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+async function fbGunToggle(jsGun) {
+  const gunTarih = haftaninGunuTarihi(jsGun);
+  const ayar     = _fbGunAyarlari[String(jsGun)] || {};
+  const kapalimi = ayar.kapali_tarih === gunTarih;
+  if (kapalimi) {
+    _fbGunAyarlari[String(jsGun)] = { kapali_tarih: null };
+  } else {
+    _fbGunAyarlari[String(jsGun)] = { kapali_tarih: gunTarih };
+  }
+  try {
+    await db.ref(DB_YOLU.firebase_kontrol).update({
+      gun_ayarlari: _fbGunAyarlari,
+      zaman: Date.now()
+    });
+    const bilgi = FB_GUNLER.find(g => g.js === jsGun);
+    toast(kapalimi
+      ? `✅ ${bilgi.ad} otomatik moda döndü`
+      : `⛔ ${bilgi.ad} (${gunTarih}) tüm gün kapalı`);
+    _fbGunGridRender();
+  } catch (e) {
+    toast("Hata: " + e.message);
+  }
+}
+
+async function firebaseGenelModGuncelle() {
+  const mod   = document.getElementById("firebase_mod").value;
+  const panel = document.getElementById("fb_gun_panel");
+  const acikl = document.getElementById("fb_otomatik_aciklama");
+  try {
+    await db.ref(DB_YOLU.firebase_kontrol).update({ mod: mod, zaman: Date.now() });
+    if (mod === "otomatik") {
+      panel.style.display = "block";
+      acikl.style.display = "block";
+    } else {
+      panel.style.display = "none";
+      acikl.style.display = "none";
+    }
+    toast("Firebase modu: " + (mod === "acik" ? "Her zaman açık" : "Otomatik"));
+  } catch (e) {
+    toast("Hata: " + e.message);
+  }
+}
+
+function firebaseModGuncelle() { firebaseGenelModGuncelle(); }
+
+// ─── YÖNETİM PANELİ KULLANICI LİSTELEME VE ONAYLAMA ───────────────────────
 async function yonetimPaneliniGoster() {
   const container = document.getElementById("yonetim_panel_icerik");
+  if (!container) return;
   if (!girisYapildi) {
     container.innerHTML = '<div class="card"><p>Lütfen önce giriş yapın.</p><button onclick="googleGirisYap()" class="btn blue">Google ile Giriş Yap</button></div>';
     return;
@@ -450,8 +1064,24 @@ async function yonetimPaneliniGoster() {
   container.innerHTML = `
     <div class="card"><h3>👥 Onay Bekleyen Kullanıcılar</h3><div id="bekleyen_liste" class="kullanici-listesi">Yükleniyor...</div></div>
     <div class="card"><h3>✅ Onaylı Kullanıcılar</h3><div id="onayli_liste" class="kullanici-listesi">Yükleniyor...</div></div>
+    <div class="card">
+      <h3>🌐 Firebase Bağlantı Kontrolü</h3>
+      <select class="fb-mod-select" id="firebase_mod" onchange="firebaseGenelModGuncelle()">
+        <option value="otomatik">⏰ Otomatik Mod (Her gün 08:00–17:00)</option>
+        <option value="acik">🟢 Her Zaman Açık</option>
+      </select>
+      <div id="fb_otomatik_aciklama" style="font-size:12px;color:#7f8c8d;margin-bottom:10px;display:none">
+        ℹ️ Otomatik modda aşağıdan belirli bir günü <strong>tüm gün kapatabilirsiniz</strong> (tatil, özel gün). Ertesi gün otomatik olarak otomatik moda döner.
+      </div>
+      <div id="fb_gun_panel" style="display:none">
+        <div class="fb-gun-grid" id="fb_gun_grid">
+          <div style="text-align:center;color:#7f8c8d;grid-column:span 2">⏳ Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
   `;
   await listeleKullanicilar();
+  await firebaseKontrolYukle();
 }
 
 async function listeleKullanicilar() {
@@ -544,482 +1174,7 @@ async function kullaniciSil(uid, kaynak) {
   } catch(e) { toast("Silme hatası: " + e.message); }
 }
 
-function dinleyicileriBaslat() {
-  if (!db) return;
-  dersDurumBaslat();
-  
-  // Global aktif cihaz dinleyicisi
-  db.ref("kumanda/aktif_cihaz").on("value", snap => {
-    window.aktifCihazId = snap.val();
-    if (document.getElementById("ekran_cihaz_yonetimi").style.display === "block") {
-      cihazlarDinle();
-    }
-  });
-
-  db.ref(DB_YOLU.durum).on("value", snap => {
-    const v = snap.val() || {};
-    if (v.cevrimici) {
-      durumBarYaz("🟢 Bağlı " + (v.pc_adi || ""), "durum-bagli");
-      if (v.pc_adi) document.getElementById("ders_durum_alt").textContent = v.pc_adi + " - Kumanda";
-    } else {
-      durumBarYaz("🔴 PC Çevrimdışı", "durum-cevrimdisi");
-    }
-    if (typeof v.zil_aktif === "boolean") _sistemDurumGuncelle(v.zil_aktif);
-    if (v.mevcut_ses !== undefined) {
-      mevcutSes = v.mevcut_ses;
-      document.getElementById("ses_slider").value = mevcutSes;
-      document.getElementById("vol_val").innerHTML = "%" + mevcutSes;
-      document.getElementById("vol_val2").innerHTML = "%" + mevcutSes;
-    }
-  });
-  db.ref(DB_YOLU.genel_ayar).on("value", snap => {
-    const v = snap.val();
-    if (v && typeof v === "object") {
-      document.getElementById("chk_teneffus").checked = !!v.teneffus_aktif;
-      if (v.muzik_sesi !== undefined) {
-        document.getElementById("rng_muzik_sesi").value = v.muzik_sesi;
-        document.getElementById("lbl_muzik_sesi").textContent = "%" + v.muzik_sesi;
-      }
-    }
-  });
-  db.ref(DB_YOLU.hava).on("value", snap => {
-    const v = snap.val();
-    const el = document.getElementById("hava_bilgi");
-    if (el) {
-      if (v && v.sehir) el.textContent = `${v.sehir} - ${v.durum || ""} ${v.sicaklik ? v.sicaklik + "°C" : ""}`.trim();
-      else el.textContent = "Veri yok";
-    }
-  });
-  // 🔥 İLK AÇILIŞTA SESİ ÇEK
-  db.ref(DB_YOLU.ses).get().then(snap => {
-    const v = snap.val();
-    if (v !== null) {
-      const yeni = parseInt(v);
-      mevcutSes = yeni;
-      document.getElementById("ses_slider").value = yeni;
-      document.getElementById("vol_val").textContent = "%" + yeni;
-      document.getElementById("vol_val2").textContent = "%" + yeni;
-    }
-  });
-
-  db.ref(DB_YOLU.ses).on("value", snap => {
-    const v = snap.val();
-    if (v !== null) {
-      const yeni = parseInt(v);
-      mevcutSes = yeni;
-      document.getElementById("ses_slider").value = yeni;
-      document.getElementById("vol_val").textContent = "%" + yeni;
-      document.getElementById("vol_val2").textContent = "%" + yeni;
-    }
-  });
-}
-// BAŞLANGIÇTA MEVCUT SES SEVİYESİNİ BİR KERE OKU (YENİ)
-db.ref(DB_YOLU.ses).once("value").then(snap => {
-    const v = snap.val();
-    if (v !== null) {
-        const yeni = parseInt(v);
-        mevcutSes = yeni;
-        document.getElementById("ses_slider").value = yeni;
-        document.getElementById("vol_val").textContent = "%" + yeni;
-        document.getElementById("vol_val2").textContent = "%" + yeni;
-    } else {
-        // Firebase'de ses değeri yoksa varsayılan 80'i ayarla (ve yaz)
-        mevcutSes = 80;
-        document.getElementById("ses_slider").value = 80;
-        document.getElementById("vol_val").textContent = "%80";
-        document.getElementById("vol_val2").textContent = "%80";
-        db.ref(DB_YOLU.ses).set(80); // Firebase'e de yaz
-    }
-});
-async function komutGonder(kod, isim) {
-  if (!islemIcinYetkiKontrol()) return;
-  try {
-    await db.ref(DB_YOLU.komut).set({ kod, zaman: Date.now() });
-    toast(isim + " ✅");
-  } catch (e) { toast("❌ Hata: " + e.message); }
-}
-
-async function anonsGonder() {
-  if (!islemIcinYetkiKontrol()) return;
-  const metin = document.getElementById("txt_anons").value.trim();
-  if (!metin) return;
-  const tekrar = parseInt(document.getElementById("anons_tekrar").value, 10) || 1;
-  const veri = tekrar > 1 ? `${metin}||${tekrar}` : metin;
-  try {
-    await db.ref(DB_YOLU.anons).set({ metin: veri, zaman: Date.now() });
-    toast(`Anons İletildi! 🔊 (${tekrar}x)`);
-    document.getElementById("txt_anons").value = "";
-  } catch (e) { toast("❌ Hata: " + e.message); }
-}
-
-function sesGuncelle(val, ikincislider) {
-  if (!islemIcinYetkiKontrol()) return;
-  mevcutSes = parseInt(val, 10);
-  document.getElementById("vol_val").textContent = "%" + mevcutSes;
-  document.getElementById("vol_val2").textContent = "%" + mevcutSes;
-  if (!ikincislider && document.querySelector("#ekran_sarki input[type=range]")) {
-    document.querySelector("#ekran_sarki input[type=range]").value = mevcutSes;
-  } else if (ikincislider) {
-    document.getElementById("ses_slider").value = mevcutSes;
-  }
-  clearTimeout(sesZamanlayici);
-  sesZamanlayici = setTimeout(async () => {
-    try { await db.ref(DB_YOLU.ses).set(mevcutSes); }
-    catch(e) { toast("❌ Hata: " + e.message); }
-  }, 300);
-}
-
-async function sistemToggle() {
-  if (!islemIcinYetkiKontrol()) return;
-  const yeniDurum = !sistemAcik;
-  try {
-    await db.ref(DB_YOLU.sistem_durum).set({ aktif: yeniDurum, zaman: Date.now() });
-    _sistemDurumGuncelle(yeniDurum);
-    toast(yeniDurum ? "✅ Sistem Açıldı" : "⛔ Sistem Kapatıldı");
-  } catch (e) { toast("❌ Hata: " + e.message); }
-}
-
-function _sistemDurumGuncelle(aktif) {
-  sistemAcik = aktif;
-  const btn = document.getElementById("btn_sistem");
-  const lbl = document.getElementById("lbl_sistem");
-  if (btn) {
-    if (aktif) { btn.style.backgroundColor = "#2ed573"; btn.style.boxShadow = "0 4px #27ae60"; lbl.innerHTML = "🟢 SİSTEM: AÇIK"; }
-    else { btn.style.backgroundColor = "#ff4757"; btn.style.boxShadow = "0 4px #c0392b"; lbl.innerHTML = "🔴 SİSTEM: KAPALI"; }
-  }
-}
-
-function genelAyarGoster() { 
-  const card = document.getElementById("genel_ayar_card"); 
-  if (card) card.style.display = card.style.display === "none" ? "block" : "none"; 
-}
-
-function genelAyarGonder() {
-  if (!islemIcinYetkiKontrol()) return;
-  clearTimeout(genelAyarTimer);
-  genelAyarTimer = setTimeout(async () => {
-    const ten = document.getElementById("chk_teneffus").checked;
-    const ses = parseInt(document.getElementById("rng_muzik_sesi").value, 10);
-    try {
-      await db.ref(DB_YOLU.genel_ayar).set({ teneffus_aktif: ten, muzik_sesi: ses, zaman: Date.now() });
-      toast("✅ Ayar güncellendi");
-    } catch (e) { toast("❌ Hata: " + e.message); }
-  }, 350);
-}
-
-async function zilListesiYukle() {
-  const kap = document.getElementById("zil_melodi_liste");
-  try {
-    const snap = await db.ref(DB_YOLU.zil_listesi).get();
-    let liste = snap.exists() ? (snap.val() || []) : [];
-    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Melodi bulunamadı.</div>'; return; }
-    window._zilListesi = liste;
-    if (seciliZilTip) zilTipSec(seciliZilTip, seciliZilAdi);
-    else kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Yukarıdan bir zil türü seçin.</div>';
-  } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
-}
-
-function zilTipSec(tip, ad) {
-  seciliZilTip = tip;
-  seciliZilAdi = ad;
-  document.getElementById("zil_secili_tip").textContent = ad + " için melodi seçin:";
-  const kap = document.getElementById("zil_melodi_liste");
-  const liste = window._zilListesi || [];
-  if (!liste.length) { zilListesiYukle(); return; }
-  kap.innerHTML = "";
-  const varsDiv = document.createElement("div");
-  varsDiv.className = "sarki-item";
-  varsDiv.innerHTML = '<span class="sarki-name">🎵 Varsayılan</span><span class="play-btn">▶️</span>';
-  varsDiv.onclick = () => { zilSecGonder(tip, "Varsayılan", ad); };
-  kap.appendChild(varsDiv);
-  liste.forEach(melodi => {
-    const div = document.createElement("div");
-    div.className = "sarki-item";
-    div.innerHTML = `<span class="sarki-name">${melodi}</span><span class="play-btn">▶️</span>`;
-    div.onclick = () => { zilSecGonder(tip, melodi, ad); };
-    kap.appendChild(div);
-  });
-}
-
-async function zilSecGonder(tip, melodi, ad) {
-  if (!islemIcinYetkiKontrol()) return;
-  try {
-    await db.ref(DB_YOLU.zil_sec).set({ tip, melodi, zaman: Date.now() });
-    toast("✅ " + ad + ": " + melodi);
-  } catch (e) { toast("❌ Hata: " + e.message); }
-}
-
-async function sarkiListesiYukle() {
-  const kap = document.getElementById("sarki_liste");
-  kap.innerHTML = "";
-  try {
-    const snap = await db.ref(DB_YOLU.sarki_liste).get();
-    let liste = snap.exists() ? (snap.val() || []) : [];
-    if (!liste.length) { kap.innerHTML = '<div class="sarki-item" style="color:#7f8c8d">Şarkı bulunamadı.</div>'; return; }
-    liste.forEach(sarki => {
-      const div = document.createElement("div");
-      div.className = "sarki-item";
-      div.innerHTML = `<span class="sarki-name">${sarki}</span><span class="play-btn">▶️</span>`;
-      div.onclick = async () => {
-        if (!islemIcinYetkiKontrol()) return;
-        try {
-          await db.ref(DB_YOLU.sarki).set({ ad: sarki, zaman: Date.now() });
-          toast("🎵 " + sarki);
-        } catch (e) { toast("❌ Hata: " + e.message); }
-      };
-      kap.appendChild(div);
-    });
-  } catch (e) { kap.innerHTML = '<div class="sarki-item" style="color:#e74c3c">Liste yüklenemedi.</div>'; }
-}
-
-function qrGoster() {
-  const modal = document.getElementById("qr_modal");
-  const container = document.getElementById("qr_container");
-  const urlEl = document.getElementById("qr_url");
-  const url = window.location.href;
-  urlEl.textContent = url;
-  container.innerHTML = "";
-  new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#2c3e50", colorLight: "#ffffff" });
-  modal.style.display = "flex";
-}
-function qrKapat() { document.getElementById("qr_modal").style.display = "none"; }
-
-let kayitYapiliyor=false, mikStream=null, mikAudioCtx=null, mikProcessor=null, mikKayitParc=[];
-let seciliWavBlob = null;
-
-function mikDurum(txt, renk) {
-  const d = document.getElementById("mik_durum");
-  const b = document.getElementById("btn_mik");
-  if (d) d.textContent = txt;
-  if (!b) return;
-  if (renk === "kayit") { b.style.backgroundColor = "#e74c3c"; b.style.boxShadow = "0 4px #c0392b"; }
-  else if (renk === "isleniyor") { b.style.backgroundColor = "#f39c12"; b.style.boxShadow = "0 4px #e67e22"; }
-  else { b.style.backgroundColor = "#2ed573"; b.style.boxShadow = "0 4px #27ae60"; }
-}
-function pcmToWavBlob(float32Chunks, sampleRate) {
-  let totalLength = 0;
-  for (const arr of float32Chunks) totalLength += arr.length;
-  const pcm16 = new Int16Array(totalLength);
-  let offset = 0;
-  for (const arr of float32Chunks) {
-    for (let i = 0; i < arr.length; i++) {
-      let s = Math.max(-1, Math.min(1, arr[i]));
-      pcm16[offset++] = s < 0 ? s * 0x8000 : s * 0x7fff;
-    }
-  }
-  const buffer = new ArrayBuffer(44 + pcm16.length * 2);
-  const view = new DataView(buffer);
-  const writeString = (o, str) => { for (let i = 0; i < str.length; i++) view.setUint8(o + i, str.charCodeAt(i)); };
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + pcm16.length * 2, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, pcm16.length * 2, true);
-  let pos = 44;
-  for (let i = 0; i < pcm16.length; i++, pos += 2) view.setInt16(pos, pcm16[i], true);
-  return new Blob([view], { type: 'audio/wav' });
-}
-async function mikBaslat() {
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) throw new Error('Tarayıcı desteklemiyor');
-  const constraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } };
-  mikStream = await navigator.mediaDevices.getUserMedia(constraints);
-  mikAudioCtx = new AudioCtx();
-  const source = mikAudioCtx.createMediaStreamSource(mikStream);
-  const lowpassFilter = mikAudioCtx.createBiquadFilter();
-  lowpassFilter.type = "lowpass"; lowpassFilter.frequency.value = 3400;
-  const highpassFilter = mikAudioCtx.createBiquadFilter();
-  highpassFilter.type = "highpass"; highpassFilter.frequency.value = 300;
-  mikProcessor = mikAudioCtx.createScriptProcessor(4096, 1, 1);
-  mikKayitParc = [];
-  source.connect(highpassFilter);
-  highpassFilter.connect(lowpassFilter);
-  lowpassFilter.connect(mikProcessor);
-  mikProcessor.connect(mikAudioCtx.destination);
-  mikProcessor.onaudioprocess = (e) => {
-    if (kayitYapiliyor) mikKayitParc.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-  };
-}
-async function mikToggle() {
-  if (!islemIcinYetkiKontrol()) return;
-  if (!kayitYapiliyor) {
-    try {
-      await mikBaslat();
-      kayitYapiliyor = true;
-      mikDurum('🔴 Kayıt yapılıyor... Konuşun, bitince tekrar basın.', 'kayit');
-      document.getElementById("mik_icon").textContent = "⏹️";
-      document.getElementById("mik_yazi").textContent = "Kaydı Bitir";
-      document.getElementById("mik_onizleme_kapsayici").style.display = "none";
-    } catch (e) {
-      kayitYapiliyor = false;
-      mikDurum('❌ Mikrofon izni verilmedi', 'hazir');
-      toast('Mikrofon izni gerekli');
-    }
-  } else {
-    kayitYapiliyor = false;
-    mikDurum('⏳ Ses hazırlanıyor...', 'isleniyor');
-    try { if (mikProcessor) { mikProcessor.disconnect(); mikProcessor.onaudioprocess = null; } } catch(e) {}
-    try { if (mikAudioCtx) await mikAudioCtx.close(); } catch(e) {}
-    try { if (mikStream) mikStream.getTracks().forEach(tr => tr.stop()); } catch(e) {}
-    mikProcessor = null; mikAudioCtx = null; mikStream = null;
-    seciliWavBlob = pcmToWavBlob(mikKayitParc, 44100);
-    mikKayitParc = [];
-    const url = URL.createObjectURL(seciliWavBlob);
-    document.getElementById("ses_onizleme").src = url;
-    document.getElementById("mik_onizleme_kapsayici").style.display = "block";
-    document.getElementById("mik_icon").textContent = "🎙️";
-    document.getElementById("mik_yazi").textContent = "Yeniden Kaydet";
-    mikDurum('✅ Kayıt hazır! Dinleyebilir veya gönderebilirsiniz.', 'hazir');
-  }
-}
-async function anonsuFirebaseGonder() {
-  if (!islemIcinYetkiKontrol()) return;
-  if (!seciliWavBlob) return;
-  mikDurum('⏳ Yükleniyor...', 'isleniyor');
-  try {
-    const depolama = firebase.storage();
-    const dosyaAdi = 'anonslar/anons_' + Date.now() + '.wav';
-    const ref = depolama.ref(dosyaAdi);
-    await ref.put(seciliWavBlob);
-    const indirmeUrl = await ref.getDownloadURL();
-    await db.ref(DB_YOLU.mikrofon_url).set({ url: indirmeUrl, path: dosyaAdi, zaman: Date.now() });
-    mikDurum('✅ Anons başarıyla gönderildi!', 'hazir');
-    toast('🚀 Anons Gönderildi!');
-    document.getElementById("mik_onizleme_kapsayici").style.display = "none";
-    seciliWavBlob = null;
-  } catch (err) { mikDurum('❌ Hata: ' + err.message, 'hazir'); }
-}
-
-// ========== CİHAZ YÖNETİMİ (GÜNCELLENMİŞ) ==========
-function cihazYonetiminiAc() {
-  if (!yoneticiMi) {
-    toast("❌ Bu işlem sadece yöneticiler tarafından yapılabilir!");
-    return;
-  }
-  ekranGoster("cihaz_yonetimi");
-}
-
-function cihazlarDinle() {
-  if (!db) return;
-  const cihazlarRef = db.ref(DB_YOLU.cihazlar);
-  cihazlarRef.off("value");
-  cihazlarRef.on("value", snap => {
-    if (!snap.exists()) {
-      document.getElementById("cihaz_listesi_container").innerHTML = 
-        '<div style="text-align:center;color:#7f8c8d;padding:20px">Henüz kayıtlı cihaz yok</div>';
-      return;
-    }
-    const cihazlar = snap.val();
-    let html = '';
-    Object.keys(cihazlar).forEach(cihazId => {
-      const cihaz = cihazlar[cihazId];
-      const pcAdi = cihaz.pc_adi || "Bilinmeyen PC";
-      const cihazAktif = cihaz.cevrimici === true;
-      const zaman = cihaz.guncelleme || cihaz.zaman || "—";
-      const uzaktanAktif = (window.aktifCihazId === cihazId);
-      const programAktif = (cihaz.program_aktif !== false); // varsayılan true
-      
-      // Uzaktan Erişim Butonu
-      let uzaktanYazi, uzaktanSinif;
-      if (uzaktanAktif) {
-        uzaktanYazi = "🔌 Uzaktan Erişimi Kapat";
-        uzaktanSinif = "cihaz-erisim-btn kapali";
-      } else {
-        uzaktanYazi = "🔌 Uzaktan Erişimi Aç";
-        uzaktanSinif = "cihaz-erisim-btn";
-      }
-      
-      // Program Aktif/Deaktif Butonu (sadece yönetici görecek)
-      let programHtml = "";
-      if (yoneticiMi) {
-        let programYazi, programSinif;
-        if (programAktif) {
-          programYazi = "⚙️ Programı Deaktif Et";
-          programSinif = "cihaz-program-btn";
-        } else {
-          programYazi = "⚙️ Programı Aktif Et";
-          programSinif = "cihaz-program-btn kapali";
-        }
-        programHtml = `<button class="${programSinif}" onclick="cihazProgramToggle('${escapeHtml(cihazId)}', ${programAktif})">${programYazi}</button>`;
-      }
-      
-      html += `
-        <div class="cihaz-kart">
-          <div class="cihaz-bilgi">
-            <div class="cihaz-adi">🖥️ ${escapeHtml(pcAdi)}</div>
-            <div class="cihaz-durum ${cihazAktif ? 'aktif' : 'pasif'}">
-              ${cihazAktif ? 'Çevrimiçi' : 'Çevrimdışı'} • ${escapeHtml(zaman)}
-              ${!programAktif ? ' • ⛔ Program Pasif' : ''}
-            </div>
-            <div class="cihaz-id">ID: ${escapeHtml(cihazId)}</div>
-          </div>
-          <div class="cihaz-butonlar">
-            <button class="${uzaktanSinif}" onclick="cihazUzaktanToggle('${escapeHtml(cihazId)}', ${uzaktanAktif})">${uzaktanYazi}</button>
-            ${programHtml}
-          </div>
-        </div>
-      `;
-    });
-    document.getElementById("cihaz_listesi_container").innerHTML = html;
-  });
-}
-
-function cihazUzaktanToggle(cihazId, suanAktif) {
-  if (!yoneticiMi) {
-    toast("❌ Yetkiniz yok!");
-    return;
-  }
-  if (suanAktif) {
-    // Aktif cihazı kapat => global aktif cihaz'ı null yap
-    db.ref("kumanda/aktif_cihaz").set(null)
-      .then(() => toast("✅ Uzaktan erişim kapatıldı (tüm cihazlar pasif)"))
-      .catch(err => toast("❌ Hata: " + err.message));
-  } else {
-    // Bu cihazı aktif yap
-    db.ref("kumanda/aktif_cihaz").set(cihazId)
-      .then(() => toast(`✅ ${cihazId} artık uzaktan erişime açık`))
-      .catch(err => toast("❌ Hata: " + err.message));
-  }
-}
-
-function cihazProgramToggle(cihazId, suanAktif) {
-  if (!yoneticiMi) {
-    toast("❌ Yetkiniz yok!");
-    return;
-  }
-  const yeniDurum = !suanAktif;
-  db.ref(DB_YOLU.cihazlar + "/" + cihazId).update({
-    program_aktif: yeniDurum,
-    program_son_guncelleme: Date.now()
-  }).then(() => {
-    toast(yeniDurum ? `✅ ${cihazId} programı AKTİF edildi` : `⛔ ${cihazId} programı DEAKTİF edildi`);
-  }).catch(err => toast("❌ Hata: " + err.message));
-}
-
-function escapeHtml(text) {
-  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-  return String(text).replace(/[&<>"']/g, m => map[m]);
-}
-
-function kullaniciBilgisiGoster(ad, email, photoUrl) {
-  const adEl    = document.getElementById("lbl_kullanici_ad");
-  const emailEl = document.getElementById("lbl_kullanici_email");
-  const avatarEl = document.getElementById("user_avatar_wrap");
-  if (adEl)    adEl.textContent  = ad || email || "Kullanıcı";
-  if (emailEl) emailEl.textContent = email || "";
-  if (avatarEl && photoUrl) {
-    avatarEl.innerHTML = `<img src="${photoUrl}" class="user-avatar" onerror="this.parentElement.textContent='👤'">`;
-  }
-}
-
+// ─── DERS PROGRAMI & ZAMAN KONTROLLERİ ─────────────────────────────────────
 let dersProgrami = null;
 let dersDurumTimer = null;
 
@@ -1031,7 +1186,7 @@ function dersDurumBaslat() {
     dersDurumGuncelle();
   });
   if (dersDurumTimer) clearInterval(dersDurumTimer);
-  dersDurumTimer = setInterval(dersDurumGuncelle, 30000);
+  dersDurumTimer = setInterval(dersDurumGuncelle, 15000);
 }
 
 function dersDurumGuncelle() {
@@ -1071,6 +1226,8 @@ function dersDurumGuncelle() {
     const ogretmen = s2min(d.ogretmen);
     const cikis    = s2min(d.cikis);
     const refBasla = toplanma || ogrenci || ogretmen;
+    
+    // 1. DERS AKTIF KONTROLU
     if (ogretmen !== null && cikis !== null && simdiMin >= ogretmen && simdiMin < cikis) {
       const kalan = cikis - simdiMin;
       metin.textContent = `📖 ${d.ders}`;
@@ -1080,6 +1237,7 @@ function dersDurumGuncelle() {
       badge.className   = "ders-badge badge-ders";
       return;
     }
+    // 2. TOPLANMA KONTROLU
     if (toplanma !== null && ogrenci !== null && simdiMin >= toplanma && simdiMin < ogrenci) {
       const kalan = ogrenci - simdiMin;
       metin.textContent = `🔔 ${d.ders} — Toplanma`;
@@ -1089,6 +1247,7 @@ function dersDurumGuncelle() {
       badge.className   = "ders-badge badge-teneffus";
       return;
     }
+    // 3. TENEFFUS KONTROLU
     const sonraki = prg[i + 1];
     if (sonraki && ogrenci !== null) {
       const sonrakiRef = s2min(sonraki.toplanma) || s2min(sonraki.ogrenci) || s2min(sonraki.ogretmen);
@@ -1102,6 +1261,7 @@ function dersDurumGuncelle() {
         return;
       }
     }
+    // 4. DERSE BEKLEME KONTROLU
     if (refBasla !== null && simdiMin < refBasla) {
       const kalan = refBasla - simdiMin;
       metin.textContent = `⏳ ${d.ders} başlamak üzere`;
@@ -1118,37 +1278,6 @@ function dersDurumGuncelle() {
   kart.className    = "ders-bar bitti";
   badge.className   = "ders-badge badge-bitti";
 }
-
-window.onload = () => {
-  const uid = sessionStorage.getItem("ozil_uid");
-  const email = sessionStorage.getItem("ozil_email");
-  const yetkili = sessionStorage.getItem("ozil_yetkili") === "1";
-  const yonetici = sessionStorage.getItem("ozil_yonetici") === "1";
-  if (uid && email) {
-    girisYapildi = true;
-    mevcutKullaniciUid = uid;
-    mevcutKullaniciEmail = email;
-    yetkiliMi = yetkili;
-    yoneticiMi = yonetici;
-    const cihazBtn = document.getElementById("cihaz_yonetimi_btn");
-    if (yoneticiMi && cihazBtn) cihazBtn.style.display = "inline-block";
-    const displayname = sessionStorage.getItem("ozil_displayname") || "";
-    const photourl    = sessionStorage.getItem("ozil_photourl") || "";
-    kullaniciBilgisiGoster(displayname || email, email, photourl);
-    ekranGoster("kumanda");
-    dinleyicileriBaslat();
-    yetkiKontrolEt(uid).then(y => {
-      if (y !== yetkiliMi) {
-        yetkiliMi = y;
-        sessionStorage.setItem("ozil_yetkili", y ? "1" : "0");
-        if (!y) toast("Yetkiniz iptal edildi!");
-        else toast("Yetkiniz yeniden onaylandı!");
-      }
-    });
-  } else {
-    ekranGoster("giris");
-  }
-};
 </script>
 </body>
 </html>
