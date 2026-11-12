@@ -105,13 +105,14 @@
   html[data-theme="dark"]{filter:invert(1) hue-rotate(180deg);background:#fff}
   html[data-theme="dark"] img,html[data-theme="dark"] canvas,html[data-theme="dark"] video,html[data-theme="dark"] .btn,html[data-theme="dark"] #toast{filter:invert(1) hue-rotate(180deg)}
   #surumEtiket{position:relative}
-  #temaDugme{position:absolute;right:2px;top:0;width:30px;height:30px;padding:0;border:1px solid #ced6e0;background:#fff;color:#57606f;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  #temaDugme svg{width:18px;height:18px;display:block}
+  #temaDugme,#paylasDugme{position:absolute;right:2px;top:0;width:30px;height:30px;padding:0;border:1px solid #ced6e0;background:#fff;color:#57606f;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #paylasDugme{right:40px}
+  #temaDugme svg,#paylasDugme svg{width:18px;height:18px;display:block}
 </style>
 <script>try{if(localStorage.getItem("kumanda-tema")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body>
-<div id="surumEtiket" style="text-align:center;font-size:13px;font-weight:700;color:#2f3542;padding:6px 0 2px">📱 oZil Kumanda <span style="font-weight:600;color:#888">v1.1</span><button type="button" id="temaDugme" aria-label="Koyu moda geç"></button></div>
+<div id="surumEtiket" style="text-align:center;font-size:13px;font-weight:700;color:#2f3542;padding:6px 0 2px">📱 oZil Kumanda <span style="font-weight:600;color:#888">v1.2</span><button type="button" id="paylasDugme" class="paylasBtn"></button><button type="button" id="temaDugme" aria-label="Koyu moda geç"></button></div>
 <div id="ekran_giris">
   <h2 style="line-height:1.4">
     Nimetullah Nahçivani<br>
@@ -1326,6 +1327,29 @@ function dersDurumGuncelle() {
 }
 
 
+</script>
+<script>
+// Adres paylaş düğmesi: önce sistem paylaşımı, olmazsa adresi panoya kopyalar. Mehmet Karadeniz, 2026-2027
+(function () {
+  var SH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg>';
+  var OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>';
+  function adres() { return location.href.split(/[?#]/)[0]; }
+  function kopyala(u) {
+    try { var t = document.createElement("textarea"); t.value = u; t.style.cssText = "position:fixed;opacity:0;top:0;left:0"; document.body.appendChild(t); t.select(); var ok = document.execCommand("copy"); document.body.removeChild(t); return ok; } catch (e) { return false; }
+  }
+  function tamam(b) { b.innerHTML = OK; b.title = "Adres kopyalandı"; setTimeout(function () { b.innerHTML = SH; b.title = "Adresi paylaş"; }, 1800); }
+  function paylas(b) {
+    var u = adres();
+    if (navigator.share) { navigator.share({ title: document.title, url: u }).catch(function () {}); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(function () { tamam(b); }, function () { if (kopyala(u)) tamam(b); });
+    else if (kopyala(u)) tamam(b);
+  }
+  var bs = document.querySelectorAll(".paylasBtn");
+  for (var i = 0; i < bs.length; i++) {
+    bs[i].innerHTML = SH; bs[i].title = "Adresi paylaş"; bs[i].setAttribute("aria-label", "Adresi paylaş");
+    bs[i].addEventListener("click", function () { paylas(this); });
+  }
+})();
 </script>
 </body>
 </html>
